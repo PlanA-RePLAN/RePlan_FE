@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 // components
-import OnBoarding from '@/features/onBoarding';
+import OnBoarding from '@/features/onBoarding'
 
 function App() {
   return (
