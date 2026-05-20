@@ -1,14 +1,22 @@
+import { useNavigate } from 'react-router-dom'
+
 // components
 import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
-import ProgressBar from './components/ProgressBar'
 import ProposeGoal from './ProposeGoal'
+import WritingGoal from './WritingGoal'
+
+// utils
 import { useState } from 'react'
 
 export default function OnBoarding() {
-  const [currentStep, setCurrentStep] = useState(2)
+  const [currentStep, setCurrentStep] = useState(1)
+  const navigate = useNavigate()
+
   const moveBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
+    } else {
+      navigate(-1)
     }
   }
 
@@ -19,16 +27,12 @@ export default function OnBoarding() {
   }
 
   const steps = [
-    <div key={0}>목표 입력</div>,
+    <WritingGoal key={0} />,
     <ProposeGoal moveNext={moveNext} key={1} />,
-    <div key={2}>목표 설정 완료</div>,
   ]
   return (
-    <BackHeaderLayout title="온보딩" onBack={moveBack}>
-      <div className="font-light px-5">
-        <ProgressBar totalSteps={3} currentStep={currentStep} />
-        {steps[currentStep - 1]}
-      </div>
+    <BackHeaderLayout title="목표 설정" onBack={moveBack}>
+      <div className="font-light px-5 pt-8">{steps[currentStep - 1]}</div>
     </BackHeaderLayout>
   )
 }

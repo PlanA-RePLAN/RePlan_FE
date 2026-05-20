@@ -7,11 +7,9 @@ import MainButton from '@/shared/components/MainButton'
 
 export default function ProfileSetup() {
   const navigate = useNavigate()
-  const moveBack = () => {
-    navigate('/')
-  }
+
   return (
-    <BackHeaderLayout title="프로필 입력" onBack={moveBack}>
+    <BackHeaderLayout title="프로필 입력">
       <div className="px-5 w-full flex flex-col justify-center items-center">
         <div className="flex flex-col w-full mt-8">
           <Title>
@@ -31,7 +29,9 @@ export default function ProfileSetup() {
         <MainButton
           title={'다음으로'}
           option={'primary'}
-          onClick={() => {}}
+          onClick={() => {
+            navigate('/onboarding')
+          }}
           className="mt-10"
         />
       </div>
