@@ -12,7 +12,7 @@ interface ProposeGoalProps {
 export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
   return (
     <div className="flex flex-col">
-      <div className="pt-8 flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         <Title>
           <div>목표에 맞는</div>
           <div>투두리스트를 제안드릴게요.</div>
