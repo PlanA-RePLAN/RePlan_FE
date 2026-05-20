@@ -10,8 +10,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/profilesetup" element={<ProfileSetup />} />
-        <Route path='/onboarding' element={<OnBoarding />}/>
+        <Route path="/profile-setup" element={<ProfileSetup />} />
+        <Route path="/onboarding" element={<OnBoarding />} />
       </Routes>
     </BrowserRouter>
   )
