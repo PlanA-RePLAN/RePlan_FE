@@ -1,5 +1,5 @@
 // components
-import BackHeader from '@/shared/components/BackHeader'
+import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import ProgressBar from './components/ProgressBar'
 import ProposeGoal from './ProposeGoal'
 import { useState } from 'react'
@@ -24,10 +24,11 @@ export default function OnBoarding() {
     <div key={2}>목표 설정 완료</div>,
   ]
   return (
-    <div className="font-light px-5">
-      <BackHeader onBack={moveBack} title="온보딩" />
-      <ProgressBar totalSteps={3} currentStep={currentStep} />
-      {steps[currentStep - 1]}
-    </div>
+    <BackHeaderLayout title="온보딩" onBack={moveBack}>
+      <div className="font-light px-5">
+        <ProgressBar totalSteps={3} currentStep={currentStep} />
+        {steps[currentStep - 1]}
+      </div>
+    </BackHeaderLayout>
   )
 }

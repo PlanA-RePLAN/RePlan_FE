@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import BackHeader from '@/shared/components/BackHeader'
+import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import Title from '@/shared/components/Title'
 import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 import ProfileInput from './components/ProfileInput'
@@ -11,9 +11,8 @@ export default function ProfileSetup() {
     navigate('/')
   }
   return (
-    <div className="px-5">
-      <BackHeader title="프로필 입력" onBack={moveBack} />
-      <div className="w-full flex flex-col justify-center items-center">
+    <BackHeaderLayout title="프로필 입력" onBack={moveBack}>
+      <div className="px-5 w-full flex flex-col justify-center items-center">
         <div className="flex flex-col w-full mt-8">
           <Title>
             <div>안녕하세요,</div>
@@ -36,6 +35,6 @@ export default function ProfileSetup() {
           className="mt-10"
         />
       </div>
-    </div>
+    </BackHeaderLayout>
   )
 }
