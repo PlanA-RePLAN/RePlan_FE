@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import BackHeader from "@/shared/components/BackHeader"
 import Title from "@/shared/components/Title";
@@ -6,7 +7,8 @@ import ProfileInput from "./components/ProfileInput";
 import MainButton from "@/shared/components/MainButton";
 
 export default function ProfileSetup() {
-
+  const [name, setName] = useState("")
+  const [isNameValid, setIsNameValid] = useState(false)
   const navigate = useNavigate();
   const moveBack = () =>{
     navigate("/")
@@ -26,12 +28,13 @@ export default function ProfileSetup() {
           </div>
         </div>
         <div className="w-full mt-10 relative">
-          <ProfileInput />
+          <ProfileInput onChange={setName} onValidChange={setIsNameValid} />
         </div>
-        <MainButton 
-          title={"다음으로"} 
-          option={"primary"} 
+        <MainButton
+          title={"다음으로"}
+          option={"primary"}
           onClick={()=>{}}
+          disabled={!isNameValid}
           className="mt-10"
          />
       </div>

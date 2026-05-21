@@ -1,11 +1,15 @@
-import { useState } from "react"
 import { cn } from "@/shared/utils/cn"
 
-export default function DuplicateCheckButton() {
-    
+interface DuplicateCheckButtonProps {
+    onCheck: (isDuplicate: boolean) => void
+}
+
+export default function DuplicateCheckButton({ onCheck }: DuplicateCheckButtonProps) {
+
     const[isClick, setIsClick] = useState(false)
     const handleClick = () => {
         setIsClick(true)
+        onCheck(false)
     }
 
   return (
