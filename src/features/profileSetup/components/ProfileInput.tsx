@@ -2,21 +2,47 @@ import Input from '@/shared/components/Input'
 import DuplicateCheckButton from './DuplicateCheckButton'
 import { useState } from 'react'
 
-export default function ProfileInput() {
-  const [name, setName] = useState('')
-  const [isCheck] = useState(false)
-  const [isDuplicate] = useState(false)
+interface ProfileInputProps {
+  value: string
+  onChange?: (value: string) => void
+  onValidChange?: (isValid: boolean) => void
+}
+
+export default function ProfileInput({
+  value,
+  onChange,
+  onValidChange,
+}: ProfileInputProps) {
+  const [isCheck, setIsCheck] = useState(false)
+  const [isDuplicate, setIsDuplicate] = useState(false)
+
+  const handleChange = (value: string) => {
+    onChange?.(value)
+    setIsCheck(false)
+    onValidChange?.(false)
+  }
+
+  const handleCheck = (duplicate: boolean) => {
+    setIsCheck(true)
+    setIsDuplicate(duplicate)
+    onValidChange?.(!duplicate)
+  }
 
   return (
     <div className="relative">
-      <Input value={name} setValue={setName} maxLength={10} showCount="always">
+      <Input
+        value={value}
+        setValue={handleChange}
+        maxLength={10}
+        showCount="always"
+      >
         <Input.Label option="secondary">이름</Input.Label>
         <Input.Field placeholder="이름을 입력해주세요" />
         <Input.Bottom>
           <Input.Count />
         </Input.Bottom>
       </Input>
-      <DuplicateCheckButton />
+      <DuplicateCheckButton onCheck={handleCheck} />
       {isCheck && (
         <p className="absolute top-21 text-xs text-bluegray-normal flex">
           {isDuplicate ? (

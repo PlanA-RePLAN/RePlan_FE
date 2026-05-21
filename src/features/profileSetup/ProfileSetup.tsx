@@ -1,11 +1,16 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
+
+// components
 import Title from '@/shared/components/Title'
 import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 import ProfileInput from './components/ProfileInput'
+import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import MainButton from '@/shared/components/MainButton'
 
 export default function ProfileSetup() {
+  const [name, setName] = useState('')
+  const [isNameValid, setIsNameValid] = useState(false)
   const navigate = useNavigate()
 
   return (
@@ -24,11 +29,15 @@ export default function ProfileSetup() {
           </div>
         </div>
         <div className="w-full mt-10 relative">
-          <ProfileInput />
+          <ProfileInput
+            value={name}
+            onChange={setName}
+            onValidChange={setIsNameValid}
+          />
         </div>
         <MainButton
           title={'다음으로'}
-          option={'primary'}
+          option={isNameValid ? 'primary' : 'disabled'}
           onClick={() => {
             navigate('/onboarding')
           }}
