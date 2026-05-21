@@ -5,6 +5,7 @@ interface MainButtonProps {
   title: string
   className?: string
   option: 'primary' | 'secondary'
+  disabled?: boolean
 }
 
 export default function MainButton({
@@ -12,6 +13,7 @@ export default function MainButton({
   title,
   className,
   option,
+  disabled,
 }: MainButtonProps) {
   const optionClasses = {
     secondary: 'bg-bluegray-light-hover text-bluegray-black',
@@ -19,9 +21,11 @@ export default function MainButton({
   }
   return (
     <button
+      disabled={disabled}
       className={cn(
         'text-center font-bold py-4 w-full rounded-xl',
         optionClasses[option],
+        disabled ? 'bg-bluegray-light-hover text-bluegray-normal cursor-not-allowed' : '',
         className || '',
       )}
       onClick={onClick}

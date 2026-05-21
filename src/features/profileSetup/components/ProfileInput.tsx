@@ -2,19 +2,23 @@ import Input from "@/shared/components/Input"
 import DuplicateCheckButton from "./DuplicateCheckButton"
 import { useState } from "react"
 
-export default function ProfileInput() {
+interface ProfileInputProps {
+    onChange?: (value: string) => void
+}
+
+export default function ProfileInput({ onChange }: ProfileInputProps) {
     const [isCheck, setIsCheck] = useState(false)
     const [isDuplicate, setIsDuplicate] = useState(false)
 
   return (
     <div className="relative">
         <Input
-        title={"이름"} 
-        placeholder={"이름을 입력해주세요"} 
+        title={"이름"}
+        placeholder={"이름을 입력해주세요"}
         option={"secondary"}
         showCount={"always"}
-        onChange={(v)=>console.log(v)}
-        maxLength={10} 
+        onChange={onChange}
+        maxLength={10}
         />
         <DuplicateCheckButton />
         {isCheck && (
