@@ -18,7 +18,7 @@ export default function Input({
     maxLength,
 }:InputProps){
     const optionClasses ={
-        primary : "text-md text-bluegray-black",
+        primary : "text-base text-bluegray-black",
         secondary : 'text-s text-bluegray-dark'
     }
 

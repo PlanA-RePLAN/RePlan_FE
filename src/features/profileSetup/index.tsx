@@ -12,7 +12,7 @@ export default function index() {
     <div className="flex flex-col justify-center items-center h-dvh">
         <div className='flex flex-col items-center gap-3 absolute top-[33.5%]'>
             <img src="/src/assets/logo.svg" alt="" className="" />
-            <p className="text-m text-bluegray-normal-hover">실패 없는 재계획 프로젝트</p>
+            <p className="text-base text-bluegray-normal-hover">실패 없는 재계획 프로젝트</p>
         </div>
         <div className='w-full px-5 flex flex-col gap-2 absolute bottom-[6%]'>
             {LOGIN_OPTION.map((item)=>(
