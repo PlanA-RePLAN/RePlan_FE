@@ -40,6 +40,7 @@ export default function Input({
         onChange={handleChange}
         onFocus={()=>setIsFocused(true)}
         onBlur={()=>setIsFocused(false)}
+        maxLength={maxLength}
         className="w-full h-12.25 bg-bluegray-light mt-2 mb-1 rounded-xl px-4
         hover:border hover:border-blue-normal
         "
