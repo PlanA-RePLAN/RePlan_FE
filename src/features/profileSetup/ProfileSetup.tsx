@@ -8,6 +8,7 @@ import MainButton from "@/shared/components/MainButton";
 
 export default function ProfileSetup() {
   const [name, setName] = useState("")
+  const [isNameValid, setIsNameValid] = useState(false)
   const navigate = useNavigate();
   const moveBack = () =>{
     navigate("/")
@@ -27,13 +28,13 @@ export default function ProfileSetup() {
           </div>
         </div>
         <div className="w-full mt-10 relative">
-          <ProfileInput onChange={setName} />
+          <ProfileInput onChange={setName} onValidChange={setIsNameValid} />
         </div>
         <MainButton
           title={"다음으로"}
           option={"primary"}
           onClick={()=>{}}
-          disabled={name.trim().length === 0}
+          disabled={!isNameValid}
           className="mt-10"
          />
       </div>

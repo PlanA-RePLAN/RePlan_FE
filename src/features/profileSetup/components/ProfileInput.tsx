@@ -4,11 +4,24 @@ import { useState } from "react"
 
 interface ProfileInputProps {
     onChange?: (value: string) => void
+    onValidChange?: (isValid: boolean) => void
 }
 
-export default function ProfileInput({ onChange }: ProfileInputProps) {
+export default function ProfileInput({ onChange, onValidChange }: ProfileInputProps) {
     const [isCheck, setIsCheck] = useState(false)
     const [isDuplicate, setIsDuplicate] = useState(false)
+
+    const handleChange = (value: string) => {
+        onChange?.(value)
+        setIsCheck(false)
+        onValidChange?.(false)
+    }
+
+    const handleCheck = (duplicate: boolean) => {
+        setIsCheck(true)
+        setIsDuplicate(duplicate)
+        onValidChange?.(!duplicate)
+    }
 
   return (
     <div className="relative">
@@ -17,10 +30,10 @@ export default function ProfileInput({ onChange }: ProfileInputProps) {
         placeholder={"이름을 입력해주세요"}
         option={"secondary"}
         showCount={"always"}
-        onChange={onChange}
+        onChange={handleChange}
         maxLength={10}
         />
-        <DuplicateCheckButton />
+        <DuplicateCheckButton onCheck={handleCheck} />
         {isCheck && (
             <p className="absolute top-21 text-xs text-bluegray-normal flex">
                 {isDuplicate
