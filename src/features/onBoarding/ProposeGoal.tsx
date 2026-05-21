@@ -4,6 +4,7 @@ import Description from '@/shared/components/Description'
 import MainButton from '@/shared/components/MainButton'
 import MenuIcon from '@/icons/MenuIcon'
 import AddItemIcon from '@/icons/AddItemIcon'
+import ListItem from '@/shared/components/ListItem'
 
 interface ProposeGoalProps {
   moveNext: () => void
@@ -12,7 +13,7 @@ interface ProposeGoalProps {
 export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
   return (
     <div className="flex flex-col">
-      <div className="pt-8 flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         <Title>
           <div>목표에 맞는</div>
           <div>투두리스트를 제안드릴게요.</div>
@@ -23,9 +24,9 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
         </Description>
       </div>
 
-      <div className="rounded-xl p-4 mt-6 mb-8 bg-blue-light font-semibold text-sm text-blue-normal">
+      <ListItem className="mt-6 mb-8">
         토익 850점 달성, 5월 1일까지, ETS 토익 단기공략 850+ 교재 사용
-      </div>
+      </ListItem>
 
       <div>
         <div className="flex items-center gap-2 w-full">
@@ -41,8 +42,11 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
       </div>
 
       <div className="fixed left-0 bottom-10 w-full flex gap-2 px-5">
-        <MainButton option="secondary" onClick={moveNext} title="건너뛰기" />
-        <MainButton option="primary" onClick={() => {}} title="투두 추가하기" />
+        <MainButton
+          option="primary"
+          onClick={moveNext}
+          title="선택한 투두 추가하기"
+        />
       </div>
     </div>
   )
