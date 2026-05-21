@@ -4,16 +4,17 @@ import { useNavigate } from 'react-router-dom'
 import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import ProposeGoal from './ProposeGoal'
 import WritingGoal from './WritingGoal'
+import AskQuestion from './AskQuestion'
 
 // utils
 import { useState } from 'react'
 
 export default function OnBoarding() {
-  const [currentStep, setCurrentStep] = useState(1)
+  const [currentStep, setCurrentStep] = useState(0)
   const navigate = useNavigate()
 
   const moveBack = () => {
-    if (currentStep > 1) {
+    if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
     } else {
       navigate(-1)
@@ -27,12 +28,13 @@ export default function OnBoarding() {
   }
 
   const steps = [
-    <WritingGoal key={0} />,
-    <ProposeGoal moveNext={moveNext} key={1} />,
+    <WritingGoal moveNext={moveNext} key={0} />,
+    <AskQuestion moveNext={moveNext} key={1} />,
+    <ProposeGoal moveNext={moveNext} key={2} />,
   ]
   return (
     <BackHeaderLayout title="목표 설정" onBack={moveBack}>
-      <div className="font-light px-5 pt-8">{steps[currentStep - 1]}</div>
+      <div className="font-light px-5 pt-8">{steps[currentStep]}</div>
     </BackHeaderLayout>
   )
 }

@@ -4,7 +4,7 @@ import Input from '@/shared/components/Input'
 import Title from '@/shared/components/Title'
 import MainButton from '@/shared/components/MainButton'
 
-export default function WritingGoal() {
+export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
   const [goal, setGoal] = useState('')
 
   return (
@@ -32,7 +32,7 @@ export default function WritingGoal() {
 
       <MainButton
         option={goal.trim() ? 'primary' : 'disabled'}
-        onClick={() => {}}
+        onClick={moveNext}
         title="다음으로"
         className="mt-10"
       />
