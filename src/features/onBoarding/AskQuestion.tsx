@@ -7,11 +7,15 @@ import GoalIcon from '@/icons/GoalIcon'
 import CheckBoxIcon from '@/icons/CheckBoxIcon'
 import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
 import CalendarWithClockIcon from '@/icons/CalendarWithClockIcon'
+import ChecvronRightIcon from '@/icons/ChevronLeftIcon'
+import BottomSheet from '@/shared/components/BottomSheet'
+import DatePicker from '@/features/onBoarding/components/DatePicker'
+import TimePicker from '@/features/onBoarding/components/TimePicker'
 
 // utils
 import { useState } from 'react'
+import { format } from 'date-fns'
 import { cn } from '@/shared/utils/cn'
-import ChecvronRightIcon from '@/icons/ChevronLeftIcon'
 
 const CHOICES = [
   { id: 'self', label: '직접 선택할게요' },
@@ -21,11 +25,13 @@ const CHOICES = [
 
 export default function AskQuestion({ moveNext }: { moveNext: () => void }) {
   const [period, setPeriod] = useState('')
-  const [deadlineDate] = useState('')
-  const [deadlineTime] = useState('')
+  const [deadlineDate, setDeadlineDate] = useState<Date | undefined>(undefined)
+  const [deadlineTime, setDeadlineTime] = useState('')
+  const [dateSheetOpen, setDateSheetOpen] = useState(false)
+  const [timeSheetOpen, setTimeSheetOpen] = useState(false)
 
   const isNextEnabled =
-    period === 'self' ? deadlineDate.trim() !== '' : period.trim() !== ''
+    period === 'self' ? deadlineDate !== undefined : period.trim() !== ''
 
   return (
     <div className="flex flex-col">
@@ -77,44 +83,52 @@ export default function AskQuestion({ moveNext }: { moveNext: () => void }) {
               >
                 <div className="overflow-hidden">
                   <div className="flex flex-col">
-                    <div className="flex justify-between items-center py-4 my-4 border-y border-bluegray-light-hover px-4">
+                    <button
+                      onClick={() => setDateSheetOpen(true)}
+                      className="flex justify-between items-center py-4 my-4 border-y border-bluegray-light-hover px-4 w-full"
+                    >
                       <div className="flex gap-2 items-center">
                         <div className="w-5.5 h-5.5 rounded-full bg-bluegray-light-active flex items-center justify-center">
                           <CalendarClearSharpIcon fill="white" />
                         </div>
                         <div>마감 날짜</div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         <div className="text-bluegray-dark-active text-xs font-bold">
-                          {deadlineDate}
+                          {deadlineDate
+                            ? format(deadlineDate, 'yyyy년 MM월 dd일')
+                            : ''}
                         </div>
                         <ChecvronRightIcon
                           className="rotate-180"
-                          width="20"
-                          height="20"
+                          width="18"
+                          height="18"
                           color="#A9AFB9"
                         />
                       </div>
-                    </div>
-                    <div className="flex justify-between items-center px-4">
+                    </button>
+                    <button
+                      onClick={() => setTimeSheetOpen(true)}
+                      className="flex justify-between items-center px-4 w-full"
+                    >
                       <div className="flex gap-2 items-center">
                         <div className="w-5.5 h-5.5 rounded-full bg-bluegray-light-active flex items-center justify-center">
                           <CalendarWithClockIcon fill="white" />
                         </div>
                         <div>마감 시간</div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         <div className="text-bluegray-dark-active text-xs font-bold">
                           {deadlineTime}
                         </div>
                         <ChecvronRightIcon
                           className="rotate-180"
-                          width="20"
-                          height="20"
+                          width="18"
+                          height="18"
                           color="#A9AFB9"
                         />
                       </div>
-                    </div>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -129,6 +143,34 @@ export default function AskQuestion({ moveNext }: { moveNext: () => void }) {
         title="다음으로"
         className="mt-10"
       />
+
+      <BottomSheet
+        isOpen={dateSheetOpen}
+        onClose={() => setDateSheetOpen(false)}
+      >
+        <DatePicker
+          value={deadlineDate}
+          onConfirm={(date) => {
+            setDeadlineDate(date)
+            setDateSheetOpen(false)
+          }}
+          onClose={() => setDateSheetOpen(false)}
+        />
+      </BottomSheet>
+
+      <BottomSheet
+        isOpen={timeSheetOpen}
+        onClose={() => setTimeSheetOpen(false)}
+      >
+        <TimePicker
+          value={deadlineTime}
+          onConfirm={(time) => {
+            setDeadlineTime(time)
+            setTimeSheetOpen(false)
+          }}
+          onClose={() => setTimeSheetOpen(false)}
+        />
+      </BottomSheet>
     </div>
   )
 }
