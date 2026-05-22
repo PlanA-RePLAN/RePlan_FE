@@ -37,7 +37,7 @@ export default function AskQuestion({ moveNext }: { moveNext: () => void }) {
     <div className="flex flex-col">
       <div className="flex flex-col gap-3">
         <Title>질문이 있어요.</Title>
-        <Description>
+        <Description className="text-bluegray-dark-hover">
           <div className="flex items-center gap-2">
             <GoalIcon />
             <div>목표 기한은 언제까지인가요?</div>
