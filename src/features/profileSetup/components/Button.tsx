@@ -5,6 +5,7 @@ interface ButtonProps {
   title: string
   img: string
   option: 'kakao' | 'apple' | 'google' | 'naver'
+  icon?: React.ReactNode
 }
 
 const optionClasses = {
@@ -14,7 +15,7 @@ const optionClasses = {
   google: 'bg-white text-bluegray-black border border-bluegray-light-active',
 }
 
-export default function Button({ onClick, title, img, option }: ButtonProps) {
+export default function Button({ onClick, title, img, option, icon }: ButtonProps) {
   return (
     <button
       className={cn(
@@ -23,7 +24,9 @@ export default function Button({ onClick, title, img, option }: ButtonProps) {
       )}
       onClick={onClick}
     >
-      <img src={`src/assets/${img}.svg`} alt={title} className="absolute left-6" />
+      <span className="absolute left-6">
+        {icon ?? <img src={`src/assets/${img}.svg`} alt={title} />}
+      </span>
       <p>{title}로 계속하기</p>
     </button>
   )
