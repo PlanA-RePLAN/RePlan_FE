@@ -1,8 +1,9 @@
 import { useState } from "react"
 import CalendarIcon from "@/icons/CalendarIcon"
 import MoreIcon from "@/icons/MoreIcon"
+import { type Goal } from "@/shared/types"
 
-export default function GoalSection() {
+export default function GoalSection({ goal }:{ goal : Goal}) {
     const [click, setClieck] = useState(false)
     const handleClick = () => {
         setClieck(!click)
@@ -10,15 +11,15 @@ export default function GoalSection() {
   return (
     <div className="flex items-start gap-4">
          <div className="flex flex-col items-center">
-                <div className="w-2.5 h-2.5 border border-bluegray-light-active rounded-full"></div>
-                <div className="w-px h-14 bg-bluegray-light-active"></div>
-            </div>
+            <div className="w-2.5 h-2.5 border border-bluegray-light-active rounded-full"></div>
+            <div className="w-px h-14 bg-bluegray-light-active"></div>
+        </div>
         <div className="w-full h-16.5 flex justify-between ">
             <div>
-                <h1 className="text-base mb-1">토익 850점 달성</h1>
+                <h1 className="text-base mb-1">{goal.title}</h1>
                 <div className="flex items-center gap-1 text-xs text-bluegray-normal">
                     <CalendarIcon />
-                    <p>2026년 5월 26일, 8:00PM</p>
+                    <p>{goal.deadline}</p>
                 </div>
             </div>
             <div>

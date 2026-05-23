@@ -23,7 +23,7 @@ export default function PeriodDropdown() {
         className="w-21 h-7.75 rounded-2xl bg-white border border-bluegray-light-hover
         flex items-center justify-center gap-1.25">
             <p className="text-xs font-semibold">{value}</p>
-            <ChevronDownIcon />
+            <ChevronDownIcon className={`transition-transform duration-200 ${isOpen ? "rotate-180" : "rotate-0"}`} />
         </div>
         {isOpen && (
             <div className="absolute top-9 w-21 h-25.5 py-1.5 bg-white rounded-md shadow-[0px_4px_12px_rgba(0,0,0,0.08)] z-10">

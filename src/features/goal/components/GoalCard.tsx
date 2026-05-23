@@ -1,17 +1,16 @@
 import DateSection from '@/features/goal/components/DateSection'
 import GoalSection from '@/features/goal/components/GoalSection'
+import { type GoalGroup } from '@/shared/types'
 
-const periodOptions = [
-    { year: 2026, month: 5, day: 4},
-    { year: 2026, month: 5, day: 3},
-    { year: 2026, month: 4, day: 4},
-]
-
-export default function GoalCard() {
+export default function GoalCard({ year, month, day, goals}: GoalGroup) {
   return (
-    <div className='flex flex-col gap-4'>
-        <DateSection year={2026} month={5} day={4} />
-        <GoalSection />
+    <div className='flex flex-col gap-4 mb-8'>
+        <DateSection year={year} month={month} day={day} />
+        <div>
+            {goals.map((goal)=>(
+            <GoalSection key={goal.id} goal={goal} />
+          ))}
+        </div>
     </div>
   )
 }
