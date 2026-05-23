@@ -40,6 +40,19 @@ export default function Goal() {
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined)
   const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined)
 
+  const filteredGoalGroup = goalGroup.filter((group) => {
+  if (selectedYear && selectedMonth) {
+    return group.year === selectedYear && group.month === selectedMonth
+  }
+  if (selectedYear) {
+    return group.year === selectedYear
+  }
+  if (selectedMonth) {
+    return group.month === selectedMonth
+  }
+  return true  
+})
+
   return (
     <div className='flex flex-col h-dvh'>
         <MainHeader />
@@ -78,12 +91,13 @@ export default function Goal() {
             )}
         </div>
         <div className='flex-1 overflow-y-auto px-5 pb-27'>
-            {goalGroup.map((group) => (
+            {filteredGoalGroup.map((group) => (
                 <GoalCard key={`${group.year}-${group.month}-${group.day}`} {...group} />
             ))}
         </div>
         <BottomSheet isOpen={isYearBottomSheetOpen} onClose={() => setIsYearBottomSheetOpen(false)}>
             <YearPicker
+                value={selectedYear}
                 onClose={() => setIsYearBottomSheetOpen(false)}
                 onConfirm={(year) => {
                     setSelectedYear(year)
@@ -93,6 +107,7 @@ export default function Goal() {
         </BottomSheet>
         <BottomSheet isOpen={isMonthBottomSheetOpen} onClose={()=>setIsMonthBottomSheetOpen(false)}>
           <MonthPeaker
+              value={selectedMonth}
               year={selectedYear}
               onClose={() => setIsMonthBottomSheetOpen(false)}
               onConfirm={(year, month) => {

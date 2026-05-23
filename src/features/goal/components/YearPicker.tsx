@@ -2,14 +2,15 @@ import BottomSheetHeader from "@/shared/components/BottomSheetHeader"
 import { useState } from "react"
 import { cn } from "@/shared/utils/cn"
 
-interface YearPickerProps {
+interface YearPickerProps { 
+  value? : number
   onClose: () => void
   onConfirm: (year: number) => void
 }
 
-export default function YearPicker({ onClose, onConfirm }: YearPickerProps) {
+export default function YearPicker({ value, onClose, onConfirm }: YearPickerProps) {
     const [startYear, setStartYear] = useState(2024)
-    const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined)
+    const [selectedYear, setSelectedYear] = useState<number | undefined>(value)
     const years = Array.from({ length: 6 }, (_, i) => startYear + i)
 
   return (
@@ -29,8 +30,9 @@ export default function YearPicker({ onClose, onConfirm }: YearPickerProps) {
                     onClick={() => setSelectedYear(year)}
                     className={cn(
                         'py-[9.5px] rounded-lg text-sm',
-                        selectedYear === year
-                            ? 'bg-bluegray-black text-white font-bold'
+                        selectedYear === year ? 'bg-bluegray-black text-white font-bold' 
+                        : value === year
+                            ? '' 
                             : 'text-bluegray-dark font-semibold'
                     )}
                 >

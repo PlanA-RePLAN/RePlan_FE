@@ -4,13 +4,14 @@ import { cn } from "@/shared/utils/cn"
 
 interface MonthPeakerProps {
     year?: number 
+    value?: number
     onClose: () => void
     onConfirm: (year: number, mon: number) => void
 }
 
-export default function MonthPeaker({ year, onClose, onConfirm }:MonthPeakerProps) {
+export default function MonthPeaker({ year, value, onClose, onConfirm }:MonthPeakerProps) {
     const [currentYear, setCurrentYear] = useState(year ?? 2026)
-    const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined)
+    const [selectedMonth, setSelectedMonth] = useState<number | undefined>(value)
     const months = Array.from({ length: 12 }, (_, i) => i + 1)
 
   return (
@@ -30,8 +31,9 @@ export default function MonthPeaker({ year, onClose, onConfirm }:MonthPeakerProp
                     onClick={() => setSelectedMonth(month)}
                     className={cn(
                         'py-[9.5px] rounded-lg text-sm',
-                        selectedMonth === month
-                            ? 'bg-bluegray-black text-white font-bold'
+                         selectedMonth === month ? 'bg-bluegray-black text-white font-bold' 
+                        : value === month
+                            ? '' 
                             : 'text-bluegray-dark font-semibold'
                     )}
                 >
