@@ -4,3 +4,15 @@ export type User = {
   name: string
   email: string
 }
+ export type Goal = {
+  id: number,
+  title : string,
+  deadline : string
+ }
+
+ export type GoalGroup = {
+  year: number,
+  month: number,
+  day: number,
+  goals : Goal[]
+ }
