@@ -1,10 +1,11 @@
 import Button from '@/features/profileSetup/components/Button'
+import GoogleIcon from '@/icons/GoogleIcon'
 
 const LOGIN_OPTION = [
-    { title : "카카오", img : "kakao", option : "kakao"},
-    { title : "apple", img : "apple", option : "apple"},
-    { title : "google", img : "google", option : "google"},
-    { title : "naver", img : "naver", option : "naver"}
+    { title : "카카오", img : "kakao", option : "kakao", icon: undefined},
+    { title : "apple", img : "apple", option : "apple", icon: undefined},
+    { title : "google", img : "google", option : "google", icon: <GoogleIcon />},
+    { title : "naver", img : "naver", option : "naver", icon: undefined}
 ] as const
 
 export default function index() {

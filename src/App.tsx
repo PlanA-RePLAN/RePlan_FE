@@ -20,7 +20,6 @@ function App() {
         <Route element={<LayoutWithNav />}>
           <Route path="/goal" element={<Goal />} />
         </Route>
-
       </Routes>
     </BrowserRouter>
   )

@@ -7,10 +7,10 @@ interface BackHeaderProps {
 
 export default function BackHeader({ title, onBack }: BackHeaderProps) {
   return (
-    <header className="relative flex items-center w-full py-4">
+    <header className="fixed top-0 left-0 z-50 px-5 flex items-center w-screen py-4 border-b border-bluegray-light-hover bg-white">
       <button
         onClick={onBack}
-        className="p-2 flex items-center justify-center"
+        className="flex items-center justify-center"
         aria-label="뒤로가기"
       >
         <ChevronLeftIcon width={24} height={24} color="#202021" />
