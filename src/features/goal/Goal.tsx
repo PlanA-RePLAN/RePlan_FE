@@ -8,7 +8,7 @@ import { useState } from 'react'
 import YearPicker from './components/YearPicker'
 import MonthPeaker from './components/MonthPeaker'
 import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'
-import { div } from 'framer-motion/client'
+import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 
 const goalGroup : GoalGroup[] =[
   {
@@ -91,9 +91,21 @@ export default function Goal() {
             )}
         </div>
         <div className='flex-1 overflow-y-auto px-5 pb-27'>
-            {filteredGoalGroup.map((group) => (
+          {filteredGoalGroup.length === 0 ? (
+            <div className='flex flex-col w-full h-full justify-center items-center'>
+              <DefaultProfileIcon width={72} height={72}/>
+              <h3 className='font-bold mt-6 mb-2'>목표가 비어있어요</h3>
+              <p className='text-xs text-center text-bluegray-normal'>
+                목표를 추가하고 <br />
+                투두리스트를 만들어보세요
+              </p>
+            </div>
+          ) : (
+            filteredGoalGroup.map((group) => (
                 <GoalCard key={`${group.year}-${group.month}-${group.day}`} {...group} />
-            ))}
+            ))
+          )
+        }   
         </div>
         <BottomSheet isOpen={isYearBottomSheetOpen} onClose={() => setIsYearBottomSheetOpen(false)}>
             <YearPicker
