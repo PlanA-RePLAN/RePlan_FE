@@ -13,7 +13,7 @@ function App() {
       <Routes>
         {/* Nav 미사용 페이지 */}
         <Route path="/" element={<Index />} />
-        <Route path="/profilesetup" element={<ProfileSetup />} />
+        <Route path="/profile-setup" element={<ProfileSetup />} />
         <Route path="/onboarding" element={<OnBoarding />} />
 
         {/* Nav 사용 페이지 */}
