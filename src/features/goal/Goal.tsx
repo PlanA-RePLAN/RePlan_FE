@@ -6,7 +6,9 @@ import { type GoalGroup } from '@/shared/types'
 import BottomSheet from '@/shared/components/BottomSheet'
 import { useState } from 'react'
 import YearPicker from './components/YearPicker'
+import MonthPeaker from './components/MonthPeaker'
 import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'
+import { div } from 'framer-motion/client'
 
 const goalGroup : GoalGroup[] =[
   {
@@ -33,21 +35,45 @@ const goalGroup : GoalGroup[] =[
 ] 
 
 export default function Goal() {
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
+  const [isYearBottomSheetOpen, setIsYearBottomSheetOpen] = useState(false)
+  const [isMonthBottomSheetOpen, setIsMonthBottomSheetOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined)
+  const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined)
 
   return (
     <div className='flex flex-col h-dvh'>
         <MainHeader />
         <div className='px-5'>
             <div className='flex justify-between mb-4'>
-                <PeriodDropdown onYearSelect={() => setIsBottomSheetOpen(true)} />
+                <PeriodDropdown 
+                onYearSelect={() => setIsYearBottomSheetOpen(true)} 
+                onMonthSelect={()=>setIsMonthBottomSheetOpen(true)} 
+                onReset={()=>{
+                  setSelectedYear(undefined)
+                  setSelectedMonth(undefined)
+                }}
+                />
                 <GoalAddButton />
             </div>
-            {selectedYear && (
-              <div className='flex gap-1 mb-4' onClick={() => setIsBottomSheetOpen(true)}>
-                <p className='font-bold'>{selectedYear}년</p>
-                <ChevronDownStrokeIcon/>
+            {(selectedYear || selectedMonth) && (
+              <div className='flex mb-4'>
+                <p className='font-bold'>
+                 {/* 연도만 선택됐을 때 */}
+                  {selectedYear && !selectedMonth && (
+                    <div className='flex gap-1'>
+                      <p className='font-bold'>{`${selectedYear}년`}</p>
+                      <ChevronDownStrokeIcon onClick={() => setIsYearBottomSheetOpen(true)} />
+                    </div>
+                  )}
+
+                  {/* 월이 선택됐을 때 */}
+                  {selectedMonth && (
+                    <div className='flex gap-1'>
+                      <p className='font-bold'>{`${selectedYear}년 ${selectedMonth}월`}</p>
+                      <ChevronDownStrokeIcon onClick={() => setIsMonthBottomSheetOpen(true)} />
+                    </div>
+)}
+                </p>
               </div>
             )}
         </div>
@@ -56,14 +82,24 @@ export default function Goal() {
                 <GoalCard key={`${group.year}-${group.month}-${group.day}`} {...group} />
             ))}
         </div>
-        <BottomSheet isOpen={isBottomSheetOpen} onClose={() => setIsBottomSheetOpen(false)}>
+        <BottomSheet isOpen={isYearBottomSheetOpen} onClose={() => setIsYearBottomSheetOpen(false)}>
             <YearPicker
-                onClose={() => setIsBottomSheetOpen(false)}
+                onClose={() => setIsYearBottomSheetOpen(false)}
                 onConfirm={(year) => {
                     setSelectedYear(year)
-                    setIsBottomSheetOpen(false)
+                    setIsYearBottomSheetOpen(false)
                 }}
             />
+        </BottomSheet>
+        <BottomSheet isOpen={isMonthBottomSheetOpen} onClose={()=>setIsMonthBottomSheetOpen(false)}>
+          <MonthPeaker
+              year={selectedYear}
+              onClose={() => setIsMonthBottomSheetOpen(false)}
+              onConfirm={(year, month) => {
+                  setSelectedYear(year)
+                  setSelectedMonth(month)
+                  setIsMonthBottomSheetOpen(false)
+              }}/>
         </BottomSheet>
     </div>
   )

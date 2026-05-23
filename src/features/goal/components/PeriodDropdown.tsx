@@ -1,13 +1,16 @@
 import ChevronDownIcon from "@/icons/ChevronDownIcon"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
+import { motion } from 'framer-motion'
 
 const PERIOD = [ "전체", "월별", "연도별"]
 
 interface PeriodDropdownProps {
     onYearSelect? : () => void
+    onMonthSelect? : () => void
+    onReset: () => void
 }
 
-export default function PeriodDropdown({ onYearSelect } :PeriodDropdownProps) {
+export default function PeriodDropdown({ onYearSelect, onMonthSelect, onReset } :PeriodDropdownProps) {
     
     const[isOpen, setIsOpen] = useState(false)
     const isOpenDropdown = () => {
@@ -20,6 +23,11 @@ export default function PeriodDropdown({ onYearSelect } :PeriodDropdownProps) {
         setIsOpen(false)
         if (item === '연도별'){
             onYearSelect?.()
+        }else if (item === '월별'){
+            onMonthSelect?.()
+        }
+        else{
+            onReset?.()
         }
     }
 
