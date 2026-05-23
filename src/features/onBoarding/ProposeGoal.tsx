@@ -75,7 +75,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
             <button
               onClick={() => handleSelect(todo.id)}
               className={cn(
-                'w-5 h-5 shrink-0 border-bluegray-normal border rounded-[5px] flex items-center justify-center',
+                'w-5.5 h-5.5 shrink-0 border-bluegray-light-active border rounded-[5px] flex items-center justify-center',
                 selectedItems?.includes(todo.id) && 'border-none',
               )}
             >
