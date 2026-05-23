@@ -3,7 +3,11 @@ import { useState } from "react"
 
 const PERIOD = [ "전체", "월별", "연도별"]
 
-export default function PeriodDropdown() {
+interface PeriodDropdownProps {
+    onYearSelect? : () => void
+}
+
+export default function PeriodDropdown({ onYearSelect } :PeriodDropdownProps) {
     
     const[isOpen, setIsOpen] = useState(false)
     const isOpenDropdown = () => {
@@ -14,6 +18,9 @@ export default function PeriodDropdown() {
     const handleClick = (item: string) =>{
         setValue(item)
         setIsOpen(false)
+        if (item === '연도별'){
+            onYearSelect?.()
+        }
     }
 
   return (

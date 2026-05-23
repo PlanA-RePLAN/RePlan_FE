@@ -3,6 +3,10 @@ import PeriodDropdown from './components/PeriodDropdown'
 import GoalAddButton from './components/GoalAddButton'
 import GoalCard from './components/GoalCard'
 import { type GoalGroup } from '@/shared/types'
+import BottomSheet from '@/shared/components/BottomSheet'
+import { useState } from 'react'
+import YearPicker from './components/YearPicker'
+import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'
 
 const goalGroup : GoalGroup[] =[
   {
@@ -29,20 +33,38 @@ const goalGroup : GoalGroup[] =[
 ] 
 
 export default function Goal() {
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
+  const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined)
+
   return (
     <div className='flex flex-col h-dvh'>
         <MainHeader />
         <div className='px-5'>
             <div className='flex justify-between mb-4'>
-                <PeriodDropdown />
+                <PeriodDropdown onYearSelect={() => setIsBottomSheetOpen(true)} />
                 <GoalAddButton />
             </div>
+            {selectedYear && (
+              <div className='flex gap-1 mb-4' onClick={() => setIsBottomSheetOpen(true)}>
+                <p className='font-bold'>{selectedYear}년</p>
+                <ChevronDownStrokeIcon/>
+              </div>
+            )}
         </div>
         <div className='flex-1 overflow-y-auto px-5 pb-27'>
             {goalGroup.map((group) => (
                 <GoalCard key={`${group.year}-${group.month}-${group.day}`} {...group} />
             ))}
         </div>
+        <BottomSheet isOpen={isBottomSheetOpen} onClose={() => setIsBottomSheetOpen(false)}>
+            <YearPicker
+                onClose={() => setIsBottomSheetOpen(false)}
+                onConfirm={(year) => {
+                    setSelectedYear(year)
+                    setIsBottomSheetOpen(false)
+                }}
+            />
+        </BottomSheet>
     </div>
   )
 }
