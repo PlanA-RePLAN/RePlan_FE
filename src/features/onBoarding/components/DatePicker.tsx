@@ -2,10 +2,7 @@ import { useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import { ko } from 'date-fns/locale'
 import { format } from 'date-fns'
-import CloseButtonIcon from '@/icons/CloseButtonIcon'
-import CircleCheckButtonIcon from '@/icons/CircleCheckButtonIcon'
-import ChevronLeftIcon from '@/icons/ChevronLeftIcon'
-
+import BottomSheetHeader from '@/shared/components/BottomSheetHeader'
 import 'react-day-picker/dist/style.css'
 
 interface DatePickerProps {
@@ -24,45 +21,14 @@ export default function DatePicker({
 
   return (
     <div className="px-4 pt-2 pb-4">
-      {/* 헤더 */}
-      <div className="flex justify-between items-center mb-2">
-        <button onClick={onClose}>
-          <CloseButtonIcon />
-        </button>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() =>
-              setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1))
-            }
-          >
-            <ChevronLeftIcon width={20} height={20} color="#7F838B" />
-          </button>
-          <span className="text-lg font-bold text-bluegray-black w-28 text-center">
-            {format(month, 'yyyy년 M월')}
-          </span>
-          <button
-            onClick={() =>
-              setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1))
-            }
-          >
-            <ChevronLeftIcon
-              width={20}
-              height={20}
-              color="#7F838B"
-              className="rotate-180"
-            />
-          </button>
-        </div>
-
-        <button
-          onClick={() => selected && onConfirm(selected)}
-          disabled={!selected}
-          className="disabled:opacity-30"
-        >
-          <CircleCheckButtonIcon />
-        </button>
-      </div>
+      <BottomSheetHeader
+        title={format(month, 'yyyy년 M월')}
+        onClose={onClose}
+        onConfirm={() => selected && onConfirm(selected)}
+        confirmDisabled={!selected}
+        onPrev={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1))}
+        onNext={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1))}
+      />
 
       {/* 캘린더 */}
       <DayPicker

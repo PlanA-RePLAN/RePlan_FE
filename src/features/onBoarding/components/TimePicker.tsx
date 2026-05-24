@@ -6,8 +6,7 @@ import {
   useTransform,
   type MotionValue,
 } from 'framer-motion'
-import CloseButtonIcon from '@/icons/CloseButtonIcon'
-import CircleCheckButtonIcon from '@/icons/CircleCheckButtonIcon'
+import BottomSheetHeader from '@/shared/components/BottomSheetHeader'
 
 const ITEM_HEIGHT = 48
 const VISIBLE_COUNT = 5
@@ -150,16 +149,11 @@ export default function TimePicker({
 
   return (
     <div className="px-4 pt-2 pb-6">
-      {/* 헤더 */}
-      <div className="flex justify-between items-center mb-4">
-        <button onClick={onClose}>
-          <CloseButtonIcon />
-        </button>
-        <span className="text-lg font-bold text-bluegray-black">마감 시간</span>
-        <button onClick={handleConfirm}>
-          <CircleCheckButtonIcon />
-        </button>
-      </div>
+      <BottomSheetHeader
+        title="마감 시간"
+        onClose={onClose}
+        onConfirm={handleConfirm}
+      />
 
       {/* 드럼 피커 */}
       <div className="relative flex px-18">
