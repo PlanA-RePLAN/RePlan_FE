@@ -20,10 +20,10 @@ export default function CheckBoxIcon({
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      <rect width="18" height="18" rx="5" fill="#202021" />
+      <rect width="18" height="18" rx="5" fill={color || '#202021'} />
       <path
         d="M12.5334 5.4668L7.91121 11.5335L5.6001 8.50013"
-        stroke={color || 'white'}
+        stroke="white"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
