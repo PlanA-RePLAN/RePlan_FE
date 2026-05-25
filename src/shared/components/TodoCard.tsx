@@ -1,32 +1,85 @@
+import focusedSvg from '@/assets/foucsed.svg'
 import CheckIcon from '@/icons/CheckIcon'
 import TodoTag from './TodoTag'
 import { cn } from '@/shared/utils/cn'
 import GoalIcon from '@/icons/GoalIcon'
 import ClockIcon from '@/icons/ClockIcon'
 import PinIcon from '@/icons/PinIcon'
+import { motion, useAnimation } from 'framer-motion'
 
 type Category = 'Study' | 'Project' | 'Health' | 'Rest' | 'Other' | '미선택'
 
 // ── 루트 ──────────────────────────────────────────────
+const SLIDE_WIDTH = 160
+
 interface TodoCardProps {
   children: React.ReactNode
   className?: string
-  status?: 'focused' | 'grey' | 'default'
+  status?: 'focused' | 'swipeable' | 'grey' | 'default'
 }
 
 function TodoCard({ children, className, status = 'default' }: TodoCardProps) {
-  return (
+  const controls = useAnimation()
+  const isFocusedStyle = status === 'focused' || status === 'swipeable'
+
+  const cardContent = (
     <div
       className={cn(
-        'flex items-start gap-3 w-full rounded-2xl border border-bluegray-light bg-white p-4 mt-3 transition-all duration-100 ease-in-out',
+        'relative flex items-start gap-3 w-full rounded-2xl border border-bluegray-light bg-white p-4 transition-all duration-100 ease-in-out',
+        { 'mt-3': status !== 'swipeable' },
         className,
         {
-          'bg-blue-light/60 border-blue-light-active': status === 'focused',
+          'bg-[#F5F9FE] border-blue-light-active': isFocusedStyle,
           'bg-bluegray-light': status === 'grey',
         },
       )}
     >
       {children}
+      {isFocusedStyle && (
+        <img src={focusedSvg} className="absolute right-0 top-1/2 -translate-y-1/2" />
+      )}
+    </div>
+  )
+
+  if (status !== 'swipeable') return cardContent
+
+  return (
+    <div className="relative overflow-hidden">
+      <div className="absolute right-0 top-0 h-full w-32 flex">
+       
+       {/* 삭제하기 버튼 */}
+        <div className='flex flex-col items-center gap-1.5 px-2'>
+          <button className="w-12 h-12 rounded-full bg-danger flex items-center justify-center">
+            <img src="/src/assets/delete.svg" alt="" />
+          </button>
+          <p className='text-[10px] text-bluegray-dark'>삭제하기</p>
+        </div>
+        
+        {/* 리플랜하기 버튼 */}
+        <div className='flex flex-col items-center gap-1.5 px-2'>
+          <button className="w-12 h-12 rounded-full bg-blue-normal flex items-center justify-center">
+            {/* 아이콘 컴포넌트 */}
+          </button>
+          <p className='text-[10px] text-bluegray-dark'>리플랜하기</p>
+        </div>
+        
+      </div>
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: -SLIDE_WIDTH, right: 0 }}
+        dragElastic={0}
+        dragMomentum={false}
+        animate={controls}
+        onDragEnd={(_, info) => {
+          if (info.offset.x < -SLIDE_WIDTH / 2) {
+            controls.start({ x: -SLIDE_WIDTH })
+          } else {
+            controls.start({ x: 0 })
+          }
+        }}
+      >
+        {cardContent}
+      </motion.div>
     </div>
   )
 }

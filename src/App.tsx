@@ -6,6 +6,7 @@ import ProfileSetup from '@/features/profileSetup/ProfileSetup'
 import OnBoarding from '@/features/onBoarding'
 import Goal from './features/goal/Goal'
 import LayoutWithNav from '@/shared/components/LayoutWithNav'
+import Home from './features/home/Home'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         {/* Nav 사용 페이지 */}
         <Route element={<LayoutWithNav />}>
           <Route path="/goal" element={<Goal />} />
+          <Route path="/home" element={<Home />} />
         </Route>
       </Routes>
     </BrowserRouter>

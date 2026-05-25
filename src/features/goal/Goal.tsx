@@ -1,5 +1,5 @@
 import MainHeader from '@/shared/components/MainHeader'
-import PeriodDropdown from './components/PeriodDropdown'
+import Dropdown from '@/shared/components/Dropdown'
 import GoalAddButton from './components/GoalAddButton'
 import GoalCard from './components/GoalCard'
 import { type GoalGroup } from '@/shared/types'
@@ -55,16 +55,18 @@ export default function Goal() {
 
   return (
     <div className='flex flex-col h-dvh'>
-        <MainHeader />
         <div className='px-5'>
             <div className='flex justify-between mb-4'>
-                <PeriodDropdown 
-                onYearSelect={() => setIsYearBottomSheetOpen(true)} 
-                onMonthSelect={()=>setIsMonthBottomSheetOpen(true)} 
-                onReset={()=>{
-                  setSelectedYear(undefined)
-                  setSelectedMonth(undefined)
-                }}
+                <Dropdown
+                  items={['전체', '월별', '연도별']}
+                  onChange={(item) => {
+                    if (item === '연도별') setIsYearBottomSheetOpen(true)
+                    else if (item === '월별') setIsMonthBottomSheetOpen(true)
+                    else {
+                      setSelectedYear(undefined)
+                      setSelectedMonth(undefined)
+                    }
+                  }}
                 />
                 <GoalAddButton />
             </div>
@@ -85,7 +87,7 @@ export default function Goal() {
                       <p className='font-bold'>{`${selectedYear}년 ${selectedMonth}월`}</p>
                       <ChevronDownStrokeIcon onClick={() => setIsMonthBottomSheetOpen(true)} />
                     </div>
-)}
+                  )}
                 </p>
               </div>
             )}

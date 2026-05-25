@@ -9,27 +9,30 @@ interface DatePickerProps {
   value?: Date
   onConfirm: (date: Date) => void
   onClose: () => void
+  showHeader?: boolean
 }
 
 export default function DatePicker({
   value,
   onConfirm,
   onClose,
+  showHeader
 }: DatePickerProps) {
   const [selected, setSelected] = useState<Date | undefined>(value)
   const [month, setMonth] = useState<Date>(value ?? new Date())
 
   return (
     <div className="px-4 pt-2 pb-4">
-      <BottomSheetHeader
-        title={format(month, 'yyyy년 M월')}
-        onClose={onClose}
-        onConfirm={() => selected && onConfirm(selected)}
-        confirmDisabled={!selected}
-        onPrev={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1))}
-        onNext={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1))}
-      />
-
+      {showHeader !== false && 
+        <BottomSheetHeader
+          title={format(month, 'yyyy년 M월')}
+          onClose={onClose}
+          onConfirm={() => selected && onConfirm(selected)}
+          confirmDisabled={!selected}
+          onPrev={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1))}
+          onNext={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1))}
+        />
+      }
       {/* 캘린더 */}
       <DayPicker
         mode="single"
