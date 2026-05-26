@@ -28,7 +28,8 @@ export async function registerOAuth(
 ): Promise<ApiResponse<OAuthRegisterData>>{
   const res = await client.post<ApiResponse<OAuthRegisterData>>(
     '/api/auth/oauth/register',
-    { tempToken, nickname, s3Key },
+    { nickname, s3Key },
+    { headers: { Authorization: `Bearer ${tempToken}` } }
   )
   return res.data
 }
