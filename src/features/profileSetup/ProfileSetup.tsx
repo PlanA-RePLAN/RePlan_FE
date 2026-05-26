@@ -7,11 +7,34 @@ import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 import ProfileInput from './components/ProfileInput'
 import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import MainButton from '@/shared/components/MainButton'
+import { registerOAuth } from '@/shared/api/auth'
 
 export default function ProfileSetup() {
   const [name, setName] = useState('')
   const [isNameValid, setIsNameValid] = useState(false)
   const navigate = useNavigate()
+
+  const handleClick = async () => {
+    const tempToken = sessionStorage.getItem('tempToken')
+    if(!tempToken) {
+      navigate('/')
+      return
+    }
+    try{
+      const res = await registerOAuth(tempToken, name)
+      if(!res.success || !res.data){
+        sessionStorage.removeItem('tempToken')
+        navigate('/')
+        return
+      }
+      localStorage.setItem('accessToken', res.data.accessToken!)
+      localStorage.setItem('refreshToken', res.data.refreshToken!)
+      sessionStorage.removeItem('tempToken')
+      navigate('/onboarding')
+    }catch{
+      navigate('/')
+    }
+  }
 
   return (
     <BackHeaderLayout title="프로필 입력">
@@ -38,9 +61,7 @@ export default function ProfileSetup() {
         <MainButton
           title={'다음으로'}
           option={isNameValid ? 'primary' : 'disabled'}
-          onClick={() => {
-            navigate('/onboarding')
-          }}
+          onClick={handleClick}
           className="mt-10"
         />
       </div>

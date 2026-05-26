@@ -15,3 +15,8 @@ export interface ApiResponse<T> {
 export interface NicknameCheckData{
   available: boolean
 }
+
+export interface OAuthRegisterData {
+  accessToken: string | null
+  refreshToken: string | null
+}
