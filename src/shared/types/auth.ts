@@ -9,5 +9,9 @@ export interface ApiResponse<T> {
   status: number
   success: boolean
   data: T | null
-  error: string | null
+  error: { code: string; message: string; detail: string } | null
+}
+
+export interface NicknameCheckData{
+  available: boolean
 }

@@ -1,17 +1,29 @@
 import { cn } from '@/shared/utils/cn'
 import { useState } from 'react'
+import { checkNickname } from '@/shared/api/auth'
 
 interface DuplicateCheckButtonProps {
+  nickname: string,
   onCheck: (isDuplicate: boolean) => void
 }
 
 export default function DuplicateCheckButton({
-  onCheck,
+  nickname, onCheck,
 }: DuplicateCheckButtonProps) {
   const [isClick, setIsClick] = useState(false)
-  const handleClick = () => {
-    setIsClick(true)
-    onCheck(false)
+  
+  const handleClick = async () => {
+    try{
+      const res = await checkNickname(nickname)
+      if(!res.success || !res.data){
+        onCheck(true)
+        return
+      }
+      setIsClick(true)
+      onCheck(!res.data.available)
+    }catch{
+      onCheck(true)
+    }
   }
 
   return (
