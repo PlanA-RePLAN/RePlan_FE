@@ -2,10 +2,15 @@ import { useState } from "react"
 import CalendarIcon from "@/icons/CalendarIcon"
 import MoreIcon from "@/icons/MoreIcon"
 import { type Goal } from "@/shared/types"
+import { deleteGoal } from "@/shared/api/goal"
 import { cn } from "@/shared/utils/cn"
 import BottomSheet from "@/shared/components/BottomSheet"
 
-export default function GoalSection({ id, title, dueDate, reference }) {
+interface GoalSectionProps extends Goal {
+  onClick: (id: number) => void
+}
+
+export default function GoalSection({ id, title, dueDate, reference, onClick }: GoalSectionProps) {
     const [click, setClieck] = useState(false)
     const handleClick = () => {
         setClieck(!click)
@@ -13,7 +18,20 @@ export default function GoalSection({ id, title, dueDate, reference }) {
 
     const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
     const handleDelete = () => {
-        setIsBottomSheetOpen(!isBottomSheetOpen)
+        setIsBottomSheetOpen(true)
+    }
+
+    const handleConfirmDelete = async () => {
+        try {
+            const accessToken = localStorage.getItem('accessToken') ?? ''
+            const res = await deleteGoal(accessToken, id)
+            if (res.success) {
+                setIsBottomSheetOpen(false)
+                onClick(id)
+            }
+        } catch (error) {
+            console.error(error)
+        }
     }
     
     const[check, setCheck] = useState(false)
@@ -28,7 +46,6 @@ export default function GoalSection({ id, title, dueDate, reference }) {
         const hour12 = hours % 12 || 12
         return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일, ${hour12}:${String(date.getMinutes()).padStart(2, '0')} ${ampm}`
     }
-
 
   return (
     <div className="flex items-start gap-4">
@@ -76,6 +93,7 @@ export default function GoalSection({ id, title, dueDate, reference }) {
                         </div>
                         <div className="mt-5">
                             {/* 버튼 컴포넌트 */}
+                            <button onClick={handleConfirmDelete}>임시 버튼</button>
                         </div>
                     </div>
             </BottomSheet>

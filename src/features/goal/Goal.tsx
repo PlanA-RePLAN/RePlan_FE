@@ -1,7 +1,6 @@
 // utils
-import { useState } from 'react'
+import { useState , useEffect} from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useEffect } from 'react' 
 import { getGoals } from '@/shared/api/goal'
 
 // type
@@ -58,6 +57,15 @@ const handleAddGoal = () => {
   navigate('/onboarding')
 }
 
+const handleDeleteGoal = (id: number) => {
+  setGoalGroup(prev =>
+    prev.map(group => ({
+      ...group,
+      goals: group.goals.filter(goal => goal.id !== id)
+    })).filter(group => group.goals.length > 0)
+  )
+}
+
   return (
     <div className='flex flex-col h-dvh'>
         <div className='px-5'>
@@ -109,7 +117,7 @@ const handleAddGoal = () => {
             </div>
           ) : (
             filteredGoalGroup.map((group) => (
-                <GoalCard key={group.date} {...group} />
+                <GoalCard key={group.date} {...group} onClick={handleDeleteGoal} />
             ))
           )
         }   

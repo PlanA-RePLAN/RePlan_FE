@@ -14,3 +14,14 @@ export async function getGoals(
     )
     return res.data
 }
+
+export async function deleteGoal(
+    accessToken: string,
+    id:  number,
+): Promise<ApiResponse<null>>{
+    const res = await client.delete<ApiResponse<null>>(
+        `/api/goals/${id}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+    return res.data
+}
