@@ -1,4 +1,4 @@
-import MainHeader from '@/shared/components/MainHeader'
+import { useNavigate } from 'react-router-dom'
 import Dropdown from '@/shared/components/Dropdown'
 import GoalAddButton from './components/GoalAddButton'
 import GoalCard from './components/GoalCard'
@@ -35,6 +35,7 @@ const goalGroup : GoalGroup[] =[
 ] 
 
 export default function Goal() {
+  const navigate = useNavigate()
   const [isYearBottomSheetOpen, setIsYearBottomSheetOpen] = useState(false)
   const [isMonthBottomSheetOpen, setIsMonthBottomSheetOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined)
@@ -53,6 +54,10 @@ export default function Goal() {
   return true  
 })
 
+const handleAddGoal = () => {
+  navigate('/onboarding')
+}
+
   return (
     <div className='flex flex-col h-dvh'>
         <div className='px-5'>
@@ -68,7 +73,7 @@ export default function Goal() {
                     }
                   }}
                 />
-                <GoalAddButton />
+                <GoalAddButton onClick={handleAddGoal} />
             </div>
             {(selectedYear || selectedMonth) && (
               <div className='flex mb-4'>
