@@ -1,58 +1,58 @@
+// utils
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react' 
+import { getGoals } from '@/shared/api/goal'
+
+// type
+import { type GoalGroup } from '@/shared/types'
+
+// components
 import Dropdown from '@/shared/components/Dropdown'
 import GoalAddButton from './components/GoalAddButton'
 import GoalCard from './components/GoalCard'
-import { type GoalGroup } from '@/shared/types'
 import BottomSheet from '@/shared/components/BottomSheet'
-import { useState } from 'react'
 import YearPicker from './components/YearPicker'
 import MonthPeaker from './components/MonthPeaker'
 import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'
 import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 
-const goalGroup : GoalGroup[] =[
-  {
-    year: 2026, month: 5, day: 4,
-    goals: [
-        { id: 1, title: "토익 850점 달성", deadline: "2026년 5월 26일, 8:00PM" },
-        { id: 2, title: "컴퓨터활용능력 1급 취급", deadline: "2026년 5월 26일, 8:00AM" },
-        { id: 3, title: "토익 900점 달성", deadline: "2026년 5월 11일" },
-    ]
-  },
-  {
-    year: 2026, month: 5, day: 3,
-    goals: [
-        { id: 1, title: "토익 850점 달성", deadline: "2026년 5월 26일, 8:00PM" },
-    ]
-  },
-  {
-    year: 2026, month: 4, day: 4,
-    goals: [
-        { id: 1, title: "토익 850점 달성", deadline: "2026년 5월 26일, 8:00PM" },
-        { id: 2, title: "컴퓨터활용능력 1급 취급", deadline: "2026년 5월 26일, 8:00AM" },
-    ]
-  }
-] 
-
 export default function Goal() {
   const navigate = useNavigate()
+  const [goalGroup, setGoalGroup] = useState<GoalGroup[]>([])
   const [isYearBottomSheetOpen, setIsYearBottomSheetOpen] = useState(false)
   const [isMonthBottomSheetOpen, setIsMonthBottomSheetOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined)
   const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined)
 
   const filteredGoalGroup = goalGroup.filter((group) => {
+    const [year, month] = group.date.split('-').map(Number)
   if (selectedYear && selectedMonth) {
-    return group.year === selectedYear && group.month === selectedMonth
+    return year === selectedYear && month === selectedMonth
   }
   if (selectedYear) {
-    return group.year === selectedYear
+    return year === selectedYear
   }
   if (selectedMonth) {
-    return group.month === selectedMonth
+    return month === selectedMonth
   }
   return true  
 })
+
+useEffect(()=>{
+  const fetchGoals = async () => {
+    try{
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      const res = await getGoals(accessToken, selectedYear, selectedMonth)
+      if(res.success)
+        setGoalGroup(res.data ?? [])
+    } catch (error){
+      console.error(error)
+    }
+  }
+  fetchGoals()
+},[])
+
 
 const handleAddGoal = () => {
   navigate('/onboarding')
@@ -109,7 +109,7 @@ const handleAddGoal = () => {
             </div>
           ) : (
             filteredGoalGroup.map((group) => (
-                <GoalCard key={`${group.year}-${group.month}-${group.day}`} {...group} />
+                <GoalCard key={group.date} {...group} />
             ))
           )
         }   

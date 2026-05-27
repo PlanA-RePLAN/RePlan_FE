@@ -5,7 +5,7 @@ import { type Goal } from "@/shared/types"
 import { cn } from "@/shared/utils/cn"
 import BottomSheet from "@/shared/components/BottomSheet"
 
-export default function GoalSection({ goal }:{ goal : Goal}) {
+export default function GoalSection({ id, title, dueDate, reference }) {
     const [click, setClieck] = useState(false)
     const handleClick = () => {
         setClieck(!click)
@@ -20,6 +20,16 @@ export default function GoalSection({ goal }:{ goal : Goal}) {
     const handleCheck = () => {
         setCheck(!check)
     }
+
+    const formatDueDate = (dueDate: string) => {
+        const date = new Date(dueDate)
+        const hours = date.getHours()
+        const ampm = hours >= 12 ? 'PM' : 'AM'
+        const hour12 = hours % 12 || 12
+        return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일, ${hour12}:${String(date.getMinutes()).padStart(2, '0')} ${ampm}`
+    }
+
+
   return (
     <div className="flex items-start gap-4">
          <div className="flex flex-col items-center">
@@ -28,11 +38,11 @@ export default function GoalSection({ goal }:{ goal : Goal}) {
         </div>
         <div className="w-full h-16.5 flex justify-between ">
             <div>
-                <h1 className="text-base mb-1">{goal.title}</h1>
-                {goal.deadline && (
+                <h1 className="text-base mb-1">{title}</h1>
+                {dueDate && (
                     <div className="flex items-center gap-1 text-xs text-bluegray-normal">
                         <CalendarIcon />
-                        <p>{goal.deadline}</p>
+                        <p>{formatDueDate(dueDate)}</p>
                     </div>
                 )}
             </div>
