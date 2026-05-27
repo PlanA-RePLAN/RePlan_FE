@@ -54,7 +54,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
         </Description>
       </div>
 
-      <ListItem className="mt-6 mb-8">
+      <ListItem className="mt-6 mb-8 border">
         토익 850점 달성, 5월 1일까지, ETS 토익 단기공략 850+ 교재 사용
       </ListItem>
 
