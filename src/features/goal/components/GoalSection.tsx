@@ -1,9 +1,14 @@
-import { useState } from "react"
+// util
+import { useState, useRef, useEffect } from "react"
+import { cn } from "@/shared/utils/cn"
+import { deleteGoal } from "@/shared/api/goal"
+
+// type
+import { type Goal } from "@/shared/types"
+
+// components
 import CalendarIcon from "@/icons/CalendarIcon"
 import MoreIcon from "@/icons/MoreIcon"
-import { type Goal } from "@/shared/types"
-import { deleteGoal } from "@/shared/api/goal"
-import { cn } from "@/shared/utils/cn"
 import BottomSheet from "@/shared/components/BottomSheet"
 
 interface GoalSectionProps extends Goal {
@@ -11,9 +16,9 @@ interface GoalSectionProps extends Goal {
 }
 
 export default function GoalSection({ id, title, dueDate, reference, onClick }: GoalSectionProps) {
-    const [click, setClieck] = useState(false)
+    const [click, setClick] = useState(false)
     const handleClick = () => {
-        setClieck(!click)
+        setClick(!click)
     }
 
     const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
@@ -47,6 +52,18 @@ export default function GoalSection({ id, title, dueDate, reference, onClick }: 
         return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일, ${hour12}:${String(date.getMinutes()).padStart(2, '0')} ${ampm}`
     }
 
+    const dropdownRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const handleClickOutside = (e:MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setClick(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
   return (
     <div className="flex items-start gap-4">
          <div className="flex flex-col items-center">
@@ -63,7 +80,7 @@ export default function GoalSection({ id, title, dueDate, reference, onClick }: 
                     </div>
                 )}
             </div>
-            <div>
+            <div ref={dropdownRef}>
                 <MoreIcon onClick={()=>handleClick()} />
                 {click && (
                     <div
