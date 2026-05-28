@@ -6,7 +6,7 @@ import Description from '@/shared/components/Description'
 import Input from '@/shared/components/Input'
 import Title from '@/shared/components/Title'
 import MainButton from '@/shared/components/MainButton'
-import GoalIcon from '@/icons/GoalIcon'
+import GoalOffIcon from '@/icons/GoalOffIcon'
 import ExampleTag from './components/ExampleTag'
 import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
 import ListItem from '@/shared/components/ListItem'
@@ -38,7 +38,7 @@ export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
       <Input value={goal} setValue={setGoal} maxLength={50} showCount="always">
         <Input.Label option="secondary">
           <div className="flex gap-2 text-bluegray-black">
-            <GoalIcon />
+            <GoalOffIcon />
             목표
           </div>
         </Input.Label>

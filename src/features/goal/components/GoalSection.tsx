@@ -1,25 +1,69 @@
-import { useState } from "react"
+// util
+import { useState, useRef, useEffect } from "react"
+import { cn } from "@/shared/utils/cn"
+import { deleteGoal } from "@/shared/api/goal"
+
+// type
+import { type Goal } from "@/shared/types"
+
+// components
 import CalendarIcon from "@/icons/CalendarIcon"
 import MoreIcon from "@/icons/MoreIcon"
-import { type Goal } from "@/shared/types"
-import { cn } from "@/shared/utils/cn"
 import BottomSheet from "@/shared/components/BottomSheet"
 
-export default function GoalSection({ goal }:{ goal : Goal}) {
-    const [click, setClieck] = useState(false)
+interface GoalSectionProps extends Goal {
+  onClick: (id: number) => void
+}
+
+export default function GoalSection({ id, title, dueDate, reference, onClick }: GoalSectionProps) {
+    const [click, setClick] = useState(false)
     const handleClick = () => {
-        setClieck(!click)
+        setClick(!click)
     }
 
     const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
     const handleDelete = () => {
-        setIsBottomSheetOpen(!isBottomSheetOpen)
+        setIsBottomSheetOpen(true)
+    }
+
+    const handleConfirmDelete = async () => {
+        try {
+            const accessToken = localStorage.getItem('accessToken') ?? ''
+            const res = await deleteGoal(accessToken, id)
+            if (res.success) {
+                setIsBottomSheetOpen(false)
+                onClick(id)
+            }
+        } catch (error) {
+            console.error(error)
+        }
     }
     
     const[check, setCheck] = useState(false)
     const handleCheck = () => {
         setCheck(!check)
     }
+
+    const formatDueDate = (dueDate: string) => {
+        const date = new Date(dueDate)
+        const hours = date.getHours()
+        const ampm = hours >= 12 ? 'PM' : 'AM'
+        const hour12 = hours % 12 || 12
+        return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일, ${hour12}:${String(date.getMinutes()).padStart(2, '0')} ${ampm}`
+    }
+
+    const dropdownRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const handleClickOutside = (e:MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setClick(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
   return (
     <div className="flex items-start gap-4">
          <div className="flex flex-col items-center">
@@ -28,15 +72,15 @@ export default function GoalSection({ goal }:{ goal : Goal}) {
         </div>
         <div className="w-full h-16.5 flex justify-between ">
             <div>
-                <h1 className="text-base mb-1">{goal.title}</h1>
-                {goal.deadline && (
+                <h1 className="text-base mb-1">{title}</h1>
+                {dueDate && (
                     <div className="flex items-center gap-1 text-xs text-bluegray-normal">
                         <CalendarIcon />
-                        <p>{goal.deadline}</p>
+                        <p>{formatDueDate(dueDate)}</p>
                     </div>
                 )}
             </div>
-            <div>
+            <div ref={dropdownRef}>
                 <MoreIcon onClick={()=>handleClick()} />
                 {click && (
                     <div
