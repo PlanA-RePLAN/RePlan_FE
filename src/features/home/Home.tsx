@@ -4,6 +4,8 @@ import { cn } from "@/shared/utils/cn"
 import DatePicker from "../onBoarding/components/DatePicker"
 import Dropdown from "@/shared/components/Dropdown"
 import TodoCard from "@/shared/components/TodoCard"
+import BottomSheet from "@/shared/components/BottomSheet"
+import MonthPeaker from "../goal/components/MonthPeaker"
 
 const TABS = [
     { label: "All", value : 'all' },
@@ -39,8 +41,11 @@ const TODO_GROUP = [
   ]
 
 export default function Home() {
-    const[isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
     const [selectedTab, setSelectedTab] = useState('all')
+    const [selectedYear, setSelectedYear] = useState<number>(2026)
+    const [selectedMonth, setSelectedMonth] = useState<number>(5)
+    const [isMonthBottomSheetOpen, setIsMonthBottomSheetOpen] = useState(false)
+
     const handleSelect = (value: string) => {
         setSelectedTab(value)
     }
@@ -49,8 +54,8 @@ export default function Home() {
     <div className="relative px-5">
 
          <div className='flex gap-1'>
-            <p className='font-bold'>2026년 5월</p>
-            <ChevronDownStrokeIcon onClick={() => {}} />
+            <p className='font-bold'>{`${selectedYear}년 ${selectedMonth}월`}</p>
+            <ChevronDownStrokeIcon onClick={() => setIsMonthBottomSheetOpen(true)} />
         </div>
 
         {/* 전체, 일, 월, 연도별 토글 */}
@@ -111,6 +116,19 @@ export default function Home() {
         <button className="fixed bottom-33 right-5 bg-blue-normal w-11 h-11 rounded-full flex justify-center items-center">
             <img src="/src/assets/add.svg" alt="" />
         </button>
+
+        <BottomSheet isOpen={isMonthBottomSheetOpen} onClose={() => setIsMonthBottomSheetOpen(false)}>
+            <MonthPeaker
+                value={selectedMonth}
+                year={selectedYear}
+                onClose={() => setIsMonthBottomSheetOpen(false)}
+                onConfirm={(year, month) => {
+                    setSelectedYear(year)
+                    setSelectedMonth(month)
+                    setIsMonthBottomSheetOpen(false)
+                }}
+            />
+        </BottomSheet>
     </div>
   )
 }
