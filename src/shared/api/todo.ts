@@ -31,6 +31,20 @@ export async function deleteTodo(
 }
 
 
+export async function updateTodoOrder(
+    accessToken: string,
+    todoId: number,
+    prevTodoId: number | null,
+    nextTodoId: number | null,
+): Promise<ApiResponse<null>> {
+    const res = await client.patch<ApiResponse<null>>(
+        `/api/todos/${todoId}/order`,
+        { prevTodoId, nextTodoId },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+    return res.data
+}
+
 export async function toggleTodoComplete(
     accessToken: string,
     todoId: number,

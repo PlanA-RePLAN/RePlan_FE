@@ -1,7 +1,10 @@
 // utils
 import { useState, useEffect } from "react"
 import { cn } from "@/shared/utils/cn"
-import { getTodos, deleteTodo, toggleTodoComplete } from "@/shared/api/todo"
+import { getTodos, deleteTodo, toggleTodoComplete, updateTodoOrder } from "@/shared/api/todo"
+import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 // type
 import type { Todo } from "@/shared/types"
@@ -34,9 +37,28 @@ function getDayTag(routineType: string | null): 'D' | 'M' | undefined {
     return undefined
 }
 
+function SortableItem({ id, children }: { id: number, children: React.ReactNode }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+    return (
+        <div
+            ref={setNodeRef}
+            style={{
+                transform: CSS.Transform.toString(transform),
+                transition,
+                opacity: isDragging ? 0.5 : 1,
+                zIndex: isDragging ? 1 : undefined,
+            }}
+            {...attributes}
+            {...listeners}
+        >
+            {children}
+        </div>
+    )
+}
+
 export default function Home() {
     const [selectedTab, setSelectedTab] = useState<'all' | 'day' | 'week' | 'month'>('all')
-    const [sort, setSort] = useState<'priority' | 'dueDate'>('priority')
+    const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>('priority')
     const [todos, setTodos] = useState<Todo[]>([])
     const [selectedYear, setSelectedYear] = useState<number>(2026)
     const [selectedMonth, setSelectedMonth] = useState<number>(5)
@@ -44,6 +66,12 @@ export default function Home() {
     const [isDeleteBottomSheetOpen, setIsDeleteBottomSheetOpen] = useState(false)
     const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null)
 
+    // 탭 선택
+    const handleSelect = (value: string) => {
+        setSelectedTab(value as 'all' | 'day' | 'week' | 'month')
+    }
+    
+    // 투두 삭제
     const handleDeleteClick = (todoId: number) => {
         setDeletingTodoId(todoId)
         setIsDeleteBottomSheetOpen(true)
@@ -62,6 +90,7 @@ export default function Home() {
         }
     }
 
+    // 투두 완료 및 미완료 
     const handleToggleComplete = async (todoId: number, isCompleted: boolean) => {
         setTodos(prev =>
             prev.map(t => t.todoId === todoId ? { ...t, isCompleted: !isCompleted } : t)
@@ -76,11 +105,13 @@ export default function Home() {
         }
     }
 
+    // 투두 목록 조회
     useEffect(() => {
         const fetchTodos = async () => {
             try {
                 const accessToken = localStorage.getItem('accessToken') ?? ''
-                const res = await getTodos(accessToken, selectedTab, sort)
+                const apiSort = sort === 'latest' ? 'priority' : sort
+                const res = await getTodos(accessToken, selectedTab, apiSort)
                 if (res.success) setTodos(res.data ?? [])
             } catch (error) {
                 console.error(error)
@@ -89,17 +120,46 @@ export default function Home() {
         fetchTodos()
     }, [selectedTab, sort])
 
+    // 투두 필터링 및 정렬
     const filteredTodos = todos.filter(t => {
         if (!t.dueDate) return true
         const date = new Date(t.dueDate)
         return date.getFullYear() === selectedYear && date.getMonth() + 1 === selectedMonth
     })
 
-    const pinnedTodos = filteredTodos.filter(t => t.isPinned)
-    const regularTodos = filteredTodos.filter(t => !t.isPinned)
+    const sortedTodos = sort === 'latest'
+        ? [...filteredTodos].sort((a, b) => b.todoId - a.todoId)
+        : filteredTodos
 
-    const handleSelect = (value: string) => {
-        setSelectedTab(value as 'all' | 'day' | 'week' | 'month')
+    const pinnedTodos = sortedTodos.filter(t => t.isPinned)
+    const regularTodos = sortedTodos.filter(t => !t.isPinned)
+
+    // 직접설정순(드래그앤드롭)
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    )
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event
+        if (!over || active.id === over.id) return
+
+        const oldIndex = todos.findIndex(t => t.todoId === active.id)
+        const newIndex = todos.findIndex(t => t.todoId === over.id)
+        const newTodos = arrayMove(todos, oldIndex, newIndex)
+        setTodos(newTodos)
+
+        const newRegularTodos = newTodos.filter(t => !t.isPinned)
+        const movedIndex = newRegularTodos.findIndex(t => t.todoId === active.id)
+        const prevTodoId = movedIndex > 0 ? newRegularTodos[movedIndex - 1].todoId : null
+        const nextTodoId = movedIndex < newRegularTodos.length - 1 ? newRegularTodos[movedIndex + 1].todoId : null
+
+        try {
+            const accessToken = localStorage.getItem('accessToken') ?? ''
+            await updateTodoOrder(accessToken, active.id as number, prevTodoId, nextTodoId)
+        } catch (error) {
+            console.error(error)
+            setTodos(todos)
+        }
     }
 
     return (
@@ -166,19 +226,42 @@ export default function Home() {
                     <div className="flex flex-col gap-3">
                         <Dropdown
                             items={['마감기한순', '최신등록순', '직접설정순']}
-                            onChange={(item) => setSort(item === '마감기한순' ? 'dueDate' : 'priority')}
+                            onChange={(item) => {
+                            if (item === '마감기한순') setSort('dueDate')
+                            else if (item === '최신등록순') setSort('latest')
+                            else setSort('priority')
+                        }}
                         />
                         <div className="h-dvh overflow-y-auto">
-                            {regularTodos.map(todo => (
-                                <TodoCard key={todo.todoId} status={todo.isCompleted ? 'grey' : 'swipeable-delete'} onDelete={() => handleDeleteClick(todo.todoId)}>
-                                    <TodoCard.Icon onClick={() => handleToggleComplete(todo.todoId, todo.isCompleted)} checked={todo.isCompleted} />
-                                    <TodoCard.Content>
-                                        <TodoCard.Title dayTag={getDayTag(todo.routineType)}>{todo.title}</TodoCard.Title>
-                                        {todo.dueDate && <TodoCard.Time>{formatTime(todo.dueDate)}</TodoCard.Time>}
-                                    </TodoCard.Content>
-                                    <TodoCard.Category category={todo.tagTitle ?? '미선택'} usePin pinned={todo.isPinned} setPinned={() => {}} />
-                                </TodoCard>
-                            ))}
+                            {sort === 'priority' ? (
+                                <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+                                    <SortableContext items={regularTodos.map(t => t.todoId)} strategy={verticalListSortingStrategy}>
+                                        {regularTodos.map(todo => (
+                                            <SortableItem key={todo.todoId} id={todo.todoId}>
+                                                <TodoCard status={todo.isCompleted ? 'grey' : 'swipeable-delete'} onDelete={() => handleDeleteClick(todo.todoId)}>
+                                                    <TodoCard.Icon onClick={() => handleToggleComplete(todo.todoId, todo.isCompleted)} checked={todo.isCompleted} />
+                                                    <TodoCard.Content>
+                                                        <TodoCard.Title dayTag={getDayTag(todo.routineType)}>{todo.title}</TodoCard.Title>
+                                                        {todo.dueDate && <TodoCard.Time>{formatTime(todo.dueDate)}</TodoCard.Time>}
+                                                    </TodoCard.Content>
+                                                    <TodoCard.Category category={todo.tagTitle ?? '미선택'} usePin pinned={todo.isPinned} setPinned={() => {}} />
+                                                </TodoCard>
+                                            </SortableItem>
+                                        ))}
+                                    </SortableContext>
+                                </DndContext>
+                            ) : (
+                                regularTodos.map(todo => (
+                                    <TodoCard key={todo.todoId} status={todo.isCompleted ? 'grey' : 'swipeable-delete'} onDelete={() => handleDeleteClick(todo.todoId)}>
+                                        <TodoCard.Icon onClick={() => handleToggleComplete(todo.todoId, todo.isCompleted)} checked={todo.isCompleted} />
+                                        <TodoCard.Content>
+                                            <TodoCard.Title dayTag={getDayTag(todo.routineType)}>{todo.title}</TodoCard.Title>
+                                            {todo.dueDate && <TodoCard.Time>{formatTime(todo.dueDate)}</TodoCard.Time>}
+                                        </TodoCard.Content>
+                                        <TodoCard.Category category={todo.tagTitle ?? '미선택'} usePin pinned={todo.isPinned} setPinned={() => {}} />
+                                    </TodoCard>
+                                ))
+                            )}
                         </div>
                     </div>
                 </>
