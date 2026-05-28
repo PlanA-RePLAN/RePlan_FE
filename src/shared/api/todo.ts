@@ -16,3 +16,16 @@ export async function getTodos(
     )
     return res.data
 }
+
+export async function deleteTodo(
+    accessToken: string,
+    todoId: number
+): Promise<ApiResponse<null>>{
+    const res = await client.delete<ApiResponse<null>>(
+        `/api/todos/${todoId}`,
+        {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }
+    )
+    return res.data
+}

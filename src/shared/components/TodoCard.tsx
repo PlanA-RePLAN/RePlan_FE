@@ -17,9 +17,10 @@ interface TodoCardProps {
   children: React.ReactNode
   className?: string
   status?: 'focused' | 'swipeable' | 'swipeable-delete' | 'grey' | 'default'
+  onDelete?: () => void
 }
 
-function TodoCard({ children, className, status = 'default' }: TodoCardProps) {
+function TodoCard({ children, className, status = 'default', onDelete }: TodoCardProps) {
   const controls = useAnimation()
   const isSwipeable = status === 'swipeable' || status === 'swipeable-delete'
   const isFocusedStyle = status === 'focused' || status === 'swipeable'
@@ -52,7 +53,7 @@ function TodoCard({ children, className, status = 'default' }: TodoCardProps) {
 
         {/* 삭제하기 버튼 */}
         <div className='flex flex-col items-center gap-1.5 px-2'>
-          <button className="w-12 h-12 rounded-full bg-danger flex items-center justify-center">
+          <button onClick={onDelete} className="w-12 h-12 rounded-full bg-danger flex items-center justify-center">
             <img src="/src/assets/delete.svg" alt="" />
           </button>
           <p className='text-[10px] text-bluegray-dark'>삭제하기</p>

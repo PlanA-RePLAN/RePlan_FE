@@ -1,7 +1,7 @@
 // utils
 import { useState, useEffect } from "react"
 import { cn } from "@/shared/utils/cn"
-import { getTodos } from "@/shared/api/todo"
+import { getTodos, deleteTodo } from "@/shared/api/todo"
 
 // type
 import type { Todo } from "@/shared/types"
@@ -41,9 +41,25 @@ export default function Home() {
     const [selectedYear, setSelectedYear] = useState<number>(2026)
     const [selectedMonth, setSelectedMonth] = useState<number>(5)
     const [isMonthBottomSheetOpen, setIsMonthBottomSheetOpen] = useState(false)
+    const [isDeleteBottomSheetOpen, setIsDeleteBottomSheetOpen] = useState(false)
+    const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null)
 
-    const handleCheck = () => {
-        setIsCheck(!isCheck)
+    const handleDeleteClick = (todoId: number) => {
+        setDeletingTodoId(todoId)
+        setIsDeleteBottomSheetOpen(true)
+    }
+
+    const handleConfirmDelete = async () => {
+        if (deletingTodoId === null) return
+        setTodos(prev => prev.filter(t => t.todoId !== deletingTodoId))
+        setIsDeleteBottomSheetOpen(false)
+        setDeletingTodoId(null)
+        try {
+            const accessToken = localStorage.getItem('accessToken') ?? ''
+            await deleteTodo(accessToken, deletingTodoId)
+        } catch (error) {
+            console.error(error)
+        }
     }
 
     useEffect(() => {
@@ -118,7 +134,7 @@ export default function Home() {
                                 <p className="font-bold text-[14px] text-bluegray-darker">주요 투두</p>
                             </div>
                             {pinnedTodos.map(todo => (
-                                <TodoCard key={todo.todoId} status='swipeable'>
+                                <TodoCard key={todo.todoId} status='swipeable' onDelete={() => handleDeleteClick(todo.todoId)}>
                                     <TodoCard.Icon />
                                     <TodoCard.Content>
                                         <TodoCard.Title dayTag={getDayTag(todo.routineType)}>{todo.title}</TodoCard.Title>
@@ -140,7 +156,7 @@ export default function Home() {
                         />
                         <div className="h-dvh overflow-y-auto">
                             {regularTodos.map(todo => (
-                                <TodoCard key={todo.todoId} status={"swipeable-delete"} >
+                                <TodoCard key={todo.todoId} status='swipeable-delete' onDelete={() => handleDeleteClick(todo.todoId)}>
                                     <TodoCard.Icon/>
                                     <TodoCard.Content>
                                         <TodoCard.Title dayTag={getDayTag(todo.routineType)}>{todo.title}</TodoCard.Title>
@@ -159,6 +175,27 @@ export default function Home() {
             <button className="fixed bottom-33 right-5 bg-blue-normal w-11 h-11 rounded-full flex justify-center items-center">
                 <img src="/src/assets/add.svg" alt="" />
             </button>
+
+            <BottomSheet isOpen={isDeleteBottomSheetOpen} onClose={() => setIsDeleteBottomSheetOpen(false)}>
+                <div className="pt-4 pb-9 px-5 flex flex-col items-center w-full">
+                    <h3 className="text-xl font-semibold">투두를 삭제하시겠습니까?</h3>
+                    <div className="flex gap-3 mt-5 w-full">
+                        {/* 버튼 컴포넌트로 나중에 교체 */}
+                        <button
+                            onClick={() => setIsDeleteBottomSheetOpen(false)}
+                            className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
+                        >
+                            취소
+                        </button>
+                        <button
+                            onClick={handleConfirmDelete}
+                            className="flex-1 py-3 rounded-xl bg-bluegray-light  text-danger font-semibold"
+                        >
+                            삭제
+                        </button>
+                    </div>
+                </div>
+            </BottomSheet>
 
             <BottomSheet isOpen={isMonthBottomSheetOpen} onClose={() => setIsMonthBottomSheetOpen(false)}>
                 <MonthPeaker
