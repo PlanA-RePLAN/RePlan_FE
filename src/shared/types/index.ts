@@ -6,3 +6,4 @@ export type User = {
 }
 
 export type { Goal, GoalGroup } from './goal'
+export type { Todo } from './todo'

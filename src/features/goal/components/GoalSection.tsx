@@ -108,9 +108,20 @@ export default function GoalSection({ id, title, dueDate, reference, onClick }: 
                             </div>
                             <p>목표를 추가할 때 만든 투두도 함께 삭제할게요</p>
                         </div>
-                        <div className="mt-5">
-                            {/* 버튼 컴포넌트 */}
-                            <button onClick={handleConfirmDelete}>임시 버튼</button>
+                        <div className="flex gap-3 mt-5 w-full">
+                            {/* 버튼 컴포넌트로 나중에 교체 */}
+                            <button
+                                onClick={()=>setIsBottomSheetOpen(false)}
+                                className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={handleConfirmDelete}
+                                className="flex-1 py-3 rounded-xl bg-bluegray-light  text-danger font-semibold"
+                            >
+                                삭제
+                            </button>
                         </div>
                     </div>
             </BottomSheet>
