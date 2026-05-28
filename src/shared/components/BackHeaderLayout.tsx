@@ -6,12 +6,14 @@ import BackHeader from './BackHeader'
 interface BackHeaderLayoutProps {
   title: string
   onBack?: () => void
+  className?: string
   children: React.ReactNode
 }
 
 export default function BackHeaderLayout({
   title,
   onBack,
+  className,
   children,
 }: BackHeaderLayoutProps) {
   const navigate = useNavigate()
@@ -26,8 +28,8 @@ export default function BackHeaderLayout({
 
   return (
     <>
-      <BackHeader title={title} onBack={handleBack} />
-      <main className="pt-18">{children}</main>
+      <BackHeader title={title} onBack={handleBack} className={className} />
+      <main className="pt-15">{children}</main>
     </>
   )
 }

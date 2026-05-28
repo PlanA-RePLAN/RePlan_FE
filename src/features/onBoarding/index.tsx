@@ -5,6 +5,7 @@ import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import ProposeGoal from './ProposeGoal'
 import WritingGoal from './WritingGoal'
 import AskQuestion from './AskQuestion'
+import ProgressBar from './components/ProgressBar'
 
 // utils
 import { useState } from 'react'
@@ -33,8 +34,15 @@ export default function OnBoarding() {
     <ProposeGoal moveNext={moveNext} key={2} />,
   ]
   return (
-    <BackHeaderLayout title="목표 설정" onBack={moveBack}>
-      <div className="font-light px-5 pt-8">{steps[currentStep]}</div>
+    <BackHeaderLayout
+      title="목표 설정"
+      onBack={moveBack}
+      className="border-none"
+    >
+      <div className="font-light px-5">
+        <ProgressBar totalSteps={3} currentStep={currentStep + 1} />
+        <div className="pt-8">{steps[currentStep]}</div>
+      </div>
     </BackHeaderLayout>
   )
 }

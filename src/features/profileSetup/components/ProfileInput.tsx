@@ -42,7 +42,7 @@ export default function ProfileInput({
           <Input.Count />
         </Input.Bottom>
       </Input>
-      <DuplicateCheckButton onCheck={handleCheck} />
+      <DuplicateCheckButton nickname={value} onCheck={handleCheck} />
       {isCheck && (
         <p className="absolute top-21 text-xs text-bluegray-normal flex">
           {isDuplicate ? (
