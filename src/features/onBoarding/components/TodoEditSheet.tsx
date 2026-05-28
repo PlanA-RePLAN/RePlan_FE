@@ -17,6 +17,8 @@ import CheckIcon from '@/icons/CheckIcon'
 import ClearIcon from '@/icons/ClearIcon'
 import DailyTimeSetting from './DailyTimeSetting'
 import WeeklyDaySetting from './WeeklyDaySetting'
+import MonthlySetting from './MonthlySetting'
+import SubTodoSheet from './SubTodoSheet'
 
 const REPEAT_OPTIONS: RepeatType[] = ['없음', '데일리', '위클리', '먼슬리']
 
@@ -69,8 +71,14 @@ export default function TodoEditSheet({
     todo.repeatTimeEnabled ?? false,
   )
   const [weeklyTime, setWeeklyTime] = useState(todo.repeatTime ?? '08:00 AM')
+  const [monthlyDay, setMonthlyDay] = useState(
+    todo.monthlyDay ?? new Date().getDate(),
+  )
+  const [monthlyTimeEnabled, setMonthlyTimeEnabled] = useState(
+    todo.repeatTimeEnabled ?? false,
+  )
+  const [monthlyTime, setMonthlyTime] = useState(todo.repeatTime ?? '08:00 AM')
   const [editSubTodos, setEditSubTodos] = useState<SubTodo[]>(todo.subTodos)
-  const [newSubTodoTitle, setNewSubTodoTitle] = useState('')
   const [addingSubTodo, setAddingSubTodo] = useState(false)
   const [tagAddOpen, setTagAddOpen] = useState(false)
 
@@ -88,9 +96,11 @@ export default function TodoEditSheet({
       setWeeklyDay(todo.weeklyDay ?? '월')
       setWeeklyTimeEnabled(todo.repeatTimeEnabled ?? false)
       setWeeklyTime(todo.repeatTime ?? '08:00 AM')
+      setMonthlyDay(todo.monthlyDay ?? new Date().getDate())
+      setMonthlyTimeEnabled(todo.repeatTimeEnabled ?? false)
+      setMonthlyTime(todo.repeatTime ?? '08:00 AM')
       setEditSubTodos(todo.subTodos)
       setAddingSubTodo(false)
-      setNewSubTodoTitle('')
     }
   }, [isOpen, todo])
 
@@ -105,26 +115,23 @@ export default function TodoEditSheet({
           ? dailyTimeEnabled
           : editRepeat === '위클리'
             ? weeklyTimeEnabled
-            : undefined,
+            : editRepeat === '먼슬리'
+              ? monthlyTimeEnabled
+              : undefined,
       repeatTime:
         editRepeat === '데일리' && dailyTimeEnabled
           ? dailyTime
           : editRepeat === '위클리' && weeklyTimeEnabled
             ? weeklyTime
-            : undefined,
+            : editRepeat === '먼슬리' && monthlyTimeEnabled
+              ? monthlyTime
+              : undefined,
       weeklyDay: editRepeat === '위클리' ? weeklyDay : undefined,
+      monthlyDay: editRepeat === '먼슬리' ? monthlyDay : undefined,
       deadlineDate: useDeadlineDate ? editDeadlineDate : null,
       deadlineTime: useDeadlineTime ? editDeadlineTime : null,
       subTodos: editSubTodos,
     })
-  }
-
-  const handleAddSubTodo = () => {
-    const trimmed = newSubTodoTitle.trim()
-    if (!trimmed) return
-    setEditSubTodos((prev) => [...prev, { id: Date.now(), title: trimmed }])
-    setNewSubTodoTitle('')
-    setAddingSubTodo(false)
   }
 
   const handleTagAdded = (tag: CustomTag) => {
@@ -216,6 +223,16 @@ export default function TodoEditSheet({
               onTimeChange={setWeeklyTime}
             />
           )}
+          {editRepeat === '먼슬리' && (
+            <MonthlySetting
+              selectedDay={monthlyDay}
+              onDayChange={setMonthlyDay}
+              timeEnabled={monthlyTimeEnabled}
+              onTimeEnabledChange={setMonthlyTimeEnabled}
+              time={monthlyTime}
+              onTimeChange={setMonthlyTime}
+            />
+          )}
 
           {/* 마감 일정 */}
           <div className="mt-5">
@@ -251,26 +268,19 @@ export default function TodoEditSheet({
                 </span>
               </div>
             ))}
-            {addingSubTodo && (
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full border-2 border-bluegray-light-active shrink-0" />
-                <input
-                  autoFocus
-                  value={newSubTodoTitle}
-                  onChange={(e) => setNewSubTodoTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddSubTodo()
-                    if (e.key === 'Escape') setAddingSubTodo(false)
-                  }}
-                  onBlur={handleAddSubTodo}
-                  placeholder="하위 투두를 입력해주세요"
-                  className="flex-1 text-sm font-medium bg-transparent outline-none placeholder:text-bluegray-normal"
-                />
-              </div>
-            )}
           </div>
         </div>
       </BottomSheet>
+
+      <SubTodoSheet
+        isOpen={addingSubTodo}
+        onClose={() => setAddingSubTodo(false)}
+        onConfirm={(title) => {
+          setEditSubTodos((prev) => [...prev, { id: Date.now(), title }])
+          setAddingSubTodo(false)
+        }}
+        mode="추가"
+      />
 
       <TagAddSheet
         isOpen={tagAddOpen}

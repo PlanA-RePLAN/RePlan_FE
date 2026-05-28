@@ -25,6 +25,7 @@ export interface ProposedTodo {
   repeatTimeEnabled?: boolean
   repeatTime?: string
   weeklyDay?: string
+  monthlyDay?: number
   deadlineDate: Date | null
   deadlineTime: string | null
   subTodos: SubTodo[]

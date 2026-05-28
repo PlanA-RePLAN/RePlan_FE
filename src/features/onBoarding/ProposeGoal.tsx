@@ -95,6 +95,17 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
     setInfoOpen(true)
   }
 
+  const handleSubTodoAdd = (title: string) => {
+    if (!selectedTodo) return
+    const newSubTodo = { id: Date.now(), title }
+    const updated = {
+      ...selectedTodo,
+      subTodos: [...selectedTodo.subTodos, newSubTodo],
+    }
+    setTodos((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+    setSelectedTodo(updated)
+  }
+
   const handleTagAdd = (tag: CustomTag) => {
     setAllTags((prev) => [...prev, tag])
   }
@@ -179,6 +190,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
             onEdit={handleEditOpen}
             todo={selectedTodo}
             allTags={allTags}
+            onSubTodoAdd={handleSubTodoAdd}
           />
           <TodoEditSheet
             isOpen={editOpen}

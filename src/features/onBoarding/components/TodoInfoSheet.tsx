@@ -1,14 +1,18 @@
 import { useState } from 'react'
-import BottomSheet from '@/shared/components/BottomSheet'
-import CloseButtonIcon from '@/icons/CloseButtonIcon'
-import ReplanSurveyIcon from '@/icons/ReplanSurveyIcon'
-import AddItemIcon from '@/icons/AddItemIcon'
+
+// types
 import { type ProposedTodo, type CustomTag } from '../type/types'
+
+// components
 import TodoTag from '@/shared/components/TodoTag'
 import { getTodoTag } from '@/shared/types/todo'
 import DeadlineInput from './DeadlineInput'
 import CheckIcon from '@/icons/CheckIcon'
-import DownTodoSheet from './DownTodoSheet'
+import SubTodoSheet from './SubTodoSheet'
+import BottomSheet from '@/shared/components/BottomSheet'
+import CloseButtonIcon from '@/icons/CloseButtonIcon'
+import RoundEditIcon from '@/icons/RoundEditIcon'
+import AddItemIcon from '@/icons/AddItemIcon'
 
 interface TodoInfoSheetProps {
   isOpen: boolean
@@ -16,6 +20,7 @@ interface TodoInfoSheetProps {
   onEdit: () => void
   todo: ProposedTodo
   allTags: CustomTag[]
+  onSubTodoAdd: (title: string) => void
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -32,6 +37,7 @@ export default function TodoInfoSheet({
   onEdit,
   todo,
   allTags,
+  onSubTodoAdd,
 }: TodoInfoSheetProps) {
   const [openUnderTodoSheet, setOpenUnderTodoSheet] = useState(false)
 
@@ -64,13 +70,9 @@ export default function TodoInfoSheet({
           </span>
           <button
             onClick={onEdit}
-            className="w-10 h-10 bg-bluegray-black rounded-full flex items-center justify-center"
+            className="w-7 h-7 bg-bluegray-black rounded-full flex items-center justify-center"
           >
-            <ReplanSurveyIcon
-              className="[&_path]:fill-white"
-              width={18}
-              height={18}
-            />
+            <RoundEditIcon />
           </button>
         </div>
 
@@ -108,7 +110,7 @@ export default function TodoInfoSheet({
         <div className="flex items-center justify-between mt-6">
           <SectionLabel>하위 투두</SectionLabel>
           <button onClick={() => setOpenUnderTodoSheet(true)}>
-            <AddItemIcon width={24} height={24} />
+            <AddItemIcon height={24} width={24} />
           </button>
         </div>
         <div className="flex flex-col gap-2">
@@ -130,10 +132,13 @@ export default function TodoInfoSheet({
         </div>
       </div>
 
-      <DownTodoSheet
+      <SubTodoSheet
         isOpen={openUnderTodoSheet}
         onClose={() => setOpenUnderTodoSheet(false)}
-        onConfirm={() => setOpenUnderTodoSheet(false)}
+        onConfirm={(title) => {
+          onSubTodoAdd(title)
+          setOpenUnderTodoSheet(false)
+        }}
         mode="추가"
       />
     </BottomSheet>
