@@ -1,134 +1,173 @@
-import ChevronDownStrokeIcon from "@/icons/ChevronDownStrokeIcon"
-import { useState } from "react"
+// utils
+import { useState, useEffect } from "react"
 import { cn } from "@/shared/utils/cn"
+import { getTodos } from "@/shared/api/todo"
+
+// type
+import type { Todo } from "@/shared/types"
+
+// components
+import ChevronDownStrokeIcon from "@/icons/ChevronDownStrokeIcon"
 import DatePicker from "../onBoarding/components/DatePicker"
 import Dropdown from "@/shared/components/Dropdown"
 import TodoCard from "@/shared/components/TodoCard"
 import BottomSheet from "@/shared/components/BottomSheet"
 import MonthPeaker from "../goal/components/MonthPeaker"
+import DefaultProfileIcon from "@/icons/DefaultProfileIcon"
 
 const TABS = [
-    { label: "All", value : 'all' },
-    { label: "Day", value : 'day' },
-    { label: "Week", value : 'week' },
-    { label: "Month", value : 'month' },
+    { label: "All", value: 'all' },
+    { label: "Day", value: 'day' },
+    { label: "Week", value: 'week' },
+    { label: "Month", value: 'month' },
 ]
 
-const TODO_GROUP = [
-    {
-      id: 1,
-      title: '영단어 100개 암기',
-      time: '11:00 AM',
-      category: 'Study',
-      dayTag: 'D',
-      pinned: true
-    },
-    {
-      id: 2,
-      title: '모의고사 풀기',
-      time: '6:00 PM',
-      category: 'Study',
-      dayTag: 'M',
-      pinned: false
-    },
-    {
-      id: 3,
-      title: '경제원론 공부',
-      time: '8:00 PM',
-      category: 'Study',
-      pinned: false
-    },
-  ]
+function formatTime(dueDate: string | null): string | undefined {
+    if (!dueDate) return undefined
+    const date = new Date(dueDate)
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+}
+
+function getDayTag(routineType: string | null): 'D' | 'M' | undefined {
+    if (routineType === 'DAILY') return 'D'
+    if (routineType === 'MONTHLY') return 'M'
+    return undefined
+}
 
 export default function Home() {
-    const [selectedTab, setSelectedTab] = useState('all')
+    const [selectedTab, setSelectedTab] = useState<'all' | 'day' | 'week' | 'month'>('all')
+    const [sort, setSort] = useState<'priority' | 'dueDate'>('priority')
+    const [todos, setTodos] = useState<Todo[]>([])
     const [selectedYear, setSelectedYear] = useState<number>(2026)
     const [selectedMonth, setSelectedMonth] = useState<number>(5)
     const [isMonthBottomSheetOpen, setIsMonthBottomSheetOpen] = useState(false)
 
+    useEffect(() => {
+        const fetchTodos = async () => {
+            try {
+                const accessToken = localStorage.getItem('accessToken') ?? ''
+                const res = await getTodos(accessToken, selectedTab, sort)
+                if (res.success) setTodos(res.data ?? [])
+            } catch (error) {
+                console.error(error)
+            }
+        }
+        fetchTodos()
+    }, [selectedTab, sort])
+
+    const filteredTodos = todos.filter(t => {
+        if (!t.dueDate) return true
+        const date = new Date(t.dueDate)
+        return date.getFullYear() === selectedYear && date.getMonth() + 1 === selectedMonth
+    })
+
+    const pinnedTodos = filteredTodos.filter(t => t.isPinned)
+    const regularTodos = filteredTodos.filter(t => !t.isPinned)
+
     const handleSelect = (value: string) => {
-        setSelectedTab(value)
+        setSelectedTab(value as 'all' | 'day' | 'week' | 'month')
     }
 
-  return (
-    <div className="relative px-5">
+    return (
+        <div className="relative h-dvh flex flex-col px-5">
 
-         <div className='flex gap-1'>
-            <p className='font-bold'>{`${selectedYear}년 ${selectedMonth}월`}</p>
-            <ChevronDownStrokeIcon onClick={() => setIsMonthBottomSheetOpen(true)} />
-        </div>
-
-        {/* 전체, 일, 월, 연도별 토글 */}
-        <div className="flex mt-5 mb-5 gap-1">
-            {TABS.map((tab)=>(
-                <p key={tab.value} 
-                   onClick={() => handleSelect(tab.value)}
-                   className={cn("px-3.5 py-2 rounded-[19px] text-[12px] cursor-pointer",
-                    selectedTab === tab.value ? "bg-bluegray-black text-white" : "bg-bluegray-light text-bluegray-dark"
-                   )}>
-                    {tab.label}
-                </p>
-            ))}
-        </div>
-
-        {/* 캘린더 영역 */}
-        <div>
-            <DatePicker showHeader={false}/>
-        </div>
-
-        {/* 주요 투두 */}
-        <div>
-            <div className="flex items-center gap-1 mt-8">
-                <img src="/src/assets/symbol.svg" alt="" />
-                <p className="font-bold text-[14px] text-bluegray-darker">주요 투두</p>
+            <div className='flex gap-1'>
+                <p className='font-bold'>{`${selectedYear}년 ${selectedMonth}월`}</p>
+                <ChevronDownStrokeIcon onClick={() => setIsMonthBottomSheetOpen(true)} />
             </div>
-            <TodoCard>
-                <TodoCard.Icon />
-                <TodoCard.Content>
-                    <TodoCard.Title dayTag="D" >영어단어 100개 암기</TodoCard.Title>
-                    <TodoCard.Time>11:00 AM</TodoCard.Time>
-                </TodoCard.Content>
-                <TodoCard.Category category="Study" usePin pinned={true} setPinned={()=>{}} />
-            </TodoCard>
-        </div>
 
-        <div className="bg-bluegray-light-hover w-full h-px my-8"></div>
-    
-        {/* 정렬된 투두 */}
-        <div className="flex flex-col gap-3">
-            <Dropdown items={['마감기한순', '최신등록순']} onChange={()=>{}} />
-            <div className="h-dvh overflow-y-auto">
-                {TODO_GROUP.map((todo) => (
-                    <TodoCard key={todo.id}>
-                        <TodoCard.Icon />
-                        <TodoCard.Content>
-                            <TodoCard.Title dayTag={todo.dayTag} >{todo.title}</TodoCard.Title>
-                            <TodoCard.Time>{todo.time}</TodoCard.Time>
-                        </TodoCard.Content>
-                        <TodoCard.Category category={todo.category} usePin pinned={todo.pinned} />
-                    </TodoCard>
+            {/* 전체, 일, 월, 연도별 토글 */}
+            <div className="flex mt-5 mb-5 gap-1">
+                {TABS.map((tab) => (
+                    <p key={tab.value}
+                        onClick={() => handleSelect(tab.value)}
+                        className={cn("px-3.5 py-2 rounded-[19px] text-[12px] cursor-pointer",
+                            selectedTab === tab.value ? "bg-bluegray-black text-white" : "bg-bluegray-light text-bluegray-dark"
+                        )}>
+                        {tab.label}
+                    </p>
                 ))}
             </div>
 
-        </div>
-        
-        {/* 투두 추가 버튼 */}
-        <button className="fixed bottom-33 right-5 bg-blue-normal w-11 h-11 rounded-full flex justify-center items-center">
-            <img src="/src/assets/add.svg" alt="" />
-        </button>
+            {/* 캘린더 영역 */}
+            <div className="flex-1 overflow-y-auto">
+                <div>
+                    <DatePicker showHeader={false} />
+                </div>
 
-        <BottomSheet isOpen={isMonthBottomSheetOpen} onClose={() => setIsMonthBottomSheetOpen(false)}>
-            <MonthPeaker
-                value={selectedMonth}
-                year={selectedYear}
-                onClose={() => setIsMonthBottomSheetOpen(false)}
-                onConfirm={(year, month) => {
-                    setSelectedYear(year)
-                    setSelectedMonth(month)
-                    setIsMonthBottomSheetOpen(false)
-                }}
-            />
-        </BottomSheet>
-    </div>
-  )
+                {filteredTodos.length === 0 ? (
+                    <div className='flex flex-col w-full justify-center items-center mt-16'>
+                        <DefaultProfileIcon width={72} height={72} />
+                        <h3 className='font-bold mt-6 mb-2'>오늘 할 일이 없어요</h3>
+                        <p className='text-xs text-center text-bluegray-normal'>
+                            투두를 추가하고 <br />
+                            하루를 계획해보세요
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                    {/* 주요 투두 */}
+                    {pinnedTodos.length > 0 && (
+                        <div>
+                            <div className="flex items-center gap-1 mt-8">
+                                <img src="/src/assets/symbol.svg" alt="" />
+                                <p className="font-bold text-[14px] text-bluegray-darker">주요 투두</p>
+                            </div>
+                            {pinnedTodos.map(todo => (
+                                <TodoCard key={todo.todoId}>
+                                    <TodoCard.Icon />
+                                    <TodoCard.Content>
+                                        <TodoCard.Title dayTag={getDayTag(todo.routineType)}>{todo.title}</TodoCard.Title>
+                                        {todo.dueDate && <TodoCard.Time>{formatTime(todo.dueDate)}</TodoCard.Time>}
+                                    </TodoCard.Content>
+                                    <TodoCard.Category category={todo.tagTitle ?? '미선택'} usePin pinned={todo.isPinned} setPinned={() => {}} />
+                                </TodoCard>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="bg-bluegray-light-hover w-full h-px my-8"></div>
+
+                    {/* 정렬된 투두 */}
+                    <div className="flex flex-col gap-3">
+                        <Dropdown
+                            items={['마감기한순', '최신등록순']}
+                            onChange={(item) => setSort(item === '마감기한순' ? 'dueDate' : 'priority')}
+                        />
+                        <div className="h-dvh overflow-y-auto">
+                            {regularTodos.map(todo => (
+                                <TodoCard key={todo.todoId}>
+                                    <TodoCard.Icon />
+                                    <TodoCard.Content>
+                                        <TodoCard.Title dayTag={getDayTag(todo.routineType)}>{todo.title}</TodoCard.Title>
+                                        {todo.dueDate && <TodoCard.Time>{formatTime(todo.dueDate)}</TodoCard.Time>}
+                                    </TodoCard.Content>
+                                    <TodoCard.Category category={todo.tagTitle ?? '미선택'} usePin pinned={todo.isPinned} setPinned={() => {}} />
+                                </TodoCard>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
+            </div>
+
+            {/* 투두 추가 버튼 */}
+            <button className="fixed bottom-33 right-5 bg-blue-normal w-11 h-11 rounded-full flex justify-center items-center">
+                <img src="/src/assets/add.svg" alt="" />
+            </button>
+
+            <BottomSheet isOpen={isMonthBottomSheetOpen} onClose={() => setIsMonthBottomSheetOpen(false)}>
+                <MonthPeaker
+                    value={selectedMonth}
+                    year={selectedYear}
+                    onClose={() => setIsMonthBottomSheetOpen(false)}
+                    onConfirm={(year, month) => {
+                        setSelectedYear(year)
+                        setSelectedMonth(month)
+                        setIsMonthBottomSheetOpen(false)
+                    }}
+                />
+            </BottomSheet>
+        </div>
+    )
 }

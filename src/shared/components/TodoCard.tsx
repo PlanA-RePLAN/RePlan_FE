@@ -7,7 +7,7 @@ import ClockIcon from '@/icons/ClockIcon'
 import PinIcon from '@/icons/PinIcon'
 import { motion, useAnimation } from 'framer-motion'
 
-type Category = 'Study' | 'Project' | 'Health' | 'Rest' | 'Other' | '미선택'
+type Category = string
 
 // ── 루트 ──────────────────────────────────────────────
 const SLIDE_WIDTH = 160
