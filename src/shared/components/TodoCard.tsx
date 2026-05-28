@@ -10,23 +10,25 @@ import { motion, useAnimation } from 'framer-motion'
 type Category = string
 
 // ── 루트 ──────────────────────────────────────────────
-const SLIDE_WIDTH = 160
+const SLIDE_WIDTH_FULL = 160
+const SLIDE_WIDTH_DELETE = 80
 
 interface TodoCardProps {
   children: React.ReactNode
   className?: string
-  status?: 'focused' | 'swipeable' | 'grey' | 'default'
+  status?: 'focused' | 'swipeable' | 'swipeable-delete' | 'grey' | 'default'
 }
 
 function TodoCard({ children, className, status = 'default' }: TodoCardProps) {
   const controls = useAnimation()
+  const isSwipeable = status === 'swipeable' || status === 'swipeable-delete'
   const isFocusedStyle = status === 'focused' || status === 'swipeable'
+  const slideWidth = status === 'swipeable-delete' ? SLIDE_WIDTH_DELETE : SLIDE_WIDTH_FULL
 
   const cardContent = (
     <div
       className={cn(
         'relative flex items-start gap-3 w-full rounded-2xl border border-bluegray-light bg-white p-4 transition-all duration-100 ease-in-out',
-        { 'mt-3': status !== 'swipeable' },
         className,
         {
           'bg-[#F5F9FE] border-blue-light-active': isFocusedStyle,
@@ -41,38 +43,40 @@ function TodoCard({ children, className, status = 'default' }: TodoCardProps) {
     </div>
   )
 
-  if (status !== 'swipeable') return cardContent
+  if (!isSwipeable) return cardContent
 
   return (
-    <div className="relative overflow-hidden">
-      <div className="absolute right-0 top-0 h-full w-32 flex">
-       
-       {/* 삭제하기 버튼 */}
+    <div className="relative overflow-hidden mt-3">
+      <div className="absolute right-0 top-0 h-full flex">
+
+        {/* 삭제하기 버튼 */}
         <div className='flex flex-col items-center gap-1.5 px-2'>
           <button className="w-12 h-12 rounded-full bg-danger flex items-center justify-center">
             <img src="/src/assets/delete.svg" alt="" />
           </button>
           <p className='text-[10px] text-bluegray-dark'>삭제하기</p>
         </div>
-        
-        {/* 리플랜하기 버튼 */}
-        <div className='flex flex-col items-center gap-1.5 px-2'>
-          <button className="w-12 h-12 rounded-full bg-blue-normal flex items-center justify-center">
-            {/* 아이콘 컴포넌트 */}
-          </button>
-          <p className='text-[10px] text-bluegray-dark'>리플랜하기</p>
-        </div>
-        
+
+        {/* 리플랜하기 버튼 (swipeable 전용) */}
+        {status === 'swipeable' && (
+          <div className='flex flex-col items-center gap-1.5 px-2'>
+            <button className="w-12 h-12 rounded-full bg-blue-normal flex items-center justify-center">
+              {/* 아이콘 컴포넌트 */}
+            </button>
+            <p className='text-[10px] text-bluegray-dark'>리플랜하기</p>
+          </div>
+        )}
+
       </div>
       <motion.div
         drag="x"
-        dragConstraints={{ left: -SLIDE_WIDTH, right: 0 }}
+        dragConstraints={{ left: -slideWidth, right: 0 }}
         dragElastic={0}
         dragMomentum={false}
         animate={controls}
         onDragEnd={(_, info) => {
-          if (info.offset.x < -SLIDE_WIDTH / 2) {
-            controls.start({ x: -SLIDE_WIDTH })
+          if (info.offset.x < -slideWidth / 2) {
+            controls.start({ x: -slideWidth })
           } else {
             controls.start({ x: 0 })
           }

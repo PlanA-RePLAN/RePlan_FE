@@ -114,7 +114,7 @@ export default function Home() {
                                 <p className="font-bold text-[14px] text-bluegray-darker">주요 투두</p>
                             </div>
                             {pinnedTodos.map(todo => (
-                                <TodoCard key={todo.todoId}>
+                                <TodoCard key={todo.todoId} status='swipeable'>
                                     <TodoCard.Icon />
                                     <TodoCard.Content>
                                         <TodoCard.Title dayTag={getDayTag(todo.routineType)}>{todo.title}</TodoCard.Title>
@@ -136,7 +136,7 @@ export default function Home() {
                         />
                         <div className="h-dvh overflow-y-auto">
                             {regularTodos.map(todo => (
-                                <TodoCard key={todo.todoId}>
+                                <TodoCard key={todo.todoId} status={"swipeable-delete"} >
                                     <TodoCard.Icon />
                                     <TodoCard.Content>
                                         <TodoCard.Title dayTag={getDayTag(todo.routineType)}>{todo.title}</TodoCard.Title>
