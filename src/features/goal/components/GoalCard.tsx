@@ -2,15 +2,20 @@ import DateSection from '@/features/goal/components/DateSection'
 import GoalSection from '@/features/goal/components/GoalSection'
 import { type GoalGroup } from '@/shared/types'
 
-export default function GoalCard({ year, month, day, goals}: GoalGroup) {
+interface GoalCardProps extends GoalGroup {
+  onClick: (id: number) => void
+}
+
+export default function GoalCard({ date, goals, onClick }: GoalCardProps) {
   return (
     <div className='flex flex-col gap-4 mb-8'>
-        <DateSection year={year} month={month} day={day} />
+        <DateSection date={date} />
         <div>
             {goals.map((goal)=>(
-            <GoalSection key={goal.id} goal={goal} />
+              <GoalSection key={goal.id} {...goal} onClick={onClick} />
           ))}
         </div>
+        
     </div>
   )
 }
