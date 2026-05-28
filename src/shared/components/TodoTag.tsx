@@ -1,26 +1,24 @@
-import { cn } from '@/shared/utils/cn'
+import { getTodoTag, type TodoTagId } from '@/shared/types/todo'
 
 interface TodoTagProps {
-  category: 'Study' | 'Project' | 'Health' | 'Rest' | 'Other' | '미선택'
+  category: TodoTagId | string
 }
 
 export default function TodoTag({ category }: TodoTagProps) {
-  const optionStlyes = {
-    Study: 'bg-tag1-back text-tag1-text',
-    Project: 'bg-tag2-back text-tag2-text',
-    Health: 'bg-tag1-back text-tag1-text',
-    Rest: 'bg-tag3-back text-tag3-text',
-    Other: 'bg-tag4-back text-tag4-text',
-    미선택: 'bg-white border border-bluegray-light-active text-bluegray-dark',
-  }
+  const tag = getTodoTag(category)
+
+  if (!tag) return null
+
   return (
     <div
-      className={cn(
-        'px-2 py-1 rounded-full text-xs font-semibold',
-        optionStlyes[category],
-      )}
+      style={{
+        backgroundColor: tag.bgColor,
+        color: tag.textColor,
+        border: tag.dashed ? `1px dashed ${tag.textColor}` : 'none',
+      }}
+      className="w-17 py-1 rounded-full text-xs font-semibold flex items-center justify-center"
     >
-      {category}
+      {tag.label}
     </div>
   )
 }
