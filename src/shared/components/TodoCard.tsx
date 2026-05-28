@@ -35,8 +35,11 @@ function TodoCard({ children, className, status = 'default' }: TodoCardProps) {
       )}
     >
       {children}
-      {isFocusedStyle && (
-        <img src={focusedSvg} className="absolute right-0 top-1/2 -translate-y-1/2" />
+      {status === 'swipeable' && (
+        <img
+          src={focusedSvg}
+          className="absolute right-0 top-1/2 -translate-y-1/2"
+        />
       )}
     </div>
   )
@@ -46,23 +49,21 @@ function TodoCard({ children, className, status = 'default' }: TodoCardProps) {
   return (
     <div className="relative overflow-hidden">
       <div className="absolute right-0 top-0 h-full w-32 flex">
-       
-       {/* 삭제하기 버튼 */}
-        <div className='flex flex-col items-center gap-1.5 px-2'>
+        {/* 삭제하기 버튼 */}
+        <div className="flex flex-col items-center gap-1.5 px-2">
           <button className="w-12 h-12 rounded-full bg-danger flex items-center justify-center">
             <img src="/src/assets/delete.svg" alt="" />
           </button>
-          <p className='text-[10px] text-bluegray-dark'>삭제하기</p>
+          <p className="text-[10px] text-bluegray-dark">삭제하기</p>
         </div>
-        
+
         {/* 리플랜하기 버튼 */}
-        <div className='flex flex-col items-center gap-1.5 px-2'>
+        <div className="flex flex-col items-center gap-1.5 px-2">
           <button className="w-12 h-12 rounded-full bg-blue-normal flex items-center justify-center">
             {/* 아이콘 컴포넌트 */}
           </button>
-          <p className='text-[10px] text-bluegray-dark'>리플랜하기</p>
+          <p className="text-[10px] text-bluegray-dark">리플랜하기</p>
         </div>
-        
       </div>
       <motion.div
         drag="x"
