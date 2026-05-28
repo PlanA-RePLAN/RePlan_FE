@@ -18,9 +18,10 @@ interface TodoCardProps {
   className?: string
   status?: 'focused' | 'swipeable' | 'swipeable-delete' | 'grey' | 'default'
   onDelete?: () => void
+  onClick?: () => void
 }
 
-function TodoCard({ children, className, status = 'default', onDelete }: TodoCardProps) {
+function TodoCard({ children, className, status = 'default', onDelete, onClick }: TodoCardProps) {
   const controls = useAnimation()
   const isSwipeable = status === 'swipeable' || status === 'swipeable-delete'
   const isFocusedStyle = status === 'focused' || status === 'swipeable'
@@ -93,11 +94,12 @@ function TodoCard({ children, className, status = 'default', onDelete }: TodoCar
 // ── Icon ──────────────────────────────────────────────
 interface IconProps {
   checked?: boolean
+  onClick?: ()=>void
 }
 
-function Icon({ checked = false }: IconProps) {
+function Icon({ checked = false, onClick }: IconProps) {
   return (
-    <div className="shrink-0">{checked ? <GoalIcon /> : <CheckIcon />}</div>
+    <div className="shrink-0" onClick={onClick}>{checked ? <GoalIcon /> : <CheckIcon />}</div>
   )
 }
 

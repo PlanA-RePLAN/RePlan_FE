@@ -29,3 +29,17 @@ export async function deleteTodo(
     )
     return res.data
 }
+
+
+export async function toggleTodoComplete(
+    accessToken: string,
+    todoId: number,
+    isCompleted: boolean,
+): Promise<ApiResponse<null>> {
+    const res = await client.patch<ApiResponse<null>>(
+        `/api/todos/${todoId}/complete`,
+        { isCompleted },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+    return res.data
+}

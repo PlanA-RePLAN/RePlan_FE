@@ -1,7 +1,7 @@
 // utils
 import { useState, useEffect } from "react"
 import { cn } from "@/shared/utils/cn"
-import { getTodos, deleteTodo } from "@/shared/api/todo"
+import { getTodos, deleteTodo, toggleTodoComplete } from "@/shared/api/todo"
 
 // type
 import type { Todo } from "@/shared/types"
@@ -58,6 +58,20 @@ export default function Home() {
             const accessToken = localStorage.getItem('accessToken') ?? ''
             await deleteTodo(accessToken, deletingTodoId)
         } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const handleToggleComplete = async (todoId: number, isCompleted: boolean) => {
+        setTodos(prev =>
+            prev.map(t => t.todoId === todoId ? { ...t, isCompleted: !isCompleted } : t)
+        )
+        try{
+            const accessToken = localStorage.getItem('accessToken') ?? ''
+            await toggleTodoComplete(accessToken, todoId, !isCompleted)
+        } catch (error) {
+            setTodos(prev =>
+            prev.map(t => t.todoId === todoId ? { ...t, isCompleted } : t))
             console.error(error)
         }
     }
@@ -151,13 +165,13 @@ export default function Home() {
                     {/* 정렬된 투두 */}
                     <div className="flex flex-col gap-3">
                         <Dropdown
-                            items={['마감기한순', '최신등록순']}
+                            items={['마감기한순', '최신등록순', '직접설정순']}
                             onChange={(item) => setSort(item === '마감기한순' ? 'dueDate' : 'priority')}
                         />
                         <div className="h-dvh overflow-y-auto">
                             {regularTodos.map(todo => (
-                                <TodoCard key={todo.todoId} status='swipeable-delete' onDelete={() => handleDeleteClick(todo.todoId)}>
-                                    <TodoCard.Icon/>
+                                <TodoCard key={todo.todoId} status={todo.isCompleted ? 'grey' : 'swipeable-delete'} onDelete={() => handleDeleteClick(todo.todoId)}>
+                                    <TodoCard.Icon onClick={() => handleToggleComplete(todo.todoId, todo.isCompleted)} checked={todo.isCompleted} />
                                     <TodoCard.Content>
                                         <TodoCard.Title dayTag={getDayTag(todo.routineType)}>{todo.title}</TodoCard.Title>
                                         {todo.dueDate && <TodoCard.Time>{formatTime(todo.dueDate)}</TodoCard.Time>}
