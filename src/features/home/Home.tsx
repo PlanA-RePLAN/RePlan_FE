@@ -42,6 +42,10 @@ export default function Home() {
     const [selectedMonth, setSelectedMonth] = useState<number>(5)
     const [isMonthBottomSheetOpen, setIsMonthBottomSheetOpen] = useState(false)
 
+    const handleCheck = () => {
+        setIsCheck(!isCheck)
+    }
+
     useEffect(() => {
         const fetchTodos = async () => {
             try {
@@ -137,7 +141,7 @@ export default function Home() {
                         <div className="h-dvh overflow-y-auto">
                             {regularTodos.map(todo => (
                                 <TodoCard key={todo.todoId} status={"swipeable-delete"} >
-                                    <TodoCard.Icon />
+                                    <TodoCard.Icon/>
                                     <TodoCard.Content>
                                         <TodoCard.Title dayTag={getDayTag(todo.routineType)}>{todo.title}</TodoCard.Title>
                                         {todo.dueDate && <TodoCard.Time>{formatTime(todo.dueDate)}</TodoCard.Time>}

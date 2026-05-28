@@ -29,6 +29,7 @@ function TodoCard({ children, className, status = 'default' }: TodoCardProps) {
     <div
       className={cn(
         'relative flex items-start gap-3 w-full rounded-2xl border border-bluegray-light bg-white p-4 transition-all duration-100 ease-in-out',
+        { 'mt-3': !isSwipeable },
         className,
         {
           'bg-[#F5F9FE] border-blue-light-active': isFocusedStyle,
@@ -37,7 +38,7 @@ function TodoCard({ children, className, status = 'default' }: TodoCardProps) {
       )}
     >
       {children}
-      {isFocusedStyle && (
+      {status === 'swipeable' && (
         <img src={focusedSvg} className="absolute right-0 top-1/2 -translate-y-1/2" />
       )}
     </div>
