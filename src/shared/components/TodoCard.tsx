@@ -21,11 +21,18 @@ interface TodoCardProps {
   onClick?: () => void
 }
 
-function TodoCard({ children, className, status = 'default', onDelete, onClick }: TodoCardProps) {
+function TodoCard({
+  children,
+  className,
+  status = 'default',
+  onDelete,
+  onClick,
+}: TodoCardProps) {
   const controls = useAnimation()
   const isSwipeable = status === 'swipeable' || status === 'swipeable-delete'
   const isFocusedStyle = status === 'focused' || status === 'swipeable'
-  const slideWidth = status === 'swipeable-delete' ? SLIDE_WIDTH_DELETE : SLIDE_WIDTH_FULL
+  const slideWidth =
+    status === 'swipeable-delete' ? SLIDE_WIDTH_DELETE : SLIDE_WIDTH_FULL
 
   const cardContent = (
     <div
@@ -41,7 +48,10 @@ function TodoCard({ children, className, status = 'default', onDelete, onClick }
     >
       {children}
       {status === 'swipeable' && (
-        <img src={focusedSvg} className="absolute right-0 top-1/2 -translate-y-1/2" />
+        <img
+          src={focusedSvg}
+          className="absolute right-0 top-1/2 -translate-y-1/2"
+        />
       )}
     </div>
   )
@@ -51,25 +61,26 @@ function TodoCard({ children, className, status = 'default', onDelete, onClick }
   return (
     <div className="relative overflow-hidden mt-3">
       <div className="absolute right-0 top-0 h-full flex">
-
         {/* 삭제하기 버튼 */}
-        <div className='flex flex-col items-center gap-1.5 px-2'>
-          <button onClick={onDelete} className="w-12 h-12 rounded-full bg-danger flex items-center justify-center">
+        <div className="flex flex-col items-center gap-1.5 px-2">
+          <button
+            onClick={onDelete}
+            className="w-12 h-12 rounded-full bg-danger flex items-center justify-center"
+          >
             <img src="/src/assets/delete.svg" alt="" />
           </button>
-          <p className='text-[10px] text-bluegray-dark'>삭제하기</p>
+          <p className="text-[10px] text-bluegray-dark">삭제하기</p>
         </div>
 
         {/* 리플랜하기 버튼 (swipeable 전용) */}
         {status === 'swipeable' && (
-          <div className='flex flex-col items-center gap-1.5 px-2'>
+          <div className="flex flex-col items-center gap-1.5 px-2">
             <button className="w-12 h-12 rounded-full bg-blue-normal flex items-center justify-center">
               {/* 아이콘 컴포넌트 */}
             </button>
-            <p className='text-[10px] text-bluegray-dark'>리플랜하기</p>
+            <p className="text-[10px] text-bluegray-dark">리플랜하기</p>
           </div>
         )}
-
       </div>
       <motion.div
         drag="x"
@@ -94,12 +105,14 @@ function TodoCard({ children, className, status = 'default', onDelete, onClick }
 // ── Icon ──────────────────────────────────────────────
 interface IconProps {
   checked?: boolean
-  onClick?: ()=>void
+  onClick?: () => void
 }
 
 function Icon({ checked = false, onClick }: IconProps) {
   return (
-    <div className="shrink-0" onClick={onClick}>{checked ? <GoalIcon /> : <CheckIcon />}</div>
+    <div className="shrink-0" onClick={onClick}>
+      {checked ? <GoalIcon /> : <CheckIcon />}
+    </div>
   )
 }
 

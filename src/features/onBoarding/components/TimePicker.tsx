@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   motion,
   animate,
@@ -113,14 +113,35 @@ function DrumColumn({ items, initialIndex, onChange }: DrumColumnProps) {
 
 interface TimePickerProps {
   value?: string
-  onConfirm: (time: string) => void
+  onConfirm?: (time: string) => void
+  onChange?: (time: string) => void
   onClose: () => void
+  useHeader?: boolean
+}
+
+function computeTimeString(
+  hourIdx: number,
+  minuteIdx: number,
+  periodIdx: number,
+): string {
+  const hour12 = hourIdx + 1
+  const hour24 =
+    periodIdx === 0
+      ? hour12 === 12
+        ? 0
+        : hour12
+      : hour12 === 12
+        ? 12
+        : hour12 + 12
+  return `${String(hour24).padStart(2, '0')}:${MINUTES[minuteIdx]} ${PERIODS[periodIdx]}`
 }
 
 export default function TimePicker({
   value,
   onConfirm,
+  onChange,
   onClose,
+  useHeader = true,
 }: TimePickerProps) {
   const now = new Date()
   const initHour24 = value ? parseInt(value.split(':')[0]) : now.getHours()
@@ -132,28 +153,23 @@ export default function TimePicker({
   const [minuteIdx, setMinuteIdx] = useState(initMinute)
   const [periodIdx, setPeriodIdx] = useState(initPeriod)
 
+  useEffect(() => {
+    onChange?.(computeTimeString(hourIdx, minuteIdx, periodIdx))
+  }, [hourIdx, minuteIdx, periodIdx])
+
   const handleConfirm = () => {
-    const hour12 = hourIdx + 1
-    const hour24 =
-      periodIdx === 0
-        ? hour12 === 12
-          ? 0
-          : hour12
-        : hour12 === 12
-          ? 12
-          : hour12 + 12
-    onConfirm(
-      `${String(hour24).padStart(2, '0')}:${MINUTES[minuteIdx]} ${PERIODS[periodIdx]}`,
-    )
+    onConfirm?.(computeTimeString(hourIdx, minuteIdx, periodIdx))
   }
 
   return (
     <div className="px-4 pt-2 pb-6">
-      <BottomSheetHeader
-        title="마감 시간"
-        onClose={onClose}
-        onConfirm={handleConfirm}
-      />
+      {useHeader && (
+        <BottomSheetHeader
+          title="마감 시간"
+          onClose={onClose}
+          onConfirm={handleConfirm}
+        />
+      )}
 
       {/* 드럼 피커 */}
       <div className="relative flex px-18">

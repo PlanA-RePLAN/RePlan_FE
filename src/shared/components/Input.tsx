@@ -76,7 +76,7 @@ interface FieldProps {
 }
 
 function Field({ placeholder, height = 49 }: FieldProps) {
-  const { handleChange, setIsFocused, maxLength } = useInputContext()
+  const { handleChange, setIsFocused, maxLength, value } = useInputContext()
   return (
     <textarea
       placeholder={placeholder}
@@ -85,6 +85,7 @@ function Field({ placeholder, height = 49 }: FieldProps) {
       onBlur={() => setIsFocused(false)}
       style={{ height }}
       maxLength={maxLength}
+      value={value}
       className="w-full bg-bluegray-light text-bluegray-black mt-2 mb-1 rounded-xl px-4 py-3 resize-none hover:border hover:border-blue-normal placeholder:text-bluegray-normal font-medium"
     />
   )

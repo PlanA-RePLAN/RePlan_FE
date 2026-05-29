@@ -9,6 +9,7 @@ import ProgressBar from './components/ProgressBar'
 
 // utils
 import { useState } from 'react'
+import OnboardingComplete from './OnboardingComplete'
 
 export default function OnBoarding() {
   const [currentStep, setCurrentStep] = useState(0)
@@ -39,10 +40,13 @@ export default function OnBoarding() {
       onBack={moveBack}
       className="border-none"
     >
-      <div className="font-light px-5">
-        <ProgressBar totalSteps={3} currentStep={currentStep + 1} />
-        <div className="pt-8">{steps[currentStep]}</div>
-      </div>
+      {currentStep < 3 && (
+        <div className="font-light px-5">
+          <ProgressBar totalSteps={3} currentStep={currentStep + 1} />
+          <div className="pt-8">{steps[currentStep]}</div>
+        </div>
+      )}
+      {currentStep === 3 && <OnboardingComplete />}
     </BackHeaderLayout>
   )
 }

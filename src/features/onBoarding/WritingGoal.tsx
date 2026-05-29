@@ -6,7 +6,7 @@ import Description from '@/shared/components/Description'
 import Input from '@/shared/components/Input'
 import Title from '@/shared/components/Title'
 import MainButton from '@/shared/components/MainButton'
-import GoalOffIcon from '@/icons/GoalOffIcon'
+import GoalIcon from '@/icons/GoalIcon'
 import ExampleTag from './components/ExampleTag'
 import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
 import ListItem from '@/shared/components/ListItem'
@@ -37,8 +37,8 @@ export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
       {/* --------- 목표 입력 ------------ */}
       <Input value={goal} setValue={setGoal} maxLength={50} showCount="always">
         <Input.Label option="secondary">
-          <div className="flex gap-2 text-bluegray-black">
-            <GoalOffIcon />
+          <div className="flex gap-2 items-center text-bluegray-black">
+            <GoalIcon colored={false} />
             목표
           </div>
         </Input.Label>
@@ -81,8 +81,8 @@ export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
       {/* ------------- 추가 작성 사항 -------------- */}
       <ListItem
         className={cn(
-          'bg-blue-light mt-6 px-0 border border-white',
-          isOpen && 'border-blue-light-active mb-35 pb-0',
+          'bg-blue-light mt-6 px-0 border border-white mb-35',
+          isOpen && 'border-blue-light-active pb-0',
         )}
       >
         <div className="flex flex-col gap-1 px-4">

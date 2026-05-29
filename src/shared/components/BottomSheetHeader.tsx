@@ -31,17 +31,26 @@ export default function BottomSheetHeader({
             <ChevronLeftIcon width={20} height={20} color="#7F838B" />
           </button>
         )}
-        <span className="text-lg font-bold text-bluegray-black w-28 text-center">
+        <span className="text-lg font-bold text-bluegray-black w-28 text-center whitespace-nowrap">
           {title}
         </span>
         {onNext && (
           <button onClick={onNext}>
-            <ChevronLeftIcon width={20} height={20} color="#7F838B" className="rotate-180" />
+            <ChevronLeftIcon
+              width={20}
+              height={20}
+              color="#7F838B"
+              className="rotate-180"
+            />
           </button>
         )}
       </div>
 
-      <button onClick={onConfirm} disabled={confirmDisabled} className="disabled:opacity-30">
+      <button
+        onClick={onConfirm}
+        disabled={confirmDisabled}
+        className="disabled:opacity-30"
+      >
         <CircleCheckButtonIcon />
       </button>
     </div>
