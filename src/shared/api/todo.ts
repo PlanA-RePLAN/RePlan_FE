@@ -1,4 +1,4 @@
-import { Todo } from '../types'
+import { Todo, TodoDetail } from '../types/todo'
 import { ApiResponse } from '../types/auth'
 import client from './client'
 
@@ -13,6 +13,17 @@ export async function getTodos(
             params: { filter, sort },
             headers: { Authorization: `Bearer ${accessToken}` },
         }
+    )
+    return res.data
+}
+
+export async function getTodoDetail(
+    accessToken: string,
+    todoId: number,
+): Promise<ApiResponse<TodoDetail>> {
+    const res = await client.get<ApiResponse<TodoDetail>>(
+        `/api/todos/${todoId}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
     )
     return res.data
 }
@@ -57,3 +68,4 @@ export async function toggleTodoComplete(
     )
     return res.data
 }
+

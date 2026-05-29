@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { cn } from '@/shared/utils/cn'
 
 // types
-import { type ProposedTodo, type CustomTag } from '../type/types'
+import { type CustomTag } from '../type/types'
+import type { TodoDetail } from '@/shared/types/todo'
 
 // components
 import TodoTag from '@/shared/components/TodoTag'
@@ -13,14 +15,16 @@ import BottomSheet from '@/shared/components/BottomSheet'
 import CloseButtonIcon from '@/icons/CloseButtonIcon'
 import RoundEditIcon from '@/icons/RoundEditIcon'
 import AddItemIcon from '@/icons/AddItemIcon'
+import { div } from 'framer-motion/client'
 
 interface TodoInfoSheetProps {
   isOpen: boolean
   onClose: () => void
   onEdit: () => void
-  todo: ProposedTodo
+  todo: TodoDetail
   allTags: CustomTag[]
   onSubTodoAdd: (title: string) => void
+  onClick?: () => void
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -38,14 +42,16 @@ export default function TodoInfoSheet({
   todo,
   allTags,
   onSubTodoAdd,
+  onClick
 }: TodoInfoSheetProps) {
   const [openUnderTodoSheet, setOpenUnderTodoSheet] = useState(false)
 
   const renderTag = () => {
-    if (getTodoTag(todo.selectedTagId)) {
-      return <TodoTag category={todo.selectedTagId} />
+    const tagTitle = todo.tagTitle ?? '미선택'
+    if (getTodoTag(tagTitle)) {
+      return <TodoTag category={tagTitle} />
     }
-    const custom = allTags.find((t) => t.id === todo.selectedTagId)
+    const custom = allTags.find((t) => t.label === todo.tagTitle)
     if (!custom) return null
     return (
       <div
@@ -56,6 +62,18 @@ export default function TodoInfoSheet({
       </div>
     )
   }
+
+  const getRepeatLabel = () => {
+    if (todo.routineType === 'DAILY') return '데일리'
+    if (todo.routineType === 'WEEKLY') return '위클리'
+    if (todo.routineType === 'MONTHLY') return '먼슬리'
+    return '없음'
+  }
+
+  const deadlineDate = todo.dueDate ? new Date(todo.dueDate) : null
+  const deadlineTime = todo.dueDate
+    ? new Date(todo.dueDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    : null
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
@@ -88,19 +106,29 @@ export default function TodoInfoSheet({
 
         {/* 반복 여부 */}
         <SectionLabel>반복 여부</SectionLabel>
-        <div className="mb-5">
-          <div className="inline-block bg-bluegray-black text-white text-sm font-medium px-5 py-2 rounded-full">
-            {todo.repeat}
-          </div>
+        <div className="flex gap-2 mb-5">
+          {(['없음', '데일리', '위클리', '먼슬리'] as const).map((option) => (
+            <div
+              key={option}
+              className={cn(
+                'text-sm font-medium px-5 py-2 rounded-full',
+                option === getRepeatLabel()
+                  ? 'bg-bluegray-black text-white'
+                  : 'bg-bluegray-light text-bluegray-dark',
+              )}
+            >
+              {option}
+            </div>
+          ))}
         </div>
 
         {/* 마감 일정 */}
         <SectionLabel>마감 일정</SectionLabel>
         <DeadlineInput
-          date={todo.deadlineDate}
-          time={todo.deadlineTime}
-          useDate={todo.deadlineDate !== null}
-          useTime={todo.deadlineTime !== null}
+          date={deadlineDate}
+          time={deadlineTime}
+          useDate={deadlineDate !== null}
+          useTime={deadlineTime !== null}
           notUseToggle={true}
           onUseDateChange={() => {}}
           onUseTimeChange={() => {}}
@@ -119,7 +147,7 @@ export default function TodoInfoSheet({
           ) : (
             todo.subTodos.map((sub) => (
               <div
-                key={sub.id}
+                key={sub.todoId}
                 className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
               >
                 <CheckIcon />
@@ -141,6 +169,11 @@ export default function TodoInfoSheet({
         }}
         mode="추가"
       />
+      {onClick && (
+        <div className='px-5 mt-10'>
+          <button onClick={onClick} className='w-full h-13 bg-bluegray-light flex justify-center items-center rounded-xl text-danger font-semibold text-[14px]' >투두 삭제</button>
+        </div>
+      )}
     </BottomSheet>
   )
 }
