@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import cameraSvg from '@/assets/camera.svg'
 
 // components
 import Title from '@/shared/components/Title'
@@ -48,7 +49,7 @@ export default function ProfileSetup() {
         <div className="flex justify-center relative w-30 mt-10">
           <DefaultProfileIcon />
           <div className="w-7 h-7 bg-white border border-bluegray-light-hover flex justify-center items-center rounded-full absolute bottom-0 right-0">
-            <img src="/src/assets/camera.svg" alt="" />
+            <img src={cameraSvg} alt="" />
           </div>
         </div>
         <div className="w-full mt-10 relative">

@@ -1,4 +1,7 @@
 import { cn } from '@/shared/utils/cn'
+import kakaoSvg from '@/assets/kakao.svg'
+import appleSvg from '@/assets/apple.svg'
+import naverSvg from '@/assets/naver.svg'
 
 interface ButtonProps {
   onClick: () => void
@@ -15,6 +18,12 @@ const optionClasses = {
   google: 'bg-white text-bluegray-black border border-bluegray-light-active',
 }
 
+const imgMap: Record<string, string> = {
+  kakao: kakaoSvg,
+  apple: appleSvg,
+  naver: naverSvg,
+}
+
 export default function Button({ onClick, title, img, option, icon }: ButtonProps) {
   return (
     <button
@@ -25,7 +34,7 @@ export default function Button({ onClick, title, img, option, icon }: ButtonProp
       onClick={onClick}
     >
       <span className="absolute left-6">
-        {icon ?? <img src={`src/assets/${img}.svg`} alt={title} />}
+        {icon ?? <img src={imgMap[img]} alt={title} />}
       </span>
       <p>{title}로 계속하기</p>
     </button>

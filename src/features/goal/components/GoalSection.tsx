@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { deleteGoal } from '@/shared/api/goal'
+import checkSvg from '@/assets/check.svg'
 
 // type
 import { type Goal } from '@/shared/types'
@@ -120,7 +121,7 @@ export default function GoalSection({
                 {check && (
                   <img
                     className="absolute inset-0 m-auto pointer-events-none"
-                    src="/src/assets/check.svg"
+                    src={checkSvg}
                     alt=""
                   />
                 )}

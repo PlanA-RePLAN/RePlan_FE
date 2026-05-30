@@ -1,4 +1,5 @@
 import focusedSvg from '@/assets/foucsed.svg'
+import deleteSvg from '@/assets/delete.svg'
 import CheckIcon from '@/icons/CheckIcon'
 import TodoTag from './TodoTag'
 import { cn } from '@/shared/utils/cn'
@@ -68,7 +69,7 @@ function TodoCard({
             onClick={onDelete}
             className="w-12 h-12 rounded-full bg-danger flex items-center justify-center"
           >
-            <img src="/src/assets/delete.svg" alt="" />
+            <img src={deleteSvg} alt="" />
           </button>
           <p className="text-[10px] text-bluegray-dark">삭제하기</p>
         </div>
