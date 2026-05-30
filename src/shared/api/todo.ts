@@ -2,6 +2,22 @@ import { Todo, TodoDetail } from '../types/todo'
 import { ApiResponse } from '../types/auth'
 import client from './client'
 
+export interface CreateTodoRequest {
+  title: string
+  dueDate?: string | null
+  tagId?: number | null
+  goalId?: number | null
+}
+
+export interface CreateTodoResponse {
+  todoId: number
+  title: string
+  dueDate: string | null
+  tagId: number | null
+  parentId: number | null
+  completed: boolean
+}
+
 export async function getTodos(
     accessToken: string,
     filter: 'all' | 'day' | 'week' | 'month',
@@ -54,6 +70,18 @@ export async function updateTodoOrder(
         { headers: { Authorization: `Bearer ${accessToken}` } }
     )
     return res.data
+}
+
+export async function createTodo(
+  accessToken: string,
+  body: CreateTodoRequest,
+): Promise<ApiResponse<CreateTodoResponse>> {
+  const res = await client.post<ApiResponse<CreateTodoResponse>>(
+    '/api/todos/create',
+    body,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  return res.data
 }
 
 export async function toggleTodoComplete(
