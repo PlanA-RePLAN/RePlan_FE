@@ -142,8 +142,8 @@ function Title({ children, dayTag }: TitleProps) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-bluegray-black truncate">
+    <div className="flex items-start gap-2 min-w-0">
+      <span className="text-sm font-medium text-bluegray-black break-words min-w-0">
         {children}
       </span>
       {dayTag && (

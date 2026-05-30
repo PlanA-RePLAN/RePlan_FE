@@ -8,68 +8,92 @@ import TodoCard from '@/shared/components/TodoCard'
 import CheckBoxIcon from '@/icons/CheckBoxIcon'
 import TodoInfoSheet from './components/TodoInfoSheet'
 import TodoEditSheet from './components/TodoEditSheet'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { format } from 'date-fns'
 import { cn } from '@/shared/utils/cn'
-import { type ProposedTodo, type CustomTag, PRESET_TAGS } from './type/types'
+import {
+  type ProposedTodo,
+  type CustomTag,
+  PRESET_TAGS,
+  type RepeatType,
+} from './type/types'
+import { useOnboardingStore } from '@/store/onboardingStore'
+import type { AiRecommendedTodo } from '@/shared/types/goal'
+import { createGoalWithTodos } from '@/shared/api/goal'
 
 interface ProposeGoalProps {
   moveNext: () => void
 }
 
-const INITIAL_TODOS: ProposedTodo[] = [
-  {
-    id: 1,
-    title: '11시 이전 취침',
-    time: '11:00 AM',
-    dayTag: 'D',
+function formatTime24to12(time: string | null): string {
+  if (!time) return ''
+  const [hStr, mStr] = time.split(':')
+  const h = parseInt(hStr)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  return `${String(h12).padStart(2, '0')}:${mStr} ${period}`
+}
+
+// "HH12:mm AM/PM" 또는 "HH24:mm AM/PM" → "HH:mm" (24h)
+function timeToHHmm(time: string | null): string | null {
+  if (!time) return null
+  const [timePart, period] = time.trim().split(' ')
+  if (!period) return timePart
+  const [hStr, mStr] = timePart.split(':')
+  let h = parseInt(hStr)
+  if (h > 12) return `${String(h).padStart(2, '0')}:${mStr}`
+  if (period === 'AM') {
+    h = h === 12 ? 0 : h
+  } else {
+    h = h === 12 ? 12 : h + 12
+  }
+  return `${String(h).padStart(2, '0')}:${mStr}`
+}
+
+function mapAiTodo(todo: AiRecommendedTodo, index: number): ProposedTodo {
+  const repeatMap: Record<string, RepeatType> = {
+    DAILY: '데일리',
+    WEEKLY: '위클리',
+    MONTHLY: '먼슬리',
+  }
+  const repeat: RepeatType = todo.routineType
+    ? (repeatMap[todo.routineType] ?? '없음')
+    : '없음'
+  const dayTag: 'D' | 'M' =
+    todo.routineType === 'WEEKLY' || todo.routineType === 'MONTHLY' ? 'M' : 'D'
+
+  return {
+    id: index + 1,
+    title: todo.title,
+    time: formatTime24to12(todo.dueTime),
+    dayTag,
     selectedTagId: 'Study',
-    repeat: '데일리',
-    deadlineDate: new Date('2026-05-01'),
-    deadlineTime: '8:00 PM',
-    subTodos: [{ id: 1, title: '영단어 10개 암기' }],
-  },
-  {
-    id: 2,
-    title: '모의고사 풀이',
-    time: '11:00 AM',
-    dayTag: 'M',
-    selectedTagId: 'Study',
-    repeat: '위클리',
-    deadlineDate: new Date('2026-05-01'),
-    deadlineTime: '8:00 AM',
+    repeat,
+    routineDate: todo.routineDate ?? null,
+    deadlineDate: todo.dueDate ? new Date(todo.dueDate) : null,
+    deadlineTime: todo.dueTime ? formatTime24to12(todo.dueTime) : null,
     subTodos: [],
-  },
-  {
-    id: 3,
-    title: '토익 모의고사 1회 풀기',
-    time: '1:00 PM',
-    dayTag: 'D',
-    selectedTagId: 'Study',
-    repeat: '데일리',
-    deadlineDate: new Date('2026-05-01'),
-    deadlineTime: '1:00 PM',
-    subTodos: [],
-  },
-  {
-    id: 4,
-    title: '토익 모의고사 1회 풀기',
-    time: '1:00 PM',
-    dayTag: 'D',
-    selectedTagId: 'Study',
-    repeat: '데일리',
-    deadlineDate: null,
-    deadlineTime: null,
-    subTodos: [],
-  },
-]
+  }
+}
 
 export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
-  const [todos, setTodos] = useState<ProposedTodo[]>(INITIAL_TODOS)
+  const aiRecommendation = useOnboardingStore((s) => s.aiRecommendation)
+  const goalValue = useOnboardingStore((s) => s.goalValue)
+  const deadlineDate = useOnboardingStore((s) => s.deadlineDate)
+  const deadlineTime = useOnboardingStore((s) => s.deadlineTime)
+
+  const initialTodos = useMemo(
+    () => (aiRecommendation?.todos ?? []).map(mapAiTodo),
+    [aiRecommendation],
+  )
+
+  const [todos, setTodos] = useState<ProposedTodo[]>(initialTodos)
   const [allTags, setAllTags] = useState<CustomTag[]>(PRESET_TAGS)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [selectedTodo, setSelectedTodo] = useState<ProposedTodo | null>(null)
   const [infoOpen, setInfoOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const handleSelect = (id: number, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -110,8 +134,47 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
     setAllTags((prev) => [...prev, tag])
   }
 
+  const handleSubmit = async () => {
+    if (selectedIds.length === 0 || loading) return
+    setLoading(true)
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      const selectedTodos = todos.filter((t) => selectedIds.includes(t.id))
+      const isRecurring = (t: ProposedTodo) => t.repeat !== '없음'
+      const routineTypeMap: Record<string, 'DAILY' | 'WEEKLY' | 'MONTHLY'> = {
+        데일리: 'DAILY',
+        위클리: 'WEEKLY',
+        먼슬리: 'MONTHLY',
+      }
+
+      const res = await createGoalWithTodos(accessToken, {
+        title: goalValue,
+        dueDate: deadlineDate ? format(deadlineDate, 'yyyy-MM-dd') : null,
+        dueTime: deadlineTime ? timeToHHmm(deadlineTime) : null,
+        todos: selectedTodos.map((t) => ({
+          type: isRecurring(t) ? 'RECURRING' : 'ONE_TIME',
+          title: t.title,
+          dueDate:
+            !isRecurring(t) && t.deadlineDate
+              ? format(t.deadlineDate, 'yyyy-MM-dd')
+              : null,
+          dueTime: !isRecurring(t) ? timeToHHmm(t.deadlineTime) : null,
+          routineType: isRecurring(t) ? routineTypeMap[t.repeat] : null,
+          routineDate: isRecurring(t) ? (t.routineDate ?? null) : null,
+          tagId: null,
+          subTodos: !isRecurring(t) ? t.subTodos.map((s) => s.title) : [],
+        })),
+      })
+      if (res.success) {
+        moveNext()
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col max-h-full overflow-scroll">
       <div className="flex flex-col gap-3">
         <Title>
           <div>목표에 맞는</div>
@@ -123,9 +186,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
         </Description>
       </div>
 
-      <ListItem className="mt-6 mb-8 border-none">
-        토익 850점 달성, 5월 1일까지, ETS 토익 단기공략 850+ 교재 사용
-      </ListItem>
+      <ListItem className="mt-6 mb-8 border-none">{goalValue}</ListItem>
 
       <div>
         <div className="flex items-center gap-2 w-full">
@@ -139,7 +200,10 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
         </div>
 
         {todos.map((todo, index) => (
-          <div className="flex gap-4.25 items-center" key={index}>
+          <div
+            className="flex gap-4.25 items-center max-w-full overflow-hidden"
+            key={index}
+          >
             <button
               onClick={(e) => handleSelect(todo.id, e)}
               className={cn(
@@ -176,9 +240,9 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
 
       <div className="fixed left-0 bottom-10 w-full flex gap-2 px-5">
         <MainButton
-          option={selectedIds.length === 0 ? 'disabled' : 'primary'}
-          onClick={moveNext}
-          title="선택한 투두 추가하기"
+          option={selectedIds.length === 0 || loading ? 'disabled' : 'primary'}
+          onClick={handleSubmit}
+          title={loading ? '저장 중...' : '선택한 투두 추가하기'}
         />
       </div>
 

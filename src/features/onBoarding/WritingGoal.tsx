@@ -15,6 +15,10 @@ import ChecvronRightIcon from '@/icons/ChevronLeftIcon'
 import MenuIcon from '@/icons/MenuIcon'
 import TrendingUpIcon from '@/icons/TrendingUpIcon'
 import ClockIcon from '@/icons/ClockIcon'
+import { refineGoal } from '@/shared/api/goal'
+
+// stores
+import { useOnboardingStore } from '@/store/onboardingStore'
 
 export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
   const [goal, setGoal] = useState('')
@@ -23,6 +27,32 @@ export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
   const [currentLevel, setCurrentLevel] = useState('')
   const [availableTime, setAvailableTime] = useState('')
   const [specialNote, setSpecialNote] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const setRefineData = useOnboardingStore((s) => s.setRefineData)
+  const setGoalValue = useOnboardingStore((s) => s.setGoalValue)
+
+  const handleSubmit = async () => {
+    if (!goal.trim() || !period.trim()) return
+    setLoading(true)
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      const res = await refineGoal(accessToken, {
+        goal: goal.trim(),
+        deadline: period.trim(),
+        currentLevel: currentLevel.trim() || undefined,
+        availableTime: availableTime.trim() || undefined,
+        notes: specialNote.trim() || undefined,
+      })
+      if (res.success && res.data) {
+        setGoalValue(goal.trim())
+        setRefineData(res.data)
+        moveNext()
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="flex flex-col">
@@ -208,9 +238,11 @@ export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
       </ListItem>
       <div className="fixed pb-13 pt-10 bottom-0 left-0 right-0 w-full px-5 bg-linear-to-b from-transparent from-0% to-white to-20%">
         <MainButton
-          option={goal.trim() && period.trim() ? 'primary' : 'disabled'}
-          onClick={moveNext}
-          title="다음으로"
+          option={
+            goal.trim() && period.trim() && !loading ? 'primary' : 'disabled'
+          }
+          onClick={handleSubmit}
+          title={loading ? '분석 중...' : '다음으로'}
         />
       </div>
     </div>
