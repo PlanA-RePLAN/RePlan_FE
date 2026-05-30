@@ -15,10 +15,12 @@ import {
   type ProposedTodo,
   type CustomTag,
   PRESET_TAGS,
-  type RepeatType,
+  ROUTINE_TO_REPEAT,
+  REPEAT_TO_ROUTINE,
 } from './type/types'
 import { useOnboardingStore } from '@/store/onboardingStore'
 import type { AiRecommendedTodo } from '@/shared/types/goal'
+import type { TodoDetail } from '@/shared/types/todo'
 import { createGoalWithTodos } from '@/shared/api/goal'
 
 interface ProposeGoalProps {
@@ -50,14 +52,27 @@ function timeToHHmm(time: string | null): string | null {
   return `${String(h).padStart(2, '0')}:${mStr}`
 }
 
-function mapAiTodo(todo: AiRecommendedTodo, index: number): ProposedTodo {
-  const repeatMap: Record<string, RepeatType> = {
-    DAILY: '데일리',
-    WEEKLY: '위클리',
-    MONTHLY: '먼슬리',
+function toTodoDetail(t: ProposedTodo): TodoDetail {
+  return {
+    todoId: t.id,
+    title: t.title,
+    dueDate: t.deadlineDate ? format(t.deadlineDate, 'yyyy-MM-dd') : null,
+    isCompleted: false,
+    tagId: null,
+    tagTitle: t.selectedTagId === '미선택' ? null : t.selectedTagId,
+    tagColor: null,
+    routineType: REPEAT_TO_ROUTINE[t.repeat],
+    subTodos: t.subTodos.map((s) => ({
+      todoId: s.id,
+      title: s.title,
+      isCompleted: false,
+    })),
   }
-  const repeat: RepeatType = todo.routineType
-    ? (repeatMap[todo.routineType] ?? '없음')
+}
+
+function mapAiTodo(todo: AiRecommendedTodo, index: number): ProposedTodo {
+  const repeat = todo.routineType
+    ? (ROUTINE_TO_REPEAT[todo.routineType] ?? '없음')
     : '없음'
   const dayTag: 'D' | 'M' =
     todo.routineType === 'WEEKLY' || todo.routineType === 'MONTHLY' ? 'M' : 'D'
@@ -141,11 +156,6 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
       const accessToken = localStorage.getItem('accessToken') ?? ''
       const selectedTodos = todos.filter((t) => selectedIds.includes(t.id))
       const isRecurring = (t: ProposedTodo) => t.repeat !== '없음'
-      const routineTypeMap: Record<string, 'DAILY' | 'WEEKLY' | 'MONTHLY'> = {
-        데일리: 'DAILY',
-        위클리: 'WEEKLY',
-        먼슬리: 'MONTHLY',
-      }
 
       const res = await createGoalWithTodos(accessToken, {
         title: goalValue,
@@ -159,7 +169,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
               ? format(t.deadlineDate, 'yyyy-MM-dd')
               : null,
           dueTime: !isRecurring(t) ? timeToHHmm(t.deadlineTime) : null,
-          routineType: isRecurring(t) ? routineTypeMap[t.repeat] : null,
+          routineType: isRecurring(t) ? REPEAT_TO_ROUTINE[t.repeat] : null,
           routineDate: isRecurring(t) ? (t.routineDate ?? null) : null,
           tagId: null,
           subTodos: !isRecurring(t) ? t.subTodos.map((s) => s.title) : [],
@@ -252,7 +262,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
             isOpen={infoOpen}
             onClose={() => setInfoOpen(false)}
             onEdit={handleEditOpen}
-            todo={selectedTodo}
+            todo={toTodoDetail(selectedTodo)}
             allTags={allTags}
             onSubTodoAdd={handleSubTodoAdd}
           />

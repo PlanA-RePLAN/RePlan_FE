@@ -9,6 +9,7 @@ import {
   type CustomTag,
   type RepeatType,
   type SubTodo,
+  REPEAT_OPTIONS,
 } from '../type/types'
 import TagAddSheet from './TagAddSheet'
 import DeadlineInput from './DeadlineInput'
@@ -19,8 +20,6 @@ import DailyTimeSetting from './DailyTimeSetting'
 import WeeklyDaySetting from './WeeklyDaySetting'
 import MonthlySetting from './MonthlySetting'
 import SubTodoSheet from './SubTodoSheet'
-
-const REPEAT_OPTIONS: RepeatType[] = ['없음', '데일리', '위클리', '먼슬리']
 
 interface TodoEditSheetProps {
   isOpen: boolean

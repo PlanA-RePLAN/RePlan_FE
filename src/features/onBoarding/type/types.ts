@@ -1,6 +1,27 @@
 import { TODO_TAGS, type TodoTagDef } from '@/shared/types/todo'
 
 export type RepeatType = '없음' | '데일리' | '위클리' | '먼슬리'
+export type RoutineType = 'DAILY' | 'WEEKLY' | 'MONTHLY'
+
+export const REPEAT_OPTIONS: RepeatType[] = [
+  '없음',
+  '데일리',
+  '위클리',
+  '먼슬리',
+]
+
+export const ROUTINE_TO_REPEAT: Record<RoutineType, RepeatType> = {
+  DAILY: '데일리',
+  WEEKLY: '위클리',
+  MONTHLY: '먼슬리',
+}
+
+export const REPEAT_TO_ROUTINE: Record<RepeatType, RoutineType | null> = {
+  없음: null,
+  데일리: 'DAILY',
+  위클리: 'WEEKLY',
+  먼슬리: 'MONTHLY',
+}
 
 // 커스텀 태그 (사용자가 직접 추가한 태그)
 export interface CustomTag {

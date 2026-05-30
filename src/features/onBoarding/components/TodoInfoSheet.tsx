@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { cn } from '@/shared/utils/cn'
 
 // types
-import { type CustomTag } from '../type/types'
+import {
+  type CustomTag,
+  ROUTINE_TO_REPEAT,
+  REPEAT_OPTIONS,
+} from '../type/types'
 import type { TodoDetail } from '@/shared/types/todo'
 
 // components
@@ -15,7 +19,6 @@ import BottomSheet from '@/shared/components/BottomSheet'
 import CloseButtonIcon from '@/icons/CloseButtonIcon'
 import RoundEditIcon from '@/icons/RoundEditIcon'
 import AddItemIcon from '@/icons/AddItemIcon'
-import { div } from 'framer-motion/client'
 
 interface TodoInfoSheetProps {
   isOpen: boolean
@@ -42,7 +45,7 @@ export default function TodoInfoSheet({
   todo,
   allTags,
   onSubTodoAdd,
-  onClick
+  onClick,
 }: TodoInfoSheetProps) {
   const [openUnderTodoSheet, setOpenUnderTodoSheet] = useState(false)
 
@@ -63,16 +66,17 @@ export default function TodoInfoSheet({
     )
   }
 
-  const getRepeatLabel = () => {
-    if (todo.routineType === 'DAILY') return '데일리'
-    if (todo.routineType === 'WEEKLY') return '위클리'
-    if (todo.routineType === 'MONTHLY') return '먼슬리'
-    return '없음'
-  }
+  const repeatLabel = todo.routineType
+    ? ROUTINE_TO_REPEAT[todo.routineType]
+    : '없음'
 
   const deadlineDate = todo.dueDate ? new Date(todo.dueDate) : null
   const deadlineTime = todo.dueDate
-    ? new Date(todo.dueDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    ? new Date(todo.dueDate).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })
     : null
 
   return (
@@ -107,12 +111,12 @@ export default function TodoInfoSheet({
         {/* 반복 여부 */}
         <SectionLabel>반복 여부</SectionLabel>
         <div className="flex gap-2 mb-5">
-          {(['없음', '데일리', '위클리', '먼슬리'] as const).map((option) => (
+          {REPEAT_OPTIONS.map((option) => (
             <div
               key={option}
               className={cn(
                 'text-sm font-medium px-5 py-2 rounded-full',
-                option === getRepeatLabel()
+                option === repeatLabel
                   ? 'bg-bluegray-black text-white'
                   : 'bg-bluegray-light text-bluegray-dark',
               )}
@@ -170,8 +174,13 @@ export default function TodoInfoSheet({
         mode="추가"
       />
       {onClick && (
-        <div className='px-5 mt-10'>
-          <button onClick={onClick} className='w-full h-13 bg-bluegray-light flex justify-center items-center rounded-xl text-danger font-semibold text-[14px]' >투두 삭제</button>
+        <div className="px-5 mt-10">
+          <button
+            onClick={onClick}
+            className="w-full h-13 bg-bluegray-light flex justify-center items-center rounded-xl text-danger font-semibold text-[14px]"
+          >
+            투두 삭제
+          </button>
         </div>
       )}
     </BottomSheet>

@@ -1,11 +1,7 @@
-import BellIcon from "@/icons/BellIcon"
-import DefaultProfileIcon from "@/icons/DefaultProfileIcon"
+import BellIcon from '@/icons/BellIcon'
+import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 
-interface MainHeaderProps {
-  hasNotification?: boolean
-}
-
-export default function MainHeader({ hasNotification = false }: MainHeaderProps) {
+export default function MainHeader() {
   return (
     <div className="w-full h-26.5 flex items-center justify-between px-5">
       <div className="flex items-center gap-3">
