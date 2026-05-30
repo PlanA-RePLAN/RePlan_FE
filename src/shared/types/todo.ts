@@ -1,3 +1,21 @@
+export interface SubTodoDetail {
+  todoId: number
+  title: string
+  isCompleted: boolean
+}
+
+export interface TodoDetail {
+  todoId: number
+  title: string
+  dueDate: string | null
+  isCompleted: boolean
+  tagId: number | null
+  tagTitle: string | null
+  tagColor: string | null
+  routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
+  subTodos: SubTodoDetail[]
+}
+
 export interface Todo {
   todoId: number
   title: string

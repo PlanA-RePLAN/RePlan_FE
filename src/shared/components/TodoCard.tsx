@@ -2,7 +2,7 @@ import focusedSvg from '@/assets/foucsed.svg'
 import CheckIcon from '@/icons/CheckIcon'
 import TodoTag from './TodoTag'
 import { cn } from '@/shared/utils/cn'
-import GoalIcon from '@/icons/GoalIcon'
+import GoalColoredIcon from '@/icons/GoalColoredIcon'
 import ClockIcon from '@/icons/ClockIcon'
 import PinIcon from '@/icons/PinIcon'
 import { motion, useAnimation } from 'framer-motion'
@@ -36,6 +36,7 @@ function TodoCard({
 
   const cardContent = (
     <div
+      onClick={onClick}
       className={cn(
         'relative flex items-start gap-3 w-full rounded-2xl border border-bluegray-light bg-white p-4 transition-all duration-100 ease-in-out',
         { 'mt-3': !isSwipeable },
@@ -110,8 +111,14 @@ interface IconProps {
 
 function Icon({ checked = false, onClick }: IconProps) {
   return (
-    <div className="shrink-0" onClick={onClick}>
-      {checked ? <GoalIcon /> : <CheckIcon />}
+    <div
+      className="shrink-0"
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick?.()
+      }}
+    >
+      {checked ? <GoalColoredIcon /> : <CheckIcon />}
     </div>
   )
 }

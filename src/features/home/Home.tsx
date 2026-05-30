@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { cn } from '@/shared/utils/cn'
 import {
   getTodos,
+  getTodoDetail,
   deleteTodo,
   toggleTodoComplete,
   updateTodoOrder,
@@ -23,7 +24,9 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 
 // type
-import type { Todo } from '@/shared/types'
+import type { Todo, TodoDetail } from '@/shared/types/todo'
+import type { CustomTag } from '@/features/onBoarding/type/types'
+import { PRESET_TAGS } from '@/features/onBoarding/type/types'
 
 // components
 import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'
@@ -33,6 +36,7 @@ import TodoCard from '@/shared/components/TodoCard'
 import BottomSheet from '@/shared/components/BottomSheet'
 import MonthPeaker from '../goal/components/MonthPeaker'
 import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
+import TodoInfoSheet from '../onBoarding/components/TodoInfoSheet'
 
 const TABS = [
   { label: 'All', value: 'all' },
@@ -90,41 +94,64 @@ function SortableItem({
 }
 
 export default function Home() {
-  const [selectedTab, setSelectedTab] = useState<
-    'all' | 'day' | 'week' | 'month'
-  >('all')
-  const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>(
-    'priority',
-  )
+ 
+  const [selectedTab, setSelectedTab] = useState<'all' | 'day' | 'week' | 'month'>('all')
+  const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>('priority')
   const [todos, setTodos] = useState<Todo[]>([])
+  const [selectedTodo, setSelectedTodo] = useState<TodoDetail | null>(null)
+  const [allTags] = useState<CustomTag[]>(PRESET_TAGS)
+  
   const [selectedYear, setSelectedYear] = useState<number>(2026)
   const [selectedMonth, setSelectedMonth] = useState<number>(5)
+  const [isTodoAddBottomSheetOpen, setIsTodoAddBottomSheet] = useState(false)
   const [isMonthBottomSheetOpen, setIsMonthBottomSheetOpen] = useState(false)
   const [isDeleteBottomSheetOpen, setIsDeleteBottomSheetOpen] = useState(false)
   const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null)
+
+
+  // 투두 선택
+  const handleClickTodo = async (todoId: number) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      const res = await getTodoDetail(accessToken, todoId)
+      if (res.success && res.data) {
+        setSelectedTodo(res.data)
+        setIsTodoAddBottomSheet(true)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   // 탭 선택
   const handleSelect = (value: string) => {
     setSelectedTab(value as 'all' | 'day' | 'week' | 'month')
   }
 
-  // 투두 삭제
+  // 투두 삭제 (공통)
+  const deleteTodoById = async (todoId: number) => {
+    setTodos((prev) => prev.filter((t) => t.todoId !== todoId))
+    setIsTodoAddBottomSheet(false)
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      await deleteTodo(accessToken, todoId)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  // TodoCard 스와이프 삭제 → 확인 바텀시트 오픈
   const handleDeleteClick = (todoId: number) => {
     setDeletingTodoId(todoId)
     setIsDeleteBottomSheetOpen(true)
   }
 
+  // 바텀시트 "삭제" 버튼 → 실제 삭제 실행
   const handleConfirmDelete = async () => {
     if (deletingTodoId === null) return
-    setTodos((prev) => prev.filter((t) => t.todoId !== deletingTodoId))
+    await deleteTodoById(deletingTodoId)
     setIsDeleteBottomSheetOpen(false)
     setDeletingTodoId(null)
-    try {
-      const accessToken = localStorage.getItem('accessToken') ?? ''
-      await deleteTodo(accessToken, deletingTodoId)
-    } catch (error) {
-      console.error(error)
-    }
   }
 
   // 투두 완료 및 미완료
@@ -159,6 +186,7 @@ export default function Home() {
     }
     fetchTodos()
   }, [selectedTab, sort])
+
 
   // 투두 필터링 및 정렬
   const filteredTodos = todos.filter((t) => {
@@ -273,10 +301,11 @@ export default function Home() {
                     key={todo.todoId}
                     status="swipeable"
                     onDelete={() => handleDeleteClick(todo.todoId)}
+                    
                   >
                     <TodoCard.Icon />
                     <TodoCard.Content>
-                      <TodoCard.Title dayTag={getDayTag(todo.routineType)}>
+                      <TodoCard.Title dayTag={getDayTag(todo.routineType)} onClick={() => handleClickTodo(todo.todoId)}>
                         {todo.title}
                       </TodoCard.Title>
                       {todo.dueDate && (
@@ -322,6 +351,7 @@ export default function Home() {
                               todo.isCompleted ? 'grey' : 'swipeable-delete'
                             }
                             onDelete={() => handleDeleteClick(todo.todoId)}
+                            onClick={() => handleClickTodo(todo.todoId)}
                           >
                             <TodoCard.Icon
                               onClick={() =>
@@ -361,6 +391,7 @@ export default function Home() {
                       key={todo.todoId}
                       status={todo.isCompleted ? 'grey' : 'swipeable-delete'}
                       onDelete={() => handleDeleteClick(todo.todoId)}
+                      onClick={() => handleClickTodo(todo.todoId)}
                     >
                       <TodoCard.Icon
                         onClick={() =>
@@ -397,6 +428,18 @@ export default function Home() {
       <button className="fixed bottom-33 right-5 bg-blue-normal w-11 h-11 rounded-full flex justify-center items-center">
         <img src="/src/assets/add.svg" alt="" />
       </button>
+
+      {selectedTodo && (
+        <TodoInfoSheet
+          isOpen={isTodoAddBottomSheetOpen}
+          onClose={() => setIsTodoAddBottomSheet(false)}
+          onEdit={() => {}}
+          todo={selectedTodo}
+          allTags={allTags}
+          onSubTodoAdd={() => {}}
+          onClick={() => deleteTodoById(selectedTodo.todoId)}
+        />
+      )}
 
       <BottomSheet
         isOpen={isDeleteBottomSheetOpen}
