@@ -28,6 +28,7 @@ interface TodoEditSheetProps {
   todo: ProposedTodo
   allTags: CustomTag[]
   onTagAdd: (tag: CustomTag) => void
+  title?: string
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -45,6 +46,7 @@ export default function TodoEditSheet({
   todo,
   allTags,
   onTagAdd,
+  title = '투두 수정',
 }: TodoEditSheetProps) {
   const [editTitle, setEditTitle] = useState(todo.title)
   const [editTagId, setEditTagId] = useState(todo.selectedTagId)
@@ -144,7 +146,7 @@ export default function TodoEditSheet({
       <BottomSheet isOpen={isOpen} onClose={onClose}>
         <div className="px-5 pt-2 pb-6 overflow-y-auto max-h-[80vh]">
           <BottomSheetHeader
-            title="투두 수정"
+            title={title}
             onClose={onClose}
             onConfirm={handleConfirm}
             confirmDisabled={!editTitle.trim()}
