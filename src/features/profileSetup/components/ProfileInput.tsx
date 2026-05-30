@@ -1,3 +1,4 @@
+import dangerSvg from '@/assets/danger.svg'
 import Input from '@/shared/components/Input'
 import DuplicateCheckButton from './DuplicateCheckButton'
 import { useState } from 'react'
@@ -47,7 +48,7 @@ export default function ProfileInput({
         <p className="absolute top-21 text-xs text-bluegray-normal flex">
           {isDuplicate ? (
             <>
-              <img src="/src/assets/danger.svg" alt="" className="mr-2" />
+              <img src={dangerSvg} alt="" className="mr-2" />
               <span className="text-danger font-bold">플렌에이</span>는 이미
               등록된 이름입니다.
             </>
