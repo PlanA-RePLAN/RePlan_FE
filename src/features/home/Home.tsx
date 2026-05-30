@@ -7,6 +7,7 @@ import {
   deleteTodo,
   toggleTodoComplete,
   updateTodoOrder,
+  createTodo,
 } from '@/shared/api/todo'
 import {
   DndContext,
@@ -37,6 +38,8 @@ import BottomSheet from '@/shared/components/BottomSheet'
 import MonthPeaker from '../goal/components/MonthPeaker'
 import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 import TodoInfoSheet from '../onBoarding/components/TodoInfoSheet'
+import TodoEditSheet from '../onBoarding/components/TodoEditSheet'
+import type { ProposedTodo } from '@/features/onBoarding/type/types'
 
 const TABS = [
   { label: 'All', value: 'all' },
@@ -110,6 +113,19 @@ export default function Home() {
   const [isMonthBottomSheetOpen, setIsMonthBottomSheetOpen] = useState(false)
   const [isDeleteBottomSheetOpen, setIsDeleteBottomSheetOpen] = useState(false)
   const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null)
+  const [isNewTodoSheetOpen, setIsNewTodoSheetOpen] = useState(false)
+
+  const emptyTodo: ProposedTodo = {
+    id: 0,
+    title: '',
+    time: '',
+    dayTag: 'D',
+    selectedTagId: PRESET_TAGS[0]?.id ?? '',
+    repeat: '없음',
+    deadlineDate: null,
+    deadlineTime: null,
+    subTodos: [],
+  }
 
   // 투두 선택
   const handleClickTodo = async (todoId: number) => {
@@ -139,6 +155,48 @@ export default function Home() {
       await deleteTodo(accessToken, todoId)
     } catch (error) {
       console.error(error)
+    }
+  }
+
+  // 투두 생성
+  const handleCreateTodo = async (proposed: ProposedTodo) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+
+      let dueDate: string | null = null
+      if (proposed.deadlineDate) {
+        const date = new Date(proposed.deadlineDate)
+        if (proposed.deadlineTime) {
+          const [timePart, meridiem] = proposed.deadlineTime.split(' ')
+          const [h, m] = timePart.split(':').map(Number)
+          const hours24 =
+            meridiem === 'PM' && h !== 12
+              ? h + 12
+              : meridiem === 'AM' && h === 12
+                ? 0
+                : h
+          date.setHours(hours24, m, 0, 0)
+        }
+        dueDate = date.toISOString()
+      }
+
+      const res = await createTodo(accessToken, {
+        title: proposed.title,
+        dueDate,
+        tagId: null,
+        goalId: null,
+      })
+
+      if (res.success && res.data) {
+        const accessToken2 = localStorage.getItem('accessToken') ?? ''
+        const apiSort = sort === 'latest' ? 'priority' : sort
+        const listRes = await getTodos(accessToken2, selectedTab, apiSort)
+        if (listRes.success) setTodos(listRes.data ?? [])
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsNewTodoSheetOpen(false)
     }
   }
 
@@ -432,9 +490,22 @@ export default function Home() {
       </div>
 
       {/* 투두 추가 버튼 */}
-      <button className="fixed bottom-33 right-5 bg-blue-normal w-11 h-11 rounded-full flex justify-center items-center">
+      <button
+        onClick={() => setIsNewTodoSheetOpen(true)}
+        className="fixed bottom-33 right-5 bg-blue-normal w-11 h-11 rounded-full flex justify-center items-center"
+      >
         <img src="/src/assets/add.svg" alt="" />
       </button>
+
+      <TodoEditSheet
+        isOpen={isNewTodoSheetOpen}
+        onClose={() => setIsNewTodoSheetOpen(false)}
+        onConfirm={handleCreateTodo}
+        todo={emptyTodo}
+        allTags={allTags}
+        onTagAdd={() => {}}
+        title="투두 추가"
+      />
 
       {selectedTodo && (
         <TodoInfoSheet
