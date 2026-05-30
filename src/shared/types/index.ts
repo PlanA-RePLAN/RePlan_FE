@@ -4,3 +4,6 @@ export type User = {
   name: string
   email: string
 }
+
+export type { Goal, GoalGroup } from './goal'
+export type { Todo } from './todo'

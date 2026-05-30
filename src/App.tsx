@@ -1,13 +1,27 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 // components
-import OnBoarding from '@/features/onBoarding';
+import Index from '@/features/profileSetup'
+import ProfileSetup from '@/features/profileSetup/ProfileSetup'
+import OnBoarding from '@/features/onBoarding'
+import Goal from './features/goal/Goal'
+import LayoutWithNav from '@/shared/components/LayoutWithNav'
+import Home from './features/home/Home'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<OnBoarding />} />
+        {/* Nav 미사용 페이지 */}
+        <Route path="/" element={<Index />} />
+        <Route path="/profile-setup" element={<ProfileSetup />} />
+        <Route path="/onboarding" element={<OnBoarding />} />
+
+        {/* Nav 사용 페이지 */}
+        <Route element={<LayoutWithNav />}>
+          <Route path="/goal" element={<Goal />} />
+          <Route path="/home" element={<Home />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   )
