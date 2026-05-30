@@ -94,20 +94,22 @@ function SortableItem({
 }
 
 export default function Home() {
- 
-  const [selectedTab, setSelectedTab] = useState<'all' | 'day' | 'week' | 'month'>('all')
-  const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>('priority')
+  const [selectedTab, setSelectedTab] = useState<
+    'all' | 'day' | 'week' | 'month'
+  >('all')
+  const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>(
+    'priority',
+  )
   const [todos, setTodos] = useState<Todo[]>([])
   const [selectedTodo, setSelectedTodo] = useState<TodoDetail | null>(null)
   const [allTags] = useState<CustomTag[]>(PRESET_TAGS)
-  
+
   const [selectedYear, setSelectedYear] = useState<number>(2026)
   const [selectedMonth, setSelectedMonth] = useState<number>(5)
   const [isTodoAddBottomSheetOpen, setIsTodoAddBottomSheet] = useState(false)
   const [isMonthBottomSheetOpen, setIsMonthBottomSheetOpen] = useState(false)
   const [isDeleteBottomSheetOpen, setIsDeleteBottomSheetOpen] = useState(false)
   const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null)
-
 
   // 투두 선택
   const handleClickTodo = async (todoId: number) => {
@@ -186,7 +188,6 @@ export default function Home() {
     }
     fetchTodos()
   }, [selectedTab, sort])
-
 
   // 투두 필터링 및 정렬
   const filteredTodos = todos.filter((t) => {
@@ -273,7 +274,11 @@ export default function Home() {
       {/* 캘린더 영역 */}
       <div className="flex-1 overflow-y-auto">
         <div>
-          <DatePicker showHeader={false} />
+          <DatePicker
+            onClose={() => {}}
+            onConfirm={() => {}}
+            showHeader={false}
+          />
         </div>
 
         {filteredTodos.length === 0 ? (
@@ -301,11 +306,13 @@ export default function Home() {
                     key={todo.todoId}
                     status="swipeable"
                     onDelete={() => handleDeleteClick(todo.todoId)}
-                    
                   >
                     <TodoCard.Icon />
                     <TodoCard.Content>
-                      <TodoCard.Title dayTag={getDayTag(todo.routineType)} onClick={() => handleClickTodo(todo.todoId)}>
+                      <TodoCard.Title
+                        dayTag={getDayTag(todo.routineType)}
+                        onClick={() => handleClickTodo(todo.todoId)}
+                      >
                         {todo.title}
                       </TodoCard.Title>
                       {todo.dueDate && (

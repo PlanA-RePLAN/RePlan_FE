@@ -140,16 +140,17 @@ function Content({ children }: ContentProps) {
 interface TitleProps {
   children: React.ReactNode
   dayTag?: 'M' | 'D'
+  onClick?: () => void
 }
 
-function Title({ children, dayTag }: TitleProps) {
+function Title({ children, dayTag, onClick }: TitleProps) {
   const dayTagColors = {
     D: 'text-[#7EA4F5]',
     M: 'text-[#FFA9A9]',
   }
 
   return (
-    <div className="flex items-start gap-2 min-w-0">
+    <div className="flex items-start gap-2 min-w-0" onClick={onClick}>
       <span className="text-sm font-medium text-bluegray-black break-words min-w-0">
         {children}
       </span>
