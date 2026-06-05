@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import logoSvg from '@/assets/logo.svg'
 import Button from '@/features/profileSetup/components/Button'
 import GoogleIcon from '@/icons/GoogleIcon'
 import { kakaoOAuthLogin } from '@/shared/api/auth'
@@ -71,10 +72,8 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col justify-center items-center h-dvh">
       <div className="flex flex-col items-center gap-3 absolute top-[33.5%]">
-        <img src="/src/assets/logo.svg" alt="" />
-        <p className="text-base text-bluegray-normal-hover">
-          실패 없는 재계획 프로젝트
-        </p>
+        <img src={logoSvg} alt="" />
+        <p className="text-base text-bluegray-normal-hover">실패 없는 재계획 프로젝트</p>
       </div>
       {error && (
         <p className="absolute top-[60%] text-sm text-danger text-center px-5">

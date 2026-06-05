@@ -29,6 +29,10 @@ import type { Todo, TodoDetail } from '@/shared/types/todo'
 import type { CustomTag } from '@/features/onBoarding/type/types'
 import { PRESET_TAGS } from '@/features/onBoarding/type/types'
 
+// assets
+import symbolSvg from '@/assets/symbol.svg'
+import addSvg from '@/assets/add.svg'
+
 // components
 import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'
 import DatePicker from '../onBoarding/components/DatePicker'
@@ -354,7 +358,7 @@ export default function Home() {
             {pinnedTodos.length > 0 && (
               <div>
                 <div className="flex items-center gap-1 mt-8">
-                  <img src="/src/assets/symbol.svg" alt="" />
+                  <img src={symbolSvg} alt="" />
                   <p className="font-bold text-[14px] text-bluegray-darker">
                     주요 투두
                   </p>
@@ -494,7 +498,7 @@ export default function Home() {
         onClick={() => setIsNewTodoSheetOpen(true)}
         className="fixed bottom-33 right-5 bg-blue-normal w-11 h-11 rounded-full flex justify-center items-center"
       >
-        <img src="/src/assets/add.svg" alt="" />
+        <img src={addSvg} alt="" />
       </button>
 
       <TodoEditSheet
