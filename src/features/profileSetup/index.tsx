@@ -21,8 +21,7 @@ export default function LoginPage() {
 
   // 카카오 SDK 초기화
   useEffect(() => {
-    if (!KAKAO_JS_KEY || !window.Kakao || window.Kakao.isInitialized()) 
-      return
+    if (!KAKAO_JS_KEY || !window.Kakao || window.Kakao.isInitialized()) return
     window.Kakao.init(KAKAO_JS_KEY)
   }, [])
 
@@ -41,7 +40,7 @@ export default function LoginPage() {
       localStorage.setItem('refreshToken', refreshToken)
       navigate('/home')
     }
-    // 신규 유저 
+    // 신규 유저
     else if (isNewUser && tempToken) {
       sessionStorage.setItem('tempToken', tempToken)
       navigate('/profile-setup')
@@ -60,7 +59,8 @@ export default function LoginPage() {
       })
       const res = await kakaoOAuthLogin(accessToken)
       handleAuthResponse(res)
-    } catch {
+    } catch (e) {
+      console.log(e)
       setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.')
     }
   }
@@ -76,11 +76,17 @@ export default function LoginPage() {
         <p className="text-base text-bluegray-normal-hover">실패 없는 재계획 프로젝트</p>
       </div>
       {error && (
-        <p className="absolute top-[60%] text-sm text-danger text-center px-5">{error}</p>
+        <p className="absolute top-[60%] text-sm text-danger text-center px-5">
+          {error}
+        </p>
       )}
       <div className="w-full px-5 flex flex-col gap-2 absolute bottom-[6%]">
         {LOGIN_OPTION.map((item) => (
-          <Button key={item.title} onClick={() => handleLogin(item.option)} {...item} />
+          <Button
+            key={item.title}
+            onClick={() => handleLogin(item.option)}
+            {...item}
+          />
         ))}
       </div>
     </div>
