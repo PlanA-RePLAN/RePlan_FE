@@ -7,6 +7,7 @@ import OnBoarding from '@/features/onBoarding'
 import Goal from './features/goal/Goal'
 import LayoutWithNav from '@/shared/components/LayoutWithNav'
 import Home from './features/home/Home'
+import ReplanPage from '@/features/replan'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
         <Route path="/onboarding" element={<OnBoarding />} />
+        <Route path="/replan" element={<ReplanPage />} />
 
         {/* Nav 사용 페이지 */}
         <Route element={<LayoutWithNav />}>
