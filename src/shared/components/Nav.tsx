@@ -5,8 +5,8 @@ import ChartNavIcon from "@/icons/nav/ChartNavIcon"
 import ProfileNavIcon from "@/icons/nav/ProfileNavIcon"
 
 const NAV_ITEMS = [
-    { path: "/goal",  icon: GoalNavIcon,    label: "목표" },
     { path: "/home",  icon: HomeNavIcon,    label: "홈" },
+    { path: "/goal",  icon: GoalNavIcon,    label: "목표" },
     { path: "/chart", icon: ChartNavIcon,   label: "통계" },
     { path: "/",      icon: ProfileNavIcon, label: "마이" },
 ]
@@ -16,7 +16,7 @@ export default function Nav() {
     const navigate = useNavigate()
 
     return (
-        <div className="flex justify-around items-center w-full h-27 px-10.75 fixed bottom-0 bg-white border border-bluegray-light-hover">
+        <div className="flex justify-around items-center w-full h-27 fixed bottom-0 bg-white border border-bluegray-light-hover">
             {NAV_ITEMS.map((item) => {
                 const isActive = location.pathname === item.path
                 const Icon = item.icon
