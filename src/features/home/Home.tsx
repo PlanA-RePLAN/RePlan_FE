@@ -29,9 +29,8 @@ import type { Todo, TodoDetail } from '@/shared/types/todo'
 import type { CustomTag } from '@/features/onBoarding/type/types'
 import { PRESET_TAGS } from '@/features/onBoarding/type/types'
 
-// assets
-import symbolSvg from '@/assets/symbol.svg'
-import addSvg from '@/assets/add.svg'
+const symbolSvg = '/assets/symbol.svg'
+const addSvg = '/assets/add.svg'
 
 // components
 import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'

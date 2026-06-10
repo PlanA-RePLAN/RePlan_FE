@@ -1,5 +1,5 @@
-import focusedSvg from '@/assets/foucsed.svg'
-import deleteSvg from '@/assets/delete.svg'
+const focusedSvg = '/assets/foucsed.svg'
+const deleteSvg = '/assets/delete.svg'
 import CheckIcon from '@/icons/CheckIcon'
 import TodoTag from './TodoTag'
 import { cn } from '@/shared/utils/cn'

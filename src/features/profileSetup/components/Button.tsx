@@ -1,7 +1,7 @@
 import { cn } from '@/shared/utils/cn'
-import kakaoSvg from '@/assets/kakao.svg'
-import appleSvg from '@/assets/apple.svg'
-import naverSvg from '@/assets/naver.svg'
+const kakaoSvg = '/assets/kakao.svg'
+const appleSvg = '/assets/apple.svg'
+const naverSvg = '/assets/naver.svg'
 
 interface ButtonProps {
   onClick: () => void

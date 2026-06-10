@@ -1,4 +1,4 @@
-import dangerSvg from '@/assets/danger.svg'
+const dangerSvg = '/assets/danger.svg'
 import Input from '@/shared/components/Input'
 import DuplicateCheckButton from './DuplicateCheckButton'
 import { useState } from 'react'
