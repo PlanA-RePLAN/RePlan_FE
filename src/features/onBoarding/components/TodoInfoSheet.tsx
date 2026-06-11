@@ -6,6 +6,7 @@ import {
   type CustomTag,
   ROUTINE_TO_REPEAT,
   REPEAT_OPTIONS,
+  TAG_COLORS,
 } from '../type/types'
 import type { TodoDetail } from '@/shared/types/todo'
 
@@ -48,13 +49,33 @@ export default function TodoInfoSheet({
   onClick,
 }: TodoInfoSheetProps) {
   const [openUnderTodoSheet, setOpenUnderTodoSheet] = useState(false)
+  const [openDeleteConfirmSheet, setOpenDeleteConfirmSheet] = useState(false)
 
   const renderTag = () => {
-    const tagTitle = todo.tagTitle ?? '미선택'
+    const tagTitle = todo.tagTitle ?? ''
+    if (!tagTitle || tagTitle === '미선택') return null
+
     if (getTodoTag(tagTitle)) {
       return <TodoTag category={tagTitle} />
     }
-    const custom = allTags.find((t) => t.label === todo.tagTitle)
+
+    if (todo.tagColor) {
+      const colorDef = TAG_COLORS.find(
+        (c) => c.id === todo.tagColor!.toLowerCase(),
+      )
+      if (colorDef) {
+        return (
+          <div
+            style={{ backgroundColor: colorDef.bgColor, color: colorDef.textColor }}
+            className="inline-block px-4 py-1 rounded-full text-xs font-semibold"
+          >
+            {tagTitle}
+          </div>
+        )
+      }
+    }
+
+    const custom = allTags.find((t) => t.label === tagTitle)
     if (!custom) return null
     return (
       <div
@@ -80,6 +101,7 @@ export default function TodoInfoSheet({
     : null
 
   return (
+    <>
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <div className="px-5 pt-2 pb-6">
         {/* 헤더 */}
@@ -176,7 +198,7 @@ export default function TodoInfoSheet({
       {onClick && (
         <div className="px-5 mt-10">
           <button
-            onClick={onClick}
+            onClick={() => setOpenDeleteConfirmSheet(true)}
             className="w-full h-13 bg-bluegray-light flex justify-center items-center rounded-xl text-danger font-semibold text-[14px]"
           >
             투두 삭제
@@ -184,5 +206,32 @@ export default function TodoInfoSheet({
         </div>
       )}
     </BottomSheet>
+
+    <BottomSheet
+      isOpen={openDeleteConfirmSheet}
+      onClose={() => setOpenDeleteConfirmSheet(false)}
+    >
+      <div className="pt-4 pb-9 px-5 flex flex-col items-center w-full">
+        <h3 className="text-xl font-semibold">투두를 삭제하시겠습니까?</h3>
+        <div className="flex gap-3 mt-5 w-full">
+          <button
+            onClick={() => setOpenDeleteConfirmSheet(false)}
+            className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
+          >
+            취소
+          </button>
+          <button
+            onClick={() => {
+              setOpenDeleteConfirmSheet(false)
+              onClick?.()
+            }}
+            className="flex-1 py-3 rounded-xl bg-bluegray-light text-danger font-semibold"
+          >
+            삭제
+          </button>
+        </div>
+      </div>
+    </BottomSheet>
+    </>
   )
 }
