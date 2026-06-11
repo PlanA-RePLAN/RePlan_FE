@@ -13,6 +13,7 @@ export interface TodoDetail {
   tagTitle: string | null
   tagColor: string | null
   routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
+  routineDate: number | null
   subTodos: SubTodoDetail[]
 }
 
