@@ -22,11 +22,12 @@ export async function getTodos(
     accessToken: string,
     filter: 'all' | 'day' | 'week' | 'month',
     sort: 'priority' | 'dueDate',
+    date?: string,
 ): Promise<ApiResponse<Todo[]>> {
     const res = await client.get<ApiResponse<Todo[]>>(
         '/api/todos',
         {
-            params: { filter, sort },
+            params: { filter, sort, ...(date && { date }) },
             headers: { Authorization: `Bearer ${accessToken}` },
         }
     )
@@ -92,6 +93,40 @@ export async function toggleTodoComplete(
     const res = await client.patch<ApiResponse<null>>(
         `/api/todos/${todoId}/complete`,
         { isCompleted },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+    return res.data
+}
+
+export interface UpdateTodoRequest {
+  title: string
+  dueDate: string | null
+  tagId: number | null
+  routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
+  routineDate: number | null
+}
+
+export async function updateTodo(
+  accessToken: string,
+  todoId: number,
+  body: UpdateTodoRequest,
+): Promise<ApiResponse<null>> {
+  const res = await client.put<ApiResponse<null>>(
+    `/api/todos/${todoId}`,
+    body,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  return res.data
+}
+
+export async function pinTodo(
+    accessToken: string,
+    todoId: number,
+    isPinned: boolean,
+): Promise<ApiResponse<null>> {
+    const res = await client.patch<ApiResponse<null>>(
+        `/api/todos/${todoId}/pin`,
+        { isPinned },
         { headers: { Authorization: `Bearer ${accessToken}` } }
     )
     return res.data
