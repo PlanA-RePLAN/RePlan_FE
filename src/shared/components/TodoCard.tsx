@@ -1,25 +1,29 @@
 const focusedSvg = '/assets/foucsed.svg'
 const deleteSvg = '/assets/delete.svg'
+const replanIcon = '/assets/replan_icon.svg'
 import CheckIcon from '@/icons/CheckIcon'
 import TodoTag from './TodoTag'
 import { cn } from '@/shared/utils/cn'
 import GoalColoredIcon from '@/icons/GoalColoredIcon'
 import ClockIcon from '@/icons/ClockIcon'
 import PinIcon from '@/icons/PinIcon'
-import { motion, useAnimation } from 'framer-motion'
+import TodoPinIcon from '@/icons/TodoPinIcon'
+import { motion, useAnimation, useMotionValue } from 'framer-motion'
 
 type Category = string
 
 // ── 루트 ──────────────────────────────────────────────
 const SLIDE_WIDTH_FULL = 160
-const SLIDE_WIDTH_DELETE = 80
+const PIN_SLIDE_WIDTH = 80
 
 interface TodoCardProps {
   children: React.ReactNode
   className?: string
-  status?: 'focused' | 'swipeable' | 'swipeable-delete' | 'grey' | 'default'
+  status?: 'focused' | 'swipeable' | 'replan' | 'grey' | 'default'
   onDelete?: () => void
   onClick?: () => void
+  pinned?: boolean
+  onPin?: (pinned: boolean) => void
 }
 
 function TodoCard({
@@ -28,16 +32,27 @@ function TodoCard({
   status = 'default',
   onDelete,
   onClick,
+  pinned = false,
+  onPin,
 }: TodoCardProps) {
   const controls = useAnimation()
-  const isSwipeable = status === 'swipeable' || status === 'swipeable-delete'
-  const isFocusedStyle = status === 'focused' || status === 'swipeable'
-  const slideWidth =
-    status === 'swipeable-delete' ? SLIDE_WIDTH_DELETE : SLIDE_WIDTH_FULL
+  const motionX = useMotionValue(0)
+  const isSwipeable = status === 'swipeable' || status === 'replan'
+  const isFocusedStyle = status === 'focused' || status === 'replan'
+  const slideWidth = SLIDE_WIDTH_FULL
+
+  const handleCardClick = () => {
+    const currentX = motionX.get()
+    if (Math.abs(currentX) > 5) {
+      controls.start({ x: 0 })
+      return
+    }
+    onClick?.()
+  }
 
   const cardContent = (
     <div
-      onClick={onClick}
+      onClick={isSwipeable ? handleCardClick : onClick}
       className={cn(
         'relative flex items-start gap-3 w-full rounded-2xl border border-bluegray-light bg-white p-4 transition-all duration-100 ease-in-out',
         { 'mt-3': !isSwipeable },
@@ -49,7 +64,7 @@ function TodoCard({
       )}
     >
       {children}
-      {status === 'swipeable' && (
+      {status === 'replan' && (
         <img
           src={focusedSvg}
           className="absolute right-0 top-1/2 -translate-y-1/2"
@@ -62,8 +77,27 @@ function TodoCard({
 
   return (
     <div className="relative overflow-hidden mt-3">
-      <div className="absolute right-0 top-0 h-full flex">
-        {/* 삭제하기 버튼 */}
+      {onPin && (
+        <div className="absolute left-0 top-0 h-full flex items-center z-0">
+          <div className="flex flex-col items-center gap-1.5 px-2">
+            <button
+              onClick={() => {
+                onPin(!pinned)
+                controls.start({ x: 0 })
+              }}
+              className="w-12 h-12 rounded-full bg-[#FFA9A9] flex items-center justify-center"
+            >
+              <TodoPinIcon checked={pinned} />
+            </button>
+            <p className="text-[10px] text-bluegray-dark">
+              {pinned ? '고정 취소' : '주요 투두'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 왼쪽 스와이프 - 삭제/리플랜 */}
+      <div className="absolute right-0 top-0 h-full flex items-center z-0">
         <div className="flex flex-col items-center gap-1.5 px-2">
           <button
             onClick={onDelete}
@@ -74,25 +108,28 @@ function TodoCard({
           <p className="text-[10px] text-bluegray-dark">삭제하기</p>
         </div>
 
-        {/* 리플랜하기 버튼 (swipeable 전용) */}
-        {status === 'swipeable' && (
-          <div className="flex flex-col items-center gap-1.5 px-2">
-            <button className="w-12 h-12 rounded-full bg-blue-normal flex items-center justify-center">
-              {/* 아이콘 컴포넌트 */}
-            </button>
-            <p className="text-[10px] text-bluegray-dark">리플랜하기</p>
-          </div>
-        )}
+        <div className="flex flex-col items-center gap-1.5 px-2">
+          <button className="w-12 h-12 rounded-full bg-blue-normal flex items-center justify-center">
+            <img src={replanIcon} alt="" />
+          </button>
+          <p className="text-[10px] text-bluegray-dark">리플랜하기</p>
+        </div>
       </div>
+
       <motion.div
+        className="relative z-10"
+        style={{ x: motionX }}
         drag="x"
-        dragConstraints={{ left: -slideWidth, right: 0 }}
+        dragConstraints={{ left: -slideWidth, right: onPin ? PIN_SLIDE_WIDTH : 0 }}
         dragElastic={0}
         dragMomentum={false}
         animate={controls}
-        onDragEnd={(_, info) => {
-          if (info.offset.x < -slideWidth / 2) {
+        onDragEnd={() => {
+          const currentX = motionX.get()
+          if (currentX < -slideWidth / 2) {
             controls.start({ x: -slideWidth })
+          } else if (onPin && currentX > PIN_SLIDE_WIDTH / 2) {
+            controls.start({ x: PIN_SLIDE_WIDTH })
           } else {
             controls.start({ x: 0 })
           }
@@ -198,7 +235,10 @@ function Category({
     <div className="flex items-center gap-2 shrink-0">
       {usePin && (
         <button
-          onClick={() => setPinned && setPinned(!pinned)}
+          onClick={(e) => {
+            e.stopPropagation()
+            setPinned?.(!pinned)
+          }}
           aria-label={pinned ? '핀 해제' : '핀하기'}
         >
           <PinIcon checked={pinned} />
