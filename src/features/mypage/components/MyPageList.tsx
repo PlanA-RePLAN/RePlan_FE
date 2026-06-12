@@ -6,9 +6,10 @@ interface MyPageListProps {
   icon: React.ReactNode
   hasNewAlert?: boolean
   rightContent?: React.ReactNode
+  onClick?: () => void
 }
 
-export default function MyPageList({ title, icon, hasNewAlert = false, rightContent }: MyPageListProps) {
+export default function MyPageList({ title, icon, hasNewAlert = false, rightContent, onClick }: MyPageListProps) {
   return (
     <div className="flex justify-between items-center p-5 border-b border-bluegray-light-hover">
       <div className="flex justify-center items-center gap-3">
@@ -16,7 +17,9 @@ export default function MyPageList({ title, icon, hasNewAlert = false, rightCont
         <p className="text-[16px]">{title}</p>
         {hasNewAlert && <NotificationBadge />}
       </div>
-      {rightContent ?? <ChecvronRightIcon />}
+      <button onClick={onClick}>
+        {rightContent ?? <ChecvronRightIcon />}
+      </button>
     </div>
   )
 }
