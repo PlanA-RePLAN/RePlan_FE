@@ -7,6 +7,7 @@ import OnBoarding from '@/features/onBoarding'
 import Goal from './features/goal/Goal'
 import LayoutWithNav from '@/shared/components/LayoutWithNav'
 import Home from './features/home/Home'
+import MyPage from './features/mypage/MyPage'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route element={<LayoutWithNav />}>
           <Route path="/goal" element={<Goal />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/mypage" element={<MyPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

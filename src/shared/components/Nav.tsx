@@ -8,7 +8,7 @@ const NAV_ITEMS = [
     { path: "/goal",  icon: GoalNavIcon,    label: "목표" },
     { path: "/home",  icon: HomeNavIcon,    label: "홈" },
     { path: "/chart", icon: ChartNavIcon,   label: "통계" },
-    { path: "/",      icon: ProfileNavIcon, label: "마이" },
+    { path: "/mypage",icon: ProfileNavIcon, label: "마이" },
 ]
 
 export default function Nav() {
