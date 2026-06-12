@@ -8,6 +8,7 @@ import Goal from './features/goal/Goal'
 import LayoutWithNav from '@/shared/components/LayoutWithNav'
 import Home from './features/home/Home'
 import MyPage from './features/mypage/MyPage'
+import ProfileSetting from './features/mypage/ProfileSetting'
 import NotificationSetting from './features/mypage/NotificationSetting'
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/profile-setup" element={<ProfileSetup />} />
         <Route path="/onboarding" element={<OnBoarding />} />
         <Route path="/mypage/notification-setting" element={<NotificationSetting />} />
+        <Route path="/mypage/profile-setting" element={<ProfileSetting />} />
 
         {/* Nav 사용 페이지 */}
         <Route element={<LayoutWithNav />}>

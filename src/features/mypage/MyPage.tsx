@@ -13,9 +13,14 @@ import MyPageAppVersionIcon from "@/icons/MyPageAppVersionIcon"
 export default function MyPage() {
     const navigate = useNavigate()
 
+    const handleProfileSettingClick = () => {
+        navigate('/mypage/profile-setting')
+    }
+
     const handleNotificationSettingClick = () => {
         navigate('/mypage/notification-setting')
     }
+
 
     const SECTIONS = [
         { key: "service", label: "서비스"},
@@ -24,7 +29,7 @@ export default function MyPage() {
     ]
 
     const MYPAGE_ITEMS=[
-        { id:1, title: "프로필", icon:<MyPageProfileIcon/>, section: "service", hasNewAlert: false, onClick: () => {}  },
+        { id:1, title: "프로필", icon:<MyPageProfileIcon/>, section: "service", hasNewAlert: false, onClick: handleProfileSettingClick  },
         { id:2, title: "알림 설정", icon:<MyPageNoticeIcon/>, section: "service", hasNewAlert: false, onClick: handleNotificationSettingClick },
         { id:3, title: "공지사항", icon:<MyPageNotificationIcon/>, section: "info", hasNewAlert: true, onClick: () => {} },
         { id:4, title: "개인정보 처리방침", icon:<MyPagePrivacyIcon/>, section: "info", hasNewAlert: false, onClick: () => {} },
