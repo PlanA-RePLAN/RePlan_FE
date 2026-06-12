@@ -11,10 +11,10 @@ export default function NotificationSetting() {
   return (
     <div>
         <BackHeaderLayout title="알림 설정">
-        </BackHeaderLayout>
-        {NOTIFICATION_ITEMS.map((item) => (
+          {NOTIFICATION_ITEMS.map((item) => (
           <NotificationItem key={item.id} title={item.title} content={item.content}/>
         ))}
+        </BackHeaderLayout>
     </div>
   )
 }

@@ -9,7 +9,6 @@ import MyPagePrivacyIcon from "@/icons/MyPagePrivacyIcon"
 import MyPageTermsIcon from "@/icons/MyPageTermsIcon"
 import MyPageAppVersionIcon from "@/icons/MyPageAppVersionIcon"
 
-
 export default function MyPage() {
     const navigate = useNavigate()
 
