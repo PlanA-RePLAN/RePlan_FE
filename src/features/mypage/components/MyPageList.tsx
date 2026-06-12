@@ -1,4 +1,4 @@
-import ChecvronRightIcon from "@/icons/ChevronLeftIcon"
+import ChecvronRightIcon from "@/icons/ChevronRightIcon"
 import NotificationBadge from "./NotificationBadge"
 
 interface MyPageListProps {
