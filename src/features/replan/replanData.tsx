@@ -1,8 +1,14 @@
+import BatteryIcon from '@/icons/BatteryIcon'
 import BlockIcon from '@/icons/BlockIcon'
 import BrainIcon from '@/icons/BrainIcon'
+import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
+import ChevronDownIcon from '@/icons/ChevronDownIcon'
+import FireIcon from '@/icons/FireIcon'
+import MenuIcon from '@/icons/MenuIcon'
 import PoorConditionIcon from '@/icons/PoorConditionIcon'
 import ReplanSurveyIcon from '@/icons/ReplanSurveyIcon'
 import RestLeftFillIcon from '@/icons/RestLeftFillIcon'
+import StreamTimeIcon from '@/icons/StreamTimeIcon'
 
 export type MainOptionKey =
   | 'psychologicalState'
@@ -44,63 +50,6 @@ export interface MainOptionItem {
   subOptions: SubOptionItem[]
 }
 
-export const PlayTriangleIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path d="M5 3.5L12.5 8L5 12.5V3.5Z" fill="#A9AFB9" />
-  </svg>
-)
-
-export const FlameIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M8.5 1.5C8.5 1.5 11 5 11 7.5C11 9.433 9.433 11 7.5 11C5.567 11 4 9.433 4 7.5C4 6.5 4.5 5.5 5 5C4.5 5.5 3.5 7 3.5 9C3.5 11.485 5.515 13.5 8 13.5C10.485 13.5 12.5 11.485 12.5 9C12.5 5.5 8.5 1.5 8.5 1.5Z"
-      fill="#A9AFB9"
-    />
-  </svg>
-)
-
-export const HourglassIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M3.5 2H12.5V4.5L8.5 8L12.5 11.5V14H3.5V11.5L7.5 8L3.5 4.5V2Z"
-      fill="#A9AFB9"
-    />
-  </svg>
-)
-
-export const WeightIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <rect x="0.5" y="5" width="2.5" height="6" rx="1" fill="#A9AFB9" />
-    <rect x="13" y="5" width="2.5" height="6" rx="1" fill="#A9AFB9" />
-    <rect x="3" y="6.5" width="10" height="3" rx="1" fill="#A9AFB9" />
-    <rect x="6" y="3.5" width="4" height="9" rx="1" fill="#A9AFB9" />
-  </svg>
-)
-
 export const MoonIcon = () => (
   <svg
     width="16"
@@ -116,6 +65,65 @@ export const MoonIcon = () => (
   </svg>
 )
 
+const SortPriorityIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect x="1" y="3" width="9" height="1.5" rx="0.75" fill="#A9AFB9" />
+    <rect x="1" y="7" width="6.5" height="1.5" rx="0.75" fill="#A9AFB9" />
+    <rect x="1" y="11" width="4" height="1.5" rx="0.75" fill="#A9AFB9" />
+    <rect x="12.25" y="3.5" width="1.5" height="9" rx="0.75" fill="#A9AFB9" />
+    <path d="M10.5 6.5L13 2.5L15.5 6.5Z" fill="#A9AFB9" />
+  </svg>
+)
+
+const AlertTriangleIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M7.1 1.5C7.5 0.8 8.5 0.8 8.9 1.5L15.2 13C15.6 13.7 15.1 14.5 14.3 14.5H1.7C0.9 14.5 0.4 13.7 0.8 13L7.1 1.5Z"
+      fill="#A9AFB9"
+    />
+  </svg>
+)
+
+const FocusScanIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M1 5V1H5V2.5H2.5V5H1Z" fill="#A9AFB9" />
+    <path d="M11 1H15V5H13.5V2.5H11V1Z" fill="#A9AFB9" />
+    <path d="M1 11H2.5V13.5H5V15H1V11Z" fill="#A9AFB9" />
+    <path d="M13.5 11H15V15H11V13.5H13.5V11Z" fill="#A9AFB9" />
+    <circle cx="8" cy="8" r="2" fill="#A9AFB9" />
+  </svg>
+)
+
+const LightningBoltIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M9.5 1L4 9H8.5L6.5 15L13 7H8.5L9.5 1Z" fill="#A9AFB9" />
+  </svg>
+)
+
 export const MAIN_OPTIONS: MainOptionItem[] = [
   {
     key: 'psychologicalState',
@@ -124,31 +132,55 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
     subOptions: [
       {
         key: 'hardToStart',
-        icon: <PlayTriangleIcon />,
-        label: '시작이 어려웠어요',
+        icon: (
+          <ChevronDownIcon
+            className="rotate-270"
+            color="#A9AFB9"
+            width={20}
+            height={20}
+          />
+        ),
+        label: '시작하기 막막하거나 부담스러웠어요',
+        subSubOptions: [
+          {
+            key: 'dontKnowWhereToStart',
+            icon: <ReplanSurveyIcon />,
+            label: '무엇부터 시작할지 몰라서',
+          },
+          {
+            key: 'tooMuchTimeOrEnergy',
+            icon: <ReplanSurveyIcon />,
+            label: '시간이나 에너지가 많이 들 것 같아서',
+          },
+          {
+            key: 'wantToBePerfect',
+            icon: <ReplanSurveyIcon />,
+            label: '완벽하게 해내고 싶어서',
+          },
+        ],
         recommendedTodos: [],
       },
       {
         key: 'lackMotivation',
-        icon: <FlameIcon />,
-        label: '동기가 부족했어요',
+        icon: <FireIcon />,
+        label: '의욕/동기가 부족했어요',
         recommendedTodos: [],
       },
       {
-        key: 'seemedHard',
-        icon: <HourglassIcon />,
-        label: '어렵거나 오래걸릴 것 같아 미뤘어요',
+        key: 'procrastinated',
+        icon: <ReplanSurveyIcon />,
+        label: '당장 안 해도 돼서 미루다 쌓였어요',
         recommendedTodos: [],
       },
       {
-        key: 'pressure',
-        icon: <WeightIcon />,
-        label: '잘하고 싶어 부담을 가지다 미뤘어요',
+        key: 'distracted',
+        icon: <ReplanSurveyIcon />,
+        label: '딴짓을 하다가 미뤘어요',
         recommendedTodos: [],
       },
       {
         key: 'directInput',
-        icon: <ReplanSurveyIcon width={16} height={16} />,
+        icon: <ReplanSurveyIcon width={18} height={18} />,
         label: '직접 입력',
         recommendedTodos: [],
       },
@@ -160,53 +192,39 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
     label: '컨디션 난조',
     subOptions: [
       {
-        key: 'sleepLack',
-        icon: <MoonIcon />,
-        label: '수면부족/피로 누적 상태에요',
-        step3Title: ['오늘 유성님의', '수면 시간은 몇 시간 정도였나요?'],
-        subSubOptions: [
-          { key: 'under3h', icon: <MoonIcon />, label: '3시간 이하' },
-          { key: '4to5h', icon: <MoonIcon />, label: '4-5시간' },
-          { key: '6to7h', icon: <MoonIcon />, label: '6-7시간' },
-          { key: 'over8h', icon: <MoonIcon />, label: '8시간 이상' },
-        ],
-        todoSuggestionTitle: [
-          '일찍 잠드는 게 우선이에요.',
-          "'11시 이전 취침' Todo를 추가할까요?",
-        ],
-        recommendedTodos: [
-          {
-            id: '1',
-            title: '11시 이전 취침',
-            dayTag: 'D',
-            category: 'Study',
-            time: '11:00 AM',
-          },
-          {
-            id: '2',
-            title: '모의고사 풀이',
-            dayTag: 'M',
-            category: 'Study',
-            time: '11:00 AM',
-          },
-        ],
+        key: 'energyDrained',
+        icon: <BatteryIcon />,
+        label: '체력 방전/에너지 모두 소모 상태에요',
+        recommendedTodos: [],
       },
       {
-        key: 'sick',
+        key: 'sleepDeprived',
         icon: <BlockIcon width={16} height={16} />,
-        label: '몸이 아파요',
+        label: '수면부족/피로 누적 상태에요',
         recommendedTodos: [],
       },
       {
-        key: 'stressed',
-        icon: <BrainIcon />,
-        label: '스트레스를 받았어요',
+        key: 'physicalPain',
+        icon: <FireIcon />,
+        label: '신체적 통증이 있어요',
         recommendedTodos: [],
       },
       {
-        key: 'noFocus',
-        icon: <PlayTriangleIcon />,
-        label: '집중이 되지 않았어요',
+        key: 'burnout',
+        icon: <ChevronDownIcon className="rotate-270" color="#A9AFB9" />,
+        label: '번아웃이 왔어요',
+        subSubOptions: [
+          {
+            key: 'noProgress',
+            icon: <ReplanSurveyIcon />,
+            label: '성과나 변화가 보이지 않아 무기력해요',
+          },
+          {
+            key: 'lostDirection',
+            icon: <ReplanSurveyIcon />,
+            label: '목표의 방향성을 잃었어요',
+          },
+        ],
         recommendedTodos: [],
       },
       {
@@ -220,30 +238,49 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
   {
     key: 'goalImprovement',
     icon: <RestLeftFillIcon width={20} height={20} />,
-    label: '목표 개선 필요',
+    label: '목표/계획 개선 필요',
     subOptions: [
       {
+        key: 'failedPlan',
+        icon: <MenuIcon />,
+        label: '구체적 계획 수립을 실패했어요',
+        recommendedTodos: [],
+      },
+      {
         key: 'tooHigh',
-        icon: <WeightIcon />,
-        label: '목표가 너무 높았어요',
+        icon: (
+          <ChevronDownIcon
+            className="rotate-180"
+            color="#A9AFB9"
+            width={20}
+            height={20}
+          />
+        ),
+        label: '목표가 과했어요',
+        subSubOptions: [
+          {
+            key: 'tooManyTodos',
+            icon: <ReplanSurveyIcon />,
+            label: '하루에 계획한 할 일 개수가 많았어요',
+          },
+          {
+            key: 'tooMuchWork',
+            icon: <ReplanSurveyIcon />,
+            label: '특정 할 일의 분량이 많았어요',
+          },
+        ],
         recommendedTodos: [],
       },
       {
-        key: 'unclear',
-        icon: <HourglassIcon />,
-        label: '목표가 명확하지 않았어요',
+        key: 'noPriority',
+        icon: <SortPriorityIcon />,
+        label: '우선 순위를 정하지 못했어요',
         recommendedTodos: [],
       },
       {
-        key: 'moreImportant',
-        icon: <PlayTriangleIcon />,
-        label: '더 중요한 일이 생겼어요',
-        recommendedTodos: [],
-      },
-      {
-        key: 'priorityChanged',
-        icon: <FlameIcon />,
-        label: '우선순위가 바뀌었어요',
+        key: 'tookLonger',
+        icon: <StreamTimeIcon />,
+        label: '시간이 예측보다 더 소요됐어요',
         recommendedTodos: [],
       },
       {
@@ -261,26 +298,38 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
     subOptions: [
       {
         key: 'sudden',
-        icon: <FlameIcon />,
-        label: '갑작스러운 일이 생겼어요',
+        icon: <AlertTriangleIcon />,
+        label: '돌발 상황이 발생했어요',
         recommendedTodos: [],
       },
       {
         key: 'environment',
-        icon: <HourglassIcon />,
-        label: '환경이 좋지 않았어요',
+        icon: <FocusScanIcon />,
+        label: '집중할 수 있는 환경이 아니었어요',
+        subSubOptions: [
+          {
+            key: 'noisy',
+            icon: <ReplanSurveyIcon />,
+            label: '주변이 시끄럽거나 작업할 물리적 공간이 마땅치 않았어요',
+          },
+          {
+            key: 'interruptions',
+            icon: <ReplanSurveyIcon />,
+            label: '타인의 요청이나 연락이 계속 들어왔어요',
+          },
+        ],
         recommendedTodos: [],
       },
       {
-        key: 'interrupted',
-        icon: <PlayTriangleIcon />,
-        label: '다른 사람으로 인해 방해받았어요',
+        key: 'urgent',
+        icon: <LightningBoltIcon />,
+        label: '더 급한 일이 생겼어요',
         recommendedTodos: [],
       },
       {
-        key: 'technical',
-        icon: <WeightIcon />,
-        label: '기술적인 문제가 있었어요',
+        key: 'lateSchedule',
+        icon: <CalendarClearSharpIcon width={16} height={16} />,
+        label: '다른 일정이 늦게 끝났어요',
         recommendedTodos: [],
       },
       {
