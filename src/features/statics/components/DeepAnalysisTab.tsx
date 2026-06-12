@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'
 import BarChartIcon from '@/icons/BarChartIcon'
 import PatternIcon from '@/icons/PatternIcon'
@@ -6,13 +7,15 @@ import InsightLightIcon from '@/icons/InsightLightIcon'
 import TodoTag from '@/shared/components/TodoTag'
 import StarCircleIcon from '@/icons/StarCircleIcon'
 import SectionHeader from './SectionHeader'
+import ChartViewToggleIcon from '@/icons/ChartViewToggleIcon'
+import ChartViewToggle2Icon from '@/icons/ChartViewToggle2Icon'
 
 // ── Bar Chart ─────────────────────────────────────────
 const FAILURE_CAUSES = [
-  { label: '컨디션 난조', pct: 37, color: '#579DEC' },
-  { label: '목표 개선 필요', pct: 25, color: '#70B2FC' },
-  { label: '기타', pct: 20, color: '#93C6FF' },
-  { label: '심리적 저항', pct: 18, color: '#AFD5FF' },
+  { label: '컨디션 난조', pct: 37, color: '#579DEC', count: '24회' },
+  { label: '목표 개선 필요', pct: 25, color: '#70B2FC', count: '19회' },
+  { label: '기타', pct: 20, color: '#93C6FF', count: '13회' },
+  { label: '심리적 저항', pct: 18, color: '#AFD5FF', count: '7회' },
 ]
 
 function BarRow({
@@ -43,6 +46,54 @@ function BarRow({
             {pct}%
           </span>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Rank List ─────────────────────────────────────────
+function RankItem({
+  rank,
+  label,
+  color,
+  count,
+}: {
+  rank: number
+  label: string
+  color: string
+  count: string
+}) {
+  const isFirst = rank === 1
+  return (
+    <div
+      className={`flex items-center justify-between px-4 rounded-xl ${
+        isFirst
+          ? 'bg-blue-light border border-blue-light-active py-[10px]'
+          : 'bg-blue-light-60 py-2'
+      }`}
+    >
+      <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div
+          className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+          style={{ backgroundColor: color }}
+        >
+          <span className="text-sm font-bold text-white leading-none">
+            {rank}
+          </span>
+        </div>
+        <span
+          className={`text-sm ${isFirst ? 'font-bold text-bluegray-darker' : 'font-semibold text-bluegray-dark-active'}`}
+        >
+          {label}
+        </span>
+      </div>
+      <div
+        className="flex items-center justify-center border-[1.5px] rounded-full px-3 py-1 shrink-0"
+        style={{ borderColor: color }}
+      >
+        <span className="" style={{ color }}>
+          {count}
+        </span>
       </div>
     </div>
   )
@@ -164,6 +215,8 @@ function AIInsightCard({ title, body }: { title: string; body: string }) {
 
 // ── DeepAnalysisTab ───────────────────────────────────
 export default function DeepAnalysisTab() {
+  const [chartView, setChartView] = useState<'bar' | 'list'>('bar')
+
   return (
     <div className="px-5 pb-32">
       {/* Month Selector */}
@@ -185,18 +238,47 @@ export default function DeepAnalysisTab() {
       <div className="mt-7 flex flex-col gap-10">
         {/* 실패 원인 분포 */}
         <div className="flex flex-col gap-4">
-          <SectionHeader icon={<BarChartIcon />} title="실패 원인 분포" />
-          <div className="flex flex-col gap-3">
-            {FAILURE_CAUSES.map((item, i) => (
-              <BarRow
-                key={item.label}
-                label={item.label}
-                pct={item.pct}
-                color={item.color}
-                isFirst={i === 0}
-              />
-            ))}
+          <div className="flex items-center justify-between">
+            <SectionHeader icon={<BarChartIcon />} title="실패 원인 분포" />
+            <div className="flex items-center gap-2">
+              <button onClick={() => setChartView('bar')}>
+                <ChartViewToggleIcon
+                  color={chartView === 'bar' ? '#202021' : '#E4E6E9'}
+                />
+              </button>
+              <button onClick={() => setChartView('list')}>
+                <ChartViewToggle2Icon
+                  color={chartView === 'list' ? '#202021' : '#E4E6E9'}
+                />
+              </button>
+            </div>
           </div>
+
+          {chartView === 'bar' ? (
+            <div className="flex flex-col gap-3">
+              {FAILURE_CAUSES.map((item, i) => (
+                <BarRow
+                  key={item.label}
+                  label={item.label}
+                  pct={item.pct}
+                  color={item.color}
+                  isFirst={i === 0}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {FAILURE_CAUSES.map((item, i) => (
+                <RankItem
+                  key={item.label}
+                  rank={i + 1}
+                  label={item.label}
+                  color={item.color}
+                  count={item.count}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 패턴 분석 */}
