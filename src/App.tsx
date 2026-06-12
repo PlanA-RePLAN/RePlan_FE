@@ -8,6 +8,7 @@ import Goal from './features/goal/Goal'
 import LayoutWithNav from '@/shared/components/LayoutWithNav'
 import Home from './features/home/Home'
 import ReplanPage from '@/features/replan'
+import Statics from './features/statics/Statics'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route element={<LayoutWithNav />}>
           <Route path="/goal" element={<Goal />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/statics" element={<Statics />} />
         </Route>
       </Routes>
     </BrowserRouter>
