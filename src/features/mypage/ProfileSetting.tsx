@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getMyInfo } from '@/shared/api/user'
 
 import cameraSvg from '@/assets/camera.svg'
 
@@ -14,8 +15,26 @@ import ProfileInput from '../profileSetup/components/ProfileInput'
 type ConfirmType = 'logout' | 'deleteAccount' | null
 
 export default function ProfileSetting() {
+  const [name, setName] = useState<string | null>(null)
+  const [email, setEmail] = useState<string | null>(null)
   const [confirmType, setConfirmType] = useState<ConfirmType>(null)
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
+
+  useEffect(() => {
+    const fetchMyInfo = async () => {
+      try {
+        const accessToken = localStorage.getItem('accessToken') ?? ''
+        const res = await getMyInfo(accessToken)
+        if (res.success && res.data) {
+          setName(res.data.nickname)
+          setEmail(res.data.email)
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    }
+    fetchMyInfo()
+  }, [])
 
   const handleOpenConfirm = (type: ConfirmType) => setConfirmType(type)
   const handleCloseConfirm = () => setConfirmType(null)
@@ -44,7 +63,7 @@ export default function ProfileSetting() {
         <div className='flex justify-between mt-10 mx-[18px] p-4 border border-bluegray-light-hover rounded-[12px]'>
           <p className='text-[14px]'>이름</p>
           <div className='flex justify-center items-center gap-2'>
-            <p className='text-bluegray-darker font-[12px] font-bold'>플랜에이</p>
+            {name && <p className='text-bluegray-darker font-bold text-[12px]'>{name}</p>}
             <button onClick={() => setIsBottomSheetOpen(true)}>
               <ChecvronRightIcon/>
             </button>
@@ -54,7 +73,7 @@ export default function ProfileSetting() {
         <div className='flex justify-between mt-10 mx-[18px] p-4 border border-bluegray-light-hover rounded-[12px]'>
           <p className='text-[14px]'>연결 계정</p>
           <div className='flex justify-center items-center gap-2'>
-            <p className='text-bluegray-darker font-[12px] font-bold'>replan123@naver.com</p>
+            {email && <p className='text-bluegray-darker font-bold text-[12px]'>{email}</p>}
           </div>
         </div>
 
@@ -77,7 +96,7 @@ export default function ProfileSetting() {
             <CircleCheckButtonIcon/>
           </button>
         </div>
-        <ProfileInput value=''/>
+        <ProfileInput value={name ?? ''}/>
         </div>
       </BottomSheet>
       {/* 로그아웃 및 탈퇴 바텀시트*/}
