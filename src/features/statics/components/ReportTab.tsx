@@ -3,6 +3,7 @@ import TagIcon from '@/icons/TagIcon'
 import CalendarSectionIcon from '@/icons/CalendarSectionIcon'
 import ReplanIcon from '@/icons/ReplanIcon'
 import TodoTag from '@/shared/components/TodoTag'
+import SectionHeader from './SectionHeader'
 
 // ── Donut Chart ───────────────────────────────────────
 function DonutChart({ percentage }: { percentage: number }) {
@@ -43,22 +44,6 @@ function DonutChart({ percentage }: { percentage: number }) {
           달성률
         </span>
       </div>
-    </div>
-  )
-}
-
-// ── Section Header ────────────────────────────────────
-function SectionHeader({
-  icon,
-  title,
-}: {
-  icon: React.ReactNode
-  title: string
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      {icon}
-      <span className="text-base font-bold text-bluegray-black">{title}</span>
     </div>
   )
 }

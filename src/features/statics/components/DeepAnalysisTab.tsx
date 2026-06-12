@@ -5,22 +5,7 @@ import AIIcon from '@/icons/AIIcon'
 import InsightLightIcon from '@/icons/InsightLightIcon'
 import TodoTag from '@/shared/components/TodoTag'
 import StarCircleIcon from '@/icons/StarCircleIcon'
-
-// ── Section Header ────────────────────────────────────
-function SectionHeader({
-  icon,
-  title,
-}: {
-  icon: React.ReactNode
-  title: string
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      {icon}
-      <span className="text-base font-bold text-bluegray-black">{title}</span>
-    </div>
-  )
-}
+import SectionHeader from './SectionHeader'
 
 // ── Bar Chart ─────────────────────────────────────────
 const FAILURE_CAUSES = [
@@ -41,21 +26,20 @@ function BarRow({
   color: string
   isFirst: boolean
 }) {
-  const barW = Math.round((pct / 100) * 210)
   return (
-    <div className="flex items-center gap-5">
+    <div className="flex items-center justify-end gap-5">
       <p
-        className={`text-sm font-bold text-right w-[123px] ${isFirst ? 'text-bluegray-darker' : 'text-bluegray-dark-hover'}`}
+        className={`text-sm font-bold text-right w-30.75 ${isFirst ? 'text-bluegray-darker' : 'text-bluegray-dark-hover'}`}
       >
         {label}
       </p>
-      <div className="relative w-[210px] h-7 shrink-0">
-        <div className="absolute inset-0 bg-bluegray-light-hover rounded-[4px]" />
+      <div className="relative min-w-52.5 w-[63%] h-7 shrink-0">
+        <div className="absolute inset-0 bg-bluegray-light-hover rounded-sm" />
         <div
-          className="absolute left-0 top-0 h-7 rounded-[4px] flex items-center pl-1"
-          style={{ width: barW, backgroundColor: color }}
+          className="absolute left-0 top-0 h-7 rounded-sm flex items-center pl-1"
+          style={{ width: `${pct}%`, backgroundColor: color }}
         >
-          <span className="text-[10px] text-white font-semibold leading-[1.2]">
+          <span className="text-[10px] pl-1 text-white font-semibold leading-[1.2]">
             {pct}%
           </span>
         </div>
@@ -191,14 +175,13 @@ export default function DeepAnalysisTab() {
       </button>
 
       {/* Headline */}
-      <p className="mt-[17px] text-2xl font-bold leading-[1.3] tracking-[-0.03em]">
+      <p className="mt-4.25 text-2xl font-bold leading-[1.3] tracking-[-0.03em]">
         <span className="text-bluegray-black">이번 달 주된 실패 원인은</span>
         <br />
         <span className="text-blue-normal">컨디션 난조</span>
         <span className="text-bluegray-black">였어요</span>
       </p>
 
-      {/* Sections — 28px below headline, 40px between sections */}
       <div className="mt-7 flex flex-col gap-10">
         {/* 실패 원인 분포 */}
         <div className="flex flex-col gap-4">
