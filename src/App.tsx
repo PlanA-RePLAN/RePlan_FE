@@ -12,6 +12,7 @@ import ProfileSetting from './features/mypage/ProfileSetting'
 import NotificationSetting from './features/mypage/NotificationSetting'
 import ReplanPage from '@/features/replan'
 import Statics from './features/statics/Statics'
+import Notification from '@/features/notification/Notification'
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/mypage/notification-setting" element={<NotificationSetting />} />
         <Route path="/mypage/profile-setting" element={<ProfileSetting />} />
         <Route path="/replan" element={<ReplanPage />} />
+        <Route path="/notification" element={<Notification />} />
 
         {/* Nav 사용 페이지 */}
         <Route element={<LayoutWithNav />}>
