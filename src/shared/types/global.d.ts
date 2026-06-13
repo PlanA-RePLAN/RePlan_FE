@@ -4,6 +4,7 @@ interface Window {
   Kakao: {
     init: (key: string) => void
     isInitialized: () => boolean
+    cleanup: () => void
     Auth: {
       login: (settings: {
         scope: string
