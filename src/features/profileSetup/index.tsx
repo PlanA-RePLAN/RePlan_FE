@@ -21,8 +21,15 @@ export default function LoginPage() {
 
   // 카카오 SDK 초기화
   useEffect(() => {
-    if (!KAKAO_JS_KEY || !window.Kakao || window.Kakao.isInitialized()) return
+    if (!KAKAO_JS_KEY || !window.Kakao) return
+    if (window.Kakao.isInitialized()) return
     window.Kakao.init(KAKAO_JS_KEY)
+
+    return () => {
+      if (window.Kakao?.isInitialized()) {
+        window.Kakao.cleanup()
+      }
+    }
   }, [])
 
   //응답 처리
