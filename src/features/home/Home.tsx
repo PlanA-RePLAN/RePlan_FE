@@ -11,6 +11,7 @@ import {
   pinTodo,
   updateTodo,
 } from '@/shared/api/todo'
+import { createRoutine } from '@/shared/api/routine'
 import {
   DndContext,
   DragEndEvent,
@@ -46,6 +47,7 @@ import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 import TodoInfoSheet from '../onBoarding/components/TodoInfoSheet'
 import TodoEditSheet from '../onBoarding/components/TodoEditSheet'
 import ChevronLeftIcon from '@/icons/ChevronLeftIcon'
+import Toast from '@/features/home/components/Toast'
 
 const TABS = [
   { label: 'All', value: 'all' },
@@ -75,7 +77,7 @@ const WEEKDAY_NUM_TO_NAME: Record<number, string> = {
   1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토', 7: '일',
 }
 const WEEKDAY_NAME_TO_NUM: Record<string, number> = {
-  월: 1, 화: 2, 수: 3, 목: 4, 금: 5, 토: 6, 일: 7,
+  월: 1, 화: 2, 수: 4, 목: 8, 금: 16, 토: 32, 일: 64,
 }
 
 function todoDetailToProposed(todo: import('@/shared/types/todo').TodoDetail): ProposedTodo {
@@ -129,12 +131,9 @@ function SortableItem({
 }
 
 export default function Home() {
-  const [selectedTab, setSelectedTab] = useState<
-    'all' | 'day' | 'week' | 'month'
-  >('all')
-  const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>(
-    'priority',
-  )
+  const [showToast, setShowToast] = useState(false)
+  const [selectedTab, setSelectedTab] = useState<'all' | 'day' | 'week' | 'month'>('all')
+  const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>('priority',)
   const [todos, setTodos] = useState<Todo[]>([])
   const [selectedTodo, setSelectedTodo] = useState<TodoDetail | null>(null)
   const [allTags] = useState<CustomTag[]>(PRESET_TAGS)
@@ -150,6 +149,10 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isCompletedOpen, setIsCompletedOpen] = useState(false)
   const [calendarDueDates, setCalendarDueDates] = useState<Date[]>([])
+
+  const handleShowToast = () => {
+    setShowToast(true)
+  }
 
   const handleClickCompletedTodo = () => setIsCompletedOpen((prev) => !prev)
 
@@ -201,6 +204,8 @@ export default function Home() {
   const handleCreateTodo = async (proposed: ProposedTodo) => {
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
+      const routineType = REPEAT_TO_ROUTINE[proposed.repeat]
+      const apiSort = sort === 'latest' ? 'priority' : sort
 
       let dueDate: string | null = null
       if (proposed.deadlineDate) {
@@ -219,18 +224,51 @@ export default function Home() {
         dueDate = date.toISOString()
       }
 
-      const res = await createTodo(accessToken, {
-        title: proposed.title,
-        dueDate,
-        tagId: null,
-        goalId: null,
-      })
+      if (routineType) {
+        let routineDate: number | null = null
+        if (routineType === 'WEEKLY' && proposed.weeklyDay) {
+          routineDate = WEEKDAY_NAME_TO_NUM[proposed.weeklyDay] ?? null
+        } else if (routineType === 'MONTHLY' && proposed.monthlyDay) {
+          routineDate = proposed.monthlyDay
+        }
 
-      if (res.success && res.data) {
-        const accessToken2 = localStorage.getItem('accessToken') ?? ''
-        const apiSort = sort === 'latest' ? 'priority' : sort
-        const listRes = await getTodos(accessToken2, selectedTab, apiSort)
-        if (listRes.success) setTodos(listRes.data ?? [])
+        let routineTime: string | null = null
+        if (proposed.repeatTime) {
+          const [timePart, meridiem] = proposed.repeatTime.split(' ')
+          const [h, m] = timePart.split(':').map(Number)
+          const hours24 =
+            meridiem === 'PM' && h !== 12
+              ? h + 12
+              : meridiem === 'AM' && h === 12
+                ? 0
+                : h
+          routineTime = `${String(hours24).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`
+        }
+
+        const res = await createRoutine(accessToken, {
+          title: proposed.title,
+          routineType,
+          dueDate,
+          routineTime,
+          routineDate,
+          tagId: null,
+          goalId: null,
+        })
+        if (res.success) {
+          const listRes = await getTodos(accessToken, selectedTab, apiSort)
+          if (listRes.success) setTodos(listRes.data ?? [])
+        }
+      } else {
+        const res = await createTodo(accessToken, {
+          title: proposed.title,
+          dueDate,
+          tagId: null,
+          goalId: null,
+        })
+        if (res.success) {
+          const listRes = await getTodos(accessToken, selectedTab, apiSort)
+          if (listRes.success) setTodos(listRes.data ?? [])
+        }
       }
     } catch (error) {
       console.error(error)
@@ -322,6 +360,13 @@ export default function Home() {
 
   // 투두 완료 및 미완료
   const handleToggleComplete = async (todoId: number, isCompleted: boolean) => {
+    if (!isCompleted) {
+      const willAllComplete = todos
+        .filter((t) => !t.isCompleted)
+        .every((t) => t.todoId === todoId)
+      if (willAllComplete) setShowToast(true)
+    }
+
     setTodos((prev) =>
       prev.map((t) =>
         t.todoId === todoId ? { ...t, isCompleted: !isCompleted } : t,
@@ -815,6 +860,7 @@ export default function Home() {
           }}
         />
       </BottomSheet>
+      {showToast && <Toast type='success' onClose={() => setShowToast(false)} />}
     </div>
   )
 }
