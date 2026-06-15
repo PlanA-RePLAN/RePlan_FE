@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import cameraSvg from '@/assets/camera.svg'
+const cameraSvg = '/assets/camera.svg'
 
 // components
 import Title from '@/shared/components/Title'

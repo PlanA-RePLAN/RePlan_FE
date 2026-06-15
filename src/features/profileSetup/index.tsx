@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import logoSvg from '@/assets/logo.svg'
+const logoSvg = '/assets/logo.svg'
 import Button from '@/features/profileSetup/components/Button'
 import GoogleIcon from '@/icons/GoogleIcon'
 import { kakaoOAuthLogin } from '@/shared/api/auth'

@@ -8,7 +8,10 @@ import {
   toggleTodoComplete,
   updateTodoOrder,
   createTodo,
+  pinTodo,
+  updateTodo,
 } from '@/shared/api/todo'
+import { createRoutine } from '@/shared/api/routine'
 import {
   DndContext,
   DragEndEvent,
@@ -26,12 +29,12 @@ import { CSS } from '@dnd-kit/utilities'
 
 // type
 import type { Todo, TodoDetail } from '@/shared/types/todo'
-import type { CustomTag } from '@/features/onBoarding/type/types'
-import { PRESET_TAGS } from '@/features/onBoarding/type/types'
+import type { CustomTag, ProposedTodo } from '@/features/onBoarding/type/types'
+import { PRESET_TAGS, ROUTINE_TO_REPEAT, REPEAT_TO_ROUTINE } from '@/features/onBoarding/type/types'
 
-// assets
-import symbolSvg from '@/assets/symbol.svg'
-import addSvg from '@/assets/add.svg'
+const symbolSvg = '/assets/symbol.svg'
+const addSvg = '/assets/add.svg'
+const completeSvg = '/assets/completeIcon.svg'
 
 // components
 import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'
@@ -43,7 +46,8 @@ import MonthPeaker from '../goal/components/MonthPeaker'
 import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 import TodoInfoSheet from '../onBoarding/components/TodoInfoSheet'
 import TodoEditSheet from '../onBoarding/components/TodoEditSheet'
-import type { ProposedTodo } from '@/features/onBoarding/type/types'
+import ChevronLeftIcon from '@/icons/ChevronLeftIcon'
+import Toast from '@/features/home/components/Toast'
 
 const TABS = [
   { label: 'All', value: 'all' },
@@ -62,10 +66,36 @@ function formatTime(dueDate: string | null): string | undefined {
   })
 }
 
-function getDayTag(routineType: string | null): 'D' | 'M' | undefined {
+function getDayTag(routineType: string | null): 'D' | 'W' | 'M' | undefined {
   if (routineType === 'DAILY') return 'D'
+  if (routineType === 'WEEKLY') return 'W'
   if (routineType === 'MONTHLY') return 'M'
   return undefined
+}
+
+const WEEKDAY_NUM_TO_NAME: Record<number, string> = {
+  1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토', 7: '일',
+}
+const WEEKDAY_NAME_TO_NUM: Record<string, number> = {
+  월: 1, 화: 2, 수: 4, 목: 8, 금: 16, 토: 32, 일: 64,
+}
+
+function todoDetailToProposed(todo: import('@/shared/types/todo').TodoDetail): ProposedTodo {
+  const deadlineDate = todo.dueDate ? new Date(todo.dueDate) : null
+  const deadlineTime = formatTime(todo.dueDate) ?? null
+  return {
+    id: todo.todoId,
+    title: todo.title,
+    time: deadlineTime ?? '',
+    dayTag: 'D',
+    selectedTagId: todo.tagTitle ?? '미선택',
+    repeat: todo.routineType ? (ROUTINE_TO_REPEAT[todo.routineType] ?? '없음') : '없음',
+    weeklyDay: todo.routineDate ? WEEKDAY_NUM_TO_NAME[todo.routineDate] : undefined,
+    monthlyDay: todo.routineDate ?? undefined,
+    deadlineDate,
+    deadlineTime,
+    subTodos: todo.subTodos.map((s) => ({ id: s.todoId, title: s.title })),
+  }
 }
 
 function SortableItem({
@@ -101,23 +131,30 @@ function SortableItem({
 }
 
 export default function Home() {
-  const [selectedTab, setSelectedTab] = useState<
-    'all' | 'day' | 'week' | 'month'
-  >('all')
-  const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>(
-    'priority',
-  )
+  const [showToast, setShowToast] = useState(false)
+  const [selectedTab, setSelectedTab] = useState<'all' | 'day' | 'week' | 'month'>('all')
+  const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>('priority',)
   const [todos, setTodos] = useState<Todo[]>([])
   const [selectedTodo, setSelectedTodo] = useState<TodoDetail | null>(null)
   const [allTags] = useState<CustomTag[]>(PRESET_TAGS)
 
-  const [selectedYear, setSelectedYear] = useState<number>(2026)
-  const [selectedMonth, setSelectedMonth] = useState<number>(5)
+  const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear())
+  const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth() + 1)
   const [isTodoAddBottomSheetOpen, setIsTodoAddBottomSheet] = useState(false)
   const [isMonthBottomSheetOpen, setIsMonthBottomSheetOpen] = useState(false)
   const [isDeleteBottomSheetOpen, setIsDeleteBottomSheetOpen] = useState(false)
   const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null)
   const [isNewTodoSheetOpen, setIsNewTodoSheetOpen] = useState(false)
+  const [isEditTodoSheetOpen, setIsEditTodoSheetOpen] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [isCompletedOpen, setIsCompletedOpen] = useState(false)
+  const [calendarDueDates, setCalendarDueDates] = useState<Date[]>([])
+
+  const handleShowToast = () => {
+    setShowToast(true)
+  }
+
+  const handleClickCompletedTodo = () => setIsCompletedOpen((prev) => !prev)
 
   const emptyTodo: ProposedTodo = {
     id: 0,
@@ -148,6 +185,7 @@ export default function Home() {
   // 탭 선택
   const handleSelect = (value: string) => {
     setSelectedTab(value as 'all' | 'day' | 'week' | 'month')
+    setSelectedDate(null)
   }
 
   // 투두 삭제 (공통)
@@ -166,6 +204,8 @@ export default function Home() {
   const handleCreateTodo = async (proposed: ProposedTodo) => {
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
+      const routineType = REPEAT_TO_ROUTINE[proposed.repeat]
+      const apiSort = sort === 'latest' ? 'priority' : sort
 
       let dueDate: string | null = null
       if (proposed.deadlineDate) {
@@ -184,18 +224,51 @@ export default function Home() {
         dueDate = date.toISOString()
       }
 
-      const res = await createTodo(accessToken, {
-        title: proposed.title,
-        dueDate,
-        tagId: null,
-        goalId: null,
-      })
+      if (routineType) {
+        let routineDate: number | null = null
+        if (routineType === 'WEEKLY' && proposed.weeklyDay) {
+          routineDate = WEEKDAY_NAME_TO_NUM[proposed.weeklyDay] ?? null
+        } else if (routineType === 'MONTHLY' && proposed.monthlyDay) {
+          routineDate = proposed.monthlyDay
+        }
 
-      if (res.success && res.data) {
-        const accessToken2 = localStorage.getItem('accessToken') ?? ''
-        const apiSort = sort === 'latest' ? 'priority' : sort
-        const listRes = await getTodos(accessToken2, selectedTab, apiSort)
-        if (listRes.success) setTodos(listRes.data ?? [])
+        let routineTime: string | null = null
+        if (proposed.repeatTime) {
+          const [timePart, meridiem] = proposed.repeatTime.split(' ')
+          const [h, m] = timePart.split(':').map(Number)
+          const hours24 =
+            meridiem === 'PM' && h !== 12
+              ? h + 12
+              : meridiem === 'AM' && h === 12
+                ? 0
+                : h
+          routineTime = `${String(hours24).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`
+        }
+
+        const res = await createRoutine(accessToken, {
+          title: proposed.title,
+          routineType,
+          dueDate,
+          routineTime,
+          routineDate,
+          tagId: null,
+          goalId: null,
+        })
+        if (res.success) {
+          const listRes = await getTodos(accessToken, selectedTab, apiSort)
+          if (listRes.success) setTodos(listRes.data ?? [])
+        }
+      } else {
+        const res = await createTodo(accessToken, {
+          title: proposed.title,
+          dueDate,
+          tagId: null,
+          goalId: null,
+        })
+        if (res.success) {
+          const listRes = await getTodos(accessToken, selectedTab, apiSort)
+          if (listRes.success) setTodos(listRes.data ?? [])
+        }
       }
     } catch (error) {
       console.error(error)
@@ -204,13 +277,13 @@ export default function Home() {
     }
   }
 
-  // TodoCard 스와이프 삭제 → 확인 바텀시트 오픈
+  // 투두 카드 스와이프 삭제
   const handleDeleteClick = (todoId: number) => {
     setDeletingTodoId(todoId)
     setIsDeleteBottomSheetOpen(true)
   }
 
-  // 바텀시트 "삭제" 버튼 → 실제 삭제 실행
+  // 실제 삭제 
   const handleConfirmDelete = async () => {
     if (deletingTodoId === null) return
     await deleteTodoById(deletingTodoId)
@@ -218,8 +291,82 @@ export default function Home() {
     setDeletingTodoId(null)
   }
 
+  // 투두 수정
+  const handleUpdateTodo = async (updated: ProposedTodo) => {
+    if (!selectedTodo) return
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+
+      let dueDate: string | null = null
+      if (updated.deadlineDate) {
+        const date = new Date(updated.deadlineDate)
+        if (updated.deadlineTime) {
+          const [timePart, meridiem] = updated.deadlineTime.split(' ')
+          const [h, m] = timePart.split(':').map(Number)
+          const hours24 =
+            meridiem === 'PM' && h !== 12
+              ? h + 12
+              : meridiem === 'AM' && h === 12
+                ? 0
+                : h
+          date.setHours(hours24, m, 0, 0)
+        }
+        const pad = (n: number) => String(n).padStart(2, '0')
+        dueDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`
+      }
+
+      const routineType = REPEAT_TO_ROUTINE[updated.repeat]
+      let routineDate: number | null = null
+      if (routineType === 'WEEKLY' && updated.weeklyDay) {
+        routineDate = WEEKDAY_NAME_TO_NUM[updated.weeklyDay] ?? null
+      } else if (routineType === 'MONTHLY' && updated.monthlyDay) {
+        routineDate = updated.monthlyDay
+      }
+
+      await updateTodo(accessToken, selectedTodo.todoId, {
+        title: updated.title,
+        dueDate,
+        tagId: selectedTodo.tagId,
+        routineType,
+        routineDate,
+      })
+
+      const apiSort = sort === 'latest' ? 'priority' : sort
+      const listRes = await getTodos(accessToken, selectedTab, apiSort)
+      if (listRes.success) setTodos(listRes.data ?? [])
+
+      setIsEditTodoSheetOpen(false)
+      setIsTodoAddBottomSheet(false)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  // 투두 핀/언핀
+  const handleTogglePin = async (todoId: number, isPinned: boolean) => {
+    setTodos((prev) =>
+      prev.map((t) => (t.todoId === todoId ? { ...t, isPinned } : t)),
+    )
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      await pinTodo(accessToken, todoId, isPinned)
+    } catch (error) {
+      setTodos((prev) =>
+        prev.map((t) => (t.todoId === todoId ? { ...t, isPinned: !isPinned } : t)),
+      )
+      console.error(error)
+    }
+  }
+
   // 투두 완료 및 미완료
   const handleToggleComplete = async (todoId: number, isCompleted: boolean) => {
+    if (!isCompleted) {
+      const willAllComplete = todos
+        .filter((t) => !t.isCompleted)
+        .every((t) => t.todoId === todoId)
+      if (willAllComplete) setShowToast(true)
+    }
+
     setTodos((prev) =>
       prev.map((t) =>
         t.todoId === todoId ? { ...t, isCompleted: !isCompleted } : t,
@@ -236,38 +383,112 @@ export default function Home() {
     }
   }
 
+  // 캘린더 점 표시용 조회 (selectedDate와 무관하게 탭/월 변경 시에만 갱신)
+  useEffect(() => {
+    const fetchCalendar = async () => {
+      try {
+        const accessToken = localStorage.getItem('accessToken') ?? ''
+        const toDateStr = (d: Date) =>
+          `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        const today = toDateStr(new Date())
+
+        let apiFilter: 'all' | 'day' | 'week' | 'month'
+        let apiDate: string | undefined
+
+        switch (selectedTab) {
+          case 'day':
+          case 'week':
+            apiFilter = 'week'
+            apiDate = today
+            break
+          case 'month':
+            apiFilter = 'month'
+            apiDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`
+            break
+          default:
+            apiFilter = 'all'
+        }
+
+        const res = await getTodos(accessToken, apiFilter, 'priority', apiDate)
+        if (res.success) {
+          setCalendarDueDates(
+            (res.data ?? []).filter((t) => t.dueDate).map((t) => new Date(t.dueDate!))
+          )
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    }
+    fetchCalendar()
+  }, [selectedTab, selectedYear, selectedMonth])
+
   // 투두 목록 조회
   useEffect(() => {
     const fetchTodos = async () => {
       try {
         const accessToken = localStorage.getItem('accessToken') ?? ''
         const apiSort = sort === 'latest' ? 'priority' : sort
-        const res = await getTodos(accessToken, selectedTab, apiSort)
+
+        const toDateStr = (d: Date) =>
+          `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+        const today = toDateStr(new Date())
+
+        let apiFilter: 'all' | 'day' | 'week' | 'month'
+        let apiDate: string | undefined
+
+        if (selectedDate) {
+          apiFilter = 'day'
+          apiDate = toDateStr(selectedDate)
+        } else {
+          switch (selectedTab) {
+            case 'day':
+              apiFilter = 'day'
+              apiDate = today
+              break
+            case 'week':
+              apiFilter = 'week'
+              apiDate = today
+              break
+            case 'month':
+              apiFilter = 'month'
+              apiDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`
+              break
+            default:
+              apiFilter = 'all'
+              apiDate = undefined
+          }
+        }
+
+        const res = await getTodos(accessToken, apiFilter, apiSort, apiDate)
         if (res.success) setTodos(res.data ?? [])
       } catch (error) {
         console.error(error)
       }
     }
     fetchTodos()
-  }, [selectedTab, sort])
+  }, [selectedTab, sort, selectedDate, selectedYear, selectedMonth])
 
-  // 투두 필터링 및 정렬
-  const filteredTodos = todos.filter((t) => {
-    if (!t.dueDate) return true
-    const date = new Date(t.dueDate)
-    return (
-      date.getFullYear() === selectedYear &&
-      date.getMonth() + 1 === selectedMonth
-    )
-  })
+  // all 탭 + 날짜 미선택 시에만 월 기준 클라이언트 필터 적용, 나머지는 서버가 필터링
+  const filteredTodos = selectedTab === 'all' && !selectedDate
+    ? todos.filter((t) => {
+        if (!t.dueDate) return true
+        const date = new Date(t.dueDate)
+        return (
+          date.getFullYear() === selectedYear &&
+          date.getMonth() + 1 === selectedMonth
+        )
+      })
+    : todos
 
   const sortedTodos =
     sort === 'latest'
       ? [...filteredTodos].sort((a, b) => b.todoId - a.todoId)
       : filteredTodos
 
-  const pinnedTodos = sortedTodos.filter((t) => t.isPinned)
-  const regularTodos = sortedTodos.filter((t) => !t.isPinned)
+  const pinnedTodos = sortedTodos.filter((t) => t.isPinned && !t.isCompleted)
+  const regularActiveTodos = sortedTodos.filter((t) => !t.isPinned && !t.isCompleted)
+  const completedTodos = sortedTodos.filter((t) => t.isCompleted)
 
   // 직접설정순(드래그앤드롭)
   const sensors = useSensors(
@@ -305,7 +526,7 @@ export default function Home() {
       setTodos(todos)
     }
   }
-
+  
   return (
     <div className="relative h-dvh flex flex-col px-5">
       <div className="flex gap-1">
@@ -338,8 +559,17 @@ export default function Home() {
         <div>
           <DatePicker
             onClose={() => {}}
-            onConfirm={() => {}}
+            onConfirm={(date) => setSelectedDate(date)}
+            onDeselect={() => setSelectedDate(null)}
             showHeader={false}
+            weeks={
+              selectedTab === 'day' ? 1 :
+              selectedTab === 'week' ? 2 :
+              undefined
+            }
+            selectedColor="#EEF5FD"
+            selectedTextColor='none'
+            dueDates={calendarDueDates}
           />
         </div>
 
@@ -368,8 +598,13 @@ export default function Home() {
                     key={todo.todoId}
                     status="swipeable"
                     onDelete={() => handleDeleteClick(todo.todoId)}
+                    pinned={todo.isPinned}
+                    onPin={(isPinned) => handleTogglePin(todo.todoId, isPinned)}
                   >
-                    <TodoCard.Icon />
+                    <TodoCard.Icon
+                      onClick={() => handleToggleComplete(todo.todoId, todo.isCompleted)}
+                      checked={todo.isCompleted}
+                    />
                     <TodoCard.Content>
                       <TodoCard.Title
                         dayTag={getDayTag(todo.routineType)}
@@ -384,10 +619,10 @@ export default function Home() {
                       )}
                     </TodoCard.Content>
                     <TodoCard.Category
-                      category={todo.tagTitle ?? '미선택'}
+                      category={todo.tagTitle ?? ''}
                       usePin
                       pinned={todo.isPinned}
-                      setPinned={() => {}}
+                      setPinned={(isPinned) => handleTogglePin(todo.todoId, isPinned)}
                     />
                   </TodoCard>
                 ))}
@@ -410,31 +645,26 @@ export default function Home() {
                 {sort === 'priority' ? (
                   <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
                     <SortableContext
-                      items={regularTodos.map((t) => t.todoId)}
+                      items={regularActiveTodos.map((t) => t.todoId)}
                       strategy={verticalListSortingStrategy}
                     >
-                      {regularTodos.map((todo) => (
+                      {regularActiveTodos.map((todo) => (
                         <SortableItem key={todo.todoId} id={todo.todoId}>
                           <TodoCard
-                            status={
-                              todo.isCompleted ? 'grey' : 'swipeable-delete'
-                            }
+                            status="swipeable"
                             onDelete={() => handleDeleteClick(todo.todoId)}
                             onClick={() => handleClickTodo(todo.todoId)}
+                            pinned={todo.isPinned}
+                            onPin={(isPinned) => handleTogglePin(todo.todoId, isPinned)}
                           >
                             <TodoCard.Icon
                               onClick={() =>
-                                handleToggleComplete(
-                                  todo.todoId,
-                                  todo.isCompleted,
-                                )
+                                handleToggleComplete(todo.todoId, todo.isCompleted)
                               }
                               checked={todo.isCompleted}
                             />
                             <TodoCard.Content>
-                              <TodoCard.Title
-                                dayTag={getDayTag(todo.routineType)}
-                              >
+                              <TodoCard.Title dayTag={getDayTag(todo.routineType)}>
                                 {todo.title}
                               </TodoCard.Title>
                               {todo.dueDate && (
@@ -444,10 +674,10 @@ export default function Home() {
                               )}
                             </TodoCard.Content>
                             <TodoCard.Category
-                              category={todo.tagTitle ?? '미선택'}
+                              category={todo.tagTitle ?? ''}
                               usePin
                               pinned={todo.isPinned}
-                              setPinned={() => {}}
+                              setPinned={(isPinned) => handleTogglePin(todo.todoId, isPinned)}
                             />
                           </TodoCard>
                         </SortableItem>
@@ -455,12 +685,14 @@ export default function Home() {
                     </SortableContext>
                   </DndContext>
                 ) : (
-                  regularTodos.map((todo) => (
+                  regularActiveTodos.map((todo) => (
                     <TodoCard
                       key={todo.todoId}
-                      status={todo.isCompleted ? 'grey' : 'swipeable-delete'}
+                      status="swipeable"
                       onDelete={() => handleDeleteClick(todo.todoId)}
                       onClick={() => handleClickTodo(todo.todoId)}
+                      pinned={todo.isPinned}
+                      onPin={(isPinned) => handleTogglePin(todo.todoId, isPinned)}
                     >
                       <TodoCard.Icon
                         onClick={() =>
@@ -479,14 +711,63 @@ export default function Home() {
                         )}
                       </TodoCard.Content>
                       <TodoCard.Category
-                        category={todo.tagTitle ?? '미선택'}
+                        category={todo.tagTitle ?? ''}
                         usePin
                         pinned={todo.isPinned}
-                        setPinned={() => {}}
+                        setPinned={(isPinned) => handleTogglePin(todo.todoId, isPinned)}
                       />
                     </TodoCard>
                   ))
                 )}
+
+                <>
+                  <div className="flex items-center mt-8 mb-2 justify-between">
+                    <div className='flex items-center gap-1 '>
+                      <img src={completeSvg} alt="" />
+                      <p className="font-bold text-[14px] text-bluegray-darker">완료 투두</p>
+                    </div>
+                    <ChevronLeftIcon
+                      className={cn(
+                        'w-5 h-5 transition-transform duration-300 cursor-pointer',
+                        isCompletedOpen ? 'rotate-[180deg]' : 'rotate-90',
+                      )}
+                      onClick={handleClickCompletedTodo}
+                    />
+                  </div>
+                  {isCompletedOpen && completedTodos.map((todo) => (
+                      <TodoCard
+                        key={todo.todoId}
+                        status="grey"
+                        onDelete={() => handleDeleteClick(todo.todoId)}
+                        onClick={() => handleClickTodo(todo.todoId)}
+                        pinned={todo.isPinned}
+                        onPin={(isPinned) => handleTogglePin(todo.todoId, isPinned)}
+                      >
+                        <TodoCard.Icon
+                          onClick={() =>
+                            handleToggleComplete(todo.todoId, todo.isCompleted)
+                          }
+                          checked={todo.isCompleted}
+                        />
+                        <TodoCard.Content>
+                          <TodoCard.Title dayTag={getDayTag(todo.routineType)}>
+                            {todo.title}
+                          </TodoCard.Title>
+                          {todo.dueDate && (
+                            <TodoCard.Time>
+                              {formatTime(todo.dueDate)}
+                            </TodoCard.Time>
+                          )}
+                        </TodoCard.Content>
+                        <TodoCard.Category
+                          category={todo.tagTitle ?? ''}
+                          usePin
+                          pinned={todo.isPinned}
+                          setPinned={(isPinned) => handleTogglePin(todo.todoId, isPinned)}
+                        />
+                      </TodoCard>
+                  ))}
+                </>
               </div>
             </div>
           </>
@@ -496,7 +777,7 @@ export default function Home() {
       {/* 투두 추가 버튼 */}
       <button
         onClick={() => setIsNewTodoSheetOpen(true)}
-        className="fixed bottom-33 right-5 bg-blue-normal w-11 h-11 rounded-full flex justify-center items-center"
+        className="z-10 fixed bottom-33 right-5 bg-blue-normal w-11 h-11 rounded-full flex justify-center items-center"
       >
         <img src={addSvg} alt="" />
       </button>
@@ -512,15 +793,32 @@ export default function Home() {
       />
 
       {selectedTodo && (
-        <TodoInfoSheet
-          isOpen={isTodoAddBottomSheetOpen}
-          onClose={() => setIsTodoAddBottomSheet(false)}
-          onEdit={() => {}}
-          todo={selectedTodo}
-          allTags={allTags}
-          onSubTodoAdd={() => {}}
-          onClick={() => deleteTodoById(selectedTodo.todoId)}
-        />
+        <>
+          <TodoInfoSheet
+            isOpen={isTodoAddBottomSheetOpen}
+            onClose={() => setIsTodoAddBottomSheet(false)}
+            onEdit={() => {
+              setIsTodoAddBottomSheet(false)
+              setIsEditTodoSheetOpen(true)
+            }}
+            todo={selectedTodo}
+            allTags={allTags}
+            onSubTodoAdd={() => {}}
+            onClick={() => deleteTodoById(selectedTodo.todoId)}
+          />
+          <TodoEditSheet
+            isOpen={isEditTodoSheetOpen}
+            onClose={() => {
+              setIsEditTodoSheetOpen(false)
+              setIsTodoAddBottomSheet(true)
+            }}
+            onConfirm={handleUpdateTodo}
+            todo={todoDetailToProposed(selectedTodo)}
+            allTags={allTags}
+            onTagAdd={() => {}}
+            title="투두 수정"
+          />
+        </>
       )}
 
       <BottomSheet
@@ -562,6 +860,7 @@ export default function Home() {
           }}
         />
       </BottomSheet>
+      {showToast && <Toast type='success' onClose={() => setShowToast(false)} />}
     </div>
   )
 }

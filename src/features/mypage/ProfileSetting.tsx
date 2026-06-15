@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getMyInfo } from '@/shared/api/user'
 
-import cameraSvg from '@/assets/camera.svg'
+const cameraSvg = '/assets/camera.svg'
 
 // components
 import BackHeaderLayout from "@/shared/components/BackHeaderLayout"
