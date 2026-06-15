@@ -11,6 +11,26 @@ export async function kakaoOAuthLogin(
   return res.data
 }
 
+export async function googleOAuthLogin(
+  credential: string,
+): Promise<ApiResponse<OAuthLoginData>> {
+  const res = await client.post<ApiResponse<OAuthLoginData>>(
+    '/api/auth/oauth/google',
+    { credential },
+  )
+  return res.data
+}
+
+export async function naverOAuthLogin(
+  accessToken: string,
+): Promise<ApiResponse<OAuthLoginData>> {
+  const res = await client.post<ApiResponse<OAuthLoginData>>(
+    '/api/auth/oauth/naver',
+    { accessToken },
+  )
+  return res.data
+}
+
 export async function checkNickname(
   nickname: string,
 ): Promise<ApiResponse<NicknameCheckData>>{
