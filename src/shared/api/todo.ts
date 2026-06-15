@@ -78,7 +78,7 @@ export async function createTodo(
   body: CreateTodoRequest,
 ): Promise<ApiResponse<CreateTodoResponse>> {
   const res = await client.post<ApiResponse<CreateTodoResponse>>(
-    '/api/todos/create',
+    '/api/todos',
     body,
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
