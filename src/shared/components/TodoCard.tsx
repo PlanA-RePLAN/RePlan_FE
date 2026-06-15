@@ -177,13 +177,14 @@ function Content({ children }: ContentProps) {
 // ── Title ─────────────────────────────────────────────
 interface TitleProps {
   children: React.ReactNode
-  dayTag?: 'M' | 'D'
+  dayTag?: 'M' | 'W' | 'D'
   onClick?: () => void
 }
 
 function Title({ children, dayTag, onClick }: TitleProps) {
   const dayTagColors = {
     D: 'text-[#7EA4F5]',
+    W: 'text-[#D482D0]',
     M: 'text-[#FFA9A9]',
   }
 

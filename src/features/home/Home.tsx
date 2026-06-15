@@ -64,8 +64,9 @@ function formatTime(dueDate: string | null): string | undefined {
   })
 }
 
-function getDayTag(routineType: string | null): 'D' | 'M' | undefined {
+function getDayTag(routineType: string | null): 'D' | 'W' | 'M' | undefined {
   if (routineType === 'DAILY') return 'D'
+  if (routineType === 'WEEKLY') return 'W'
   if (routineType === 'MONTHLY') return 'M'
   return undefined
 }
