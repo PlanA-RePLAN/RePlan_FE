@@ -7,6 +7,7 @@ import MyPageNoticeIcon from "@/icons/MyPageNoticeIcon"
 import MyPageNotificationIcon from "@/icons/MyPageNotificationIcon"
 import MyPagePrivacyIcon from "@/icons/MyPagePrivacyIcon"
 import MyPageTermsIcon from "@/icons/MyPageTermsIcon"
+import MyPageOpenSourceIcon from "@/icons/MyPageOpenSourceIcon"
 import MyPageAppVersionIcon from "@/icons/MyPageAppVersionIcon"
 
 export default function MyPage() {
@@ -33,7 +34,8 @@ export default function MyPage() {
         { id:3, title: "공지사항", icon:<MyPageNotificationIcon/>, section: "info", hasNewAlert: true, onClick: () => window.open('https://app.notion.com/p/37712dc6738b80bda3d6c65eb341bd36?v=37712dc6738b8066ba35000cdde11b2c', '_blank') },
         { id:4, title: "개인정보 처리방침", icon:<MyPagePrivacyIcon/>, section: "info", hasNewAlert: false, onClick: () => window.open('https://app.notion.com/p/37712dc6738b80a0a8e7c5fb9324dff7', '_blank') },
         { id:5, title: "서비스 이용약관", icon:<MyPageTermsIcon/>, section: "info", hasNewAlert: false, onClick: () => window.open('https://app.notion.com/p/37712dc6738b80aa80f9e7cbb84ce0db', '_blank') },
-        { id:6, title: "앱 버전", icon:<MyPageAppVersionIcon/>, section: "app", hasNewAlert: false, rightContent: <span className="text-sm text-bluegray-normal">1.0.0</span> },
+        { id:6, title: "오픈 소스", icon:<MyPageOpenSourceIcon/>, section: "info", hasNewAlert: false, onClick: () => window.open('https://app.notion.com/p/37712dc6738b80e0a63ad6494eb9112b', '_blank') },
+        { id:7, title: "앱 버전", icon:<MyPageAppVersionIcon/>, section: "app", hasNewAlert: false, rightContent: <span className="text-sm text-bluegray-normal">1.0.0</span> },
     ]
     
    
