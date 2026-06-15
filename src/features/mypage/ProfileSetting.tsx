@@ -11,6 +11,7 @@ import BottomSheet from '@/shared/components/BottomSheet'
 import CloseButtonIcon from '@/icons/CloseButtonIcon'
 import CircleCheckButtonIcon from '@/icons/CircleCheckButtonIcon'
 import ProfileInput from '../profileSetup/components/ProfileInput'
+import LogoIcon, { type Provider } from './components/LogoIcon'
 
 type ConfirmType = 'logout' | 'deleteAccount' | null
 
@@ -19,6 +20,7 @@ export default function ProfileSetting() {
   const [email, setEmail] = useState<string | null>(null)
   const [confirmType, setConfirmType] = useState<ConfirmType>(null)
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
+  const [provider, setProvider] = useState<Provider | null>(null)
 
   useEffect(() => {
     const fetchMyInfo = async () => {
@@ -28,6 +30,7 @@ export default function ProfileSetting() {
         if (res.success && res.data) {
           setName(res.data.nickname)
           setEmail(res.data.email)
+          setProvider(res.data.provider as Provider)
         }
       } catch (error) {
         console.error(error)
@@ -73,6 +76,7 @@ export default function ProfileSetting() {
         <div className='flex justify-between mt-10 mx-[18px] p-4 border border-bluegray-light-hover rounded-[12px]'>
           <p className='text-[14px]'>연결 계정</p>
           <div className='flex justify-center items-center gap-2'>
+            {provider && <LogoIcon provider={provider} /> }
             {email && <p className='text-bluegray-darker font-bold text-[12px]'>{email}</p>}
           </div>
         </div>
