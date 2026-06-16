@@ -61,7 +61,7 @@ export function useOAuthLogin() {
       size: 'large',
       width: 315,
     })
-  }, [])
+  }, [navigate])
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return
