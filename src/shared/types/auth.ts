@@ -20,3 +20,8 @@ export interface OAuthRegisterData {
   accessToken: string | null
   refreshToken: string | null
 }
+
+export interface PresignedUrlData {
+  presignedUrl: string
+  s3Key: string
+}

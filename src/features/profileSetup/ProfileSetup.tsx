@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 const cameraSvg = '/assets/camera.svg'
 
@@ -8,22 +8,41 @@ import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 import ProfileInput from './components/ProfileInput'
 import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import MainButton from '@/shared/components/MainButton'
-import { registerOAuth } from '@/shared/api/auth'
+import { registerOAuth, getPresignedUrl, uploadToS3 } from '@/shared/api/auth'
 
 export default function ProfileSetup() {
   const [name, setName] = useState('')
   const [isNameValid, setIsNameValid] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageFile(file)
+    setPreviewUrl(URL.createObjectURL(file))
+  }
 
   const handleClick = async () => {
     const tempToken = sessionStorage.getItem('tempToken')
-    if(!tempToken) {
+    if (!tempToken) {
       navigate('/')
       return
     }
-    try{
-      const res = await registerOAuth(tempToken, name)
-      if(!res.success || !res.data){
+    try {
+      let s3Key: string | undefined
+
+      if (imageFile) {
+        const presignedRes = await getPresignedUrl(tempToken, imageFile.name, imageFile.type)
+        if (!presignedRes.success || !presignedRes.data) throw new Error()
+        await uploadToS3(presignedRes.data.presignedUrl, imageFile)
+        s3Key = presignedRes.data.s3Key
+      }
+
+      const res = await registerOAuth(tempToken, name, s3Key)
+      if (!res.success || !res.data) {
         sessionStorage.removeItem('tempToken')
         navigate('/')
         return
@@ -32,7 +51,7 @@ export default function ProfileSetup() {
       localStorage.setItem('refreshToken', res.data.refreshToken!)
       sessionStorage.removeItem('tempToken')
       navigate('/onboarding')
-    }catch{
+    } catch {
       navigate('/')
     }
   }
@@ -46,12 +65,26 @@ export default function ProfileSetup() {
             <div>프로필을 입력해주세요!</div>
           </Title>
         </div>
-        <div className="flex justify-center relative w-30 mt-10">
-          <DefaultProfileIcon />
+        <div
+          className="flex justify-center relative w-30 mt-10 cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {previewUrl ? (
+            <img src={previewUrl} alt="프로필" className="w-30 h-30 rounded-full object-cover" />
+          ) : (
+            <DefaultProfileIcon />
+          )}
           <div className="w-7 h-7 bg-white border border-bluegray-light-hover flex justify-center items-center rounded-full absolute bottom-0 right-0">
             <img src={cameraSvg} alt="" />
           </div>
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageChange}
+        />
         <div className="w-full mt-10 relative">
           <ProfileInput
             value={name}
