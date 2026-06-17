@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 const cameraSvg = '/assets/camera.svg'
 
@@ -8,22 +8,14 @@ import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 import ProfileInput from './components/ProfileInput'
 import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import MainButton from '@/shared/components/MainButton'
-import { registerOAuth, getPresignedUrl, uploadToS3 } from '@/shared/api/auth'
+import { registerOAuth } from '@/shared/api/auth'
+import { useImageUpload } from '@/shared/hooks/useImageUpload'
 
 export default function ProfileSetup() {
   const [name, setName] = useState('')
   const [isNameValid, setIsNameValid] = useState(false)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { previewUrl, fileInputRef, handleImageChange, uploadImage } = useImageUpload('new')
   const navigate = useNavigate()
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setImageFile(file)
-    setPreviewUrl(URL.createObjectURL(file))
-  }
 
   const handleClick = async () => {
     const tempToken = sessionStorage.getItem('tempToken')
@@ -32,16 +24,8 @@ export default function ProfileSetup() {
       return
     }
     try {
-      let s3Key: string | undefined
-
-      if (imageFile) {
-        const presignedRes = await getPresignedUrl(tempToken, imageFile.name, imageFile.type)
-        if (!presignedRes.success || !presignedRes.data) throw new Error()
-        await uploadToS3(presignedRes.data.presignedUrl, imageFile)
-        s3Key = presignedRes.data.s3Key
-      }
-
-      const res = await registerOAuth(tempToken, name, s3Key)
+      const s3Key = await uploadImage(tempToken)
+      const res = await registerOAuth(tempToken, name, s3Key ?? undefined)
       if (!res.success || !res.data) {
         sessionStorage.removeItem('tempToken')
         navigate('/')
@@ -69,11 +53,10 @@ export default function ProfileSetup() {
           className="flex justify-center relative w-30 mt-10 cursor-pointer"
           onClick={() => fileInputRef.current?.click()}
         >
-          {previewUrl ? (
-            <img src={previewUrl} alt="프로필" className="w-30 h-30 rounded-full object-cover" />
-          ) : (
-            <DefaultProfileIcon />
-          )}
+          {previewUrl
+            ? <img src={previewUrl} alt="프로필" className="w-30 h-30 rounded-full object-cover" />
+            : <DefaultProfileIcon />
+          }
           <div className="w-7 h-7 bg-white border border-bluegray-light-hover flex justify-center items-center rounded-full absolute bottom-0 right-0">
             <img src={cameraSvg} alt="" />
           </div>

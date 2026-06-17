@@ -40,3 +40,28 @@ export async function getProfileImagePresignedUrl(
     )
     return res.data
 }
+
+
+export async function logout(
+    accessToken: string
+): Promise<ApiResponse<null>>{
+    const res = await client.post<ApiResponse<null>>(
+        '/api/auth/logout', {},
+        {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }
+    )
+    return res.data
+}
+
+export async function deleteAccount(
+    accessToken: string
+): Promise<ApiResponse<null>>{
+    const res = await client.delete<ApiResponse<null>>(
+        '/api/users',
+        {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }
+    )
+    return res.data
+}
