@@ -1,12 +1,7 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-const logoSvg = '/assets/logo.svg'
+import logoSvg from '@/assets/logo.svg'
 import Button from '@/features/profileSetup/components/Button'
 import GoogleIcon from '@/icons/GoogleIcon'
-import { kakaoOAuthLogin } from '@/shared/api/auth'
-import type { ApiResponse, OAuthLoginData } from '@/shared/types/auth'
-
-const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY
+import { useOAuthLogin } from '@/shared/hooks/useOAuthLogin'
 
 const LOGIN_OPTION = [
   { title: '카카오', img: 'kakao', option: 'kakao', icon: undefined },
@@ -16,64 +11,12 @@ const LOGIN_OPTION = [
 ] as const
 
 export default function LoginPage() {
-  const navigate = useNavigate()
-  const [error, setError] = useState<string | null>(null)
-
-  // 카카오 SDK 초기화
-  useEffect(() => {
-    if (!KAKAO_JS_KEY || !window.Kakao) return
-    if (window.Kakao.isInitialized()) return
-    window.Kakao.init(KAKAO_JS_KEY)
-
-    return () => {
-      if (window.Kakao?.isInitialized()) {
-        window.Kakao.cleanup()
-      }
-    }
-  }, [])
-
-  //응답 처리
-  const handleAuthResponse = (res: ApiResponse<OAuthLoginData>) => {
-    if (!res.success || !res.data) {
-      setError('로그인에 실패했습니다. 다시 시도해주세요.')
-      return
-    }
-
-    const { isNewUser, accessToken, refreshToken, tempToken } = res.data
-
-    // 기존 유저
-    if (!isNewUser && accessToken && refreshToken) {
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('refreshToken', refreshToken)
-      navigate('/home')
-    }
-    // 신규 유저
-    else if (isNewUser && tempToken) {
-      sessionStorage.setItem('tempToken', tempToken)
-      navigate('/profile-setup')
-    }
-  }
-
-  // 카카오 로그인
-  const handleKakaoLogin = async () => {
-    try {
-      const accessToken = await new Promise<string>((resolve, reject) => {
-        window.Kakao.Auth.login({
-          scope: 'account_email',
-          success: (authObj) => resolve(authObj.access_token),
-          fail: reject,
-        })
-      })
-      const res = await kakaoOAuthLogin(accessToken)
-      handleAuthResponse(res)
-    } catch (e) {
-      console.log(e)
-      setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.')
-    }
-  }
+  const { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver } = useOAuthLogin()
 
   const handleLogin = (option: string) => {
-    if (option === 'kakao') handleKakaoLogin()
+    if (option === 'kakao') loginWithKakao()
+    if (option === 'google') loginWithGoogle()
+    if (option === 'naver') loginWithNaver()
   }
 
   return (
@@ -87,6 +30,9 @@ export default function LoginPage() {
           {error}
         </p>
       )}
+      {/* 구글/네이버 SDK 버튼 (숨김) */}
+      <div ref={googleBtnRef} className="hidden" />
+      <div id="naverIdLogin" className="hidden" />
       <div className="w-full px-5 flex flex-col gap-2 absolute bottom-[6%]">
         {LOGIN_OPTION.map((item) => (
           <Button
