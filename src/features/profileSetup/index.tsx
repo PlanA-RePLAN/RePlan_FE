@@ -1,4 +1,4 @@
-import logoSvg from '@/assets/logo.svg'
+import logoSvg from '/assets/logo.svg'
 import Button from '@/features/profileSetup/components/Button'
 import GoogleIcon from '@/icons/GoogleIcon'
 import { useOAuthLogin } from '@/shared/hooks/useOAuthLogin'
