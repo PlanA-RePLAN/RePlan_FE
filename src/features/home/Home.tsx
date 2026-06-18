@@ -28,6 +28,7 @@ import { useTodos } from './hooks/useTodos'
 const symbolSvg = '/assets/symbol.svg'
 const addSvg = '/assets/add.svg'
 const completeSvg = '/assets/completeIcon.svg'
+const dragBar = '/assets/dragBar.svg'
 
 // components
 import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'
@@ -88,7 +89,7 @@ function todoDetailToProposed(todo: TodoDetail): ProposedTodo {
   }
 }
 
-function SortableItem({ id, children }: { id: number; children: React.ReactNode }) {
+function SortableItem({ id, children }: { id: number; children: (dragListeners: Record<string, unknown> | undefined) => React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
   return (
     <div
@@ -100,14 +101,16 @@ function SortableItem({ id, children }: { id: number; children: React.ReactNode 
         zIndex: isDragging ? 1 : undefined,
       }}
       {...attributes}
-      {...listeners}
     >
-      {children}
+      {children(listeners)}
     </div>
   )
 }
 
+
 export default function Home() {
+  const [showEdit, setShowEdit] = useState(false)
+  const [priorityEdit, setPriorityEdit] = useState(false)
   const [selectedTab, setSelectedTab] = useState<'all' | 'day' | 'week' | 'month'>('all')
   const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>('priority')
   const [allTags] = useState<CustomTag[]>(PRESET_TAGS)
@@ -132,6 +135,10 @@ export default function Home() {
     deadlineDate: null,
     deadlineTime: null,
     subTodos: [],
+  }
+
+  const handlePriorityEdit = () => {
+    setPriorityEdit(!priorityEdit)
   }
 
   const handleSelect = (value: string) => {
@@ -270,14 +277,32 @@ export default function Home() {
             <div className="bg-bluegray-light-hover w-full h-px my-8"></div>
 
             <div className="flex flex-col gap-3">
-              <Dropdown
-                items={['마감기한순', '최신등록순', '직접설정순']}
-                onChange={(item) => {
-                  if (item === '마감기한순') setSort('dueDate')
-                  else if (item === '최신등록순') setSort('latest')
-                  else setSort('priority')
-                }}
-              />
+              <div className='flex justify-between'>
+                <Dropdown
+                  items={['마감기한순', '최신등록순', '직접설정순']}
+                  onChange={(item) => {
+                    if (item === '마감기한순') {
+                      setSort('dueDate');
+                      setShowEdit(false);
+                    }
+                    else if (item === '최신등록순') {
+                      setSort('latest');
+                      setShowEdit(false);
+                    }
+                    else {
+                      setSort('priority'); 
+                      setShowEdit(true);
+                    }
+                  }}
+                />
+                {showEdit && (
+                  <p 
+                  onClick={()=> handlePriorityEdit()}
+                  className='text-[12px] text-center text-bluegray-normal-active py-[6.5px] w-12 h-8 border border-bluegray-light-hover rounded-[20px] cursor-pointer'>
+                    {priorityEdit ? '완료' : '편집'}
+                </p>
+                )}
+              </div>
               <div className="h-dvh overflow-y-auto">
                 {sort === 'priority' ? (
                   <DndContext sensors={sensors} onDragEnd={todoHook.handleDragEnd}>
@@ -287,32 +312,41 @@ export default function Home() {
                     >
                       {todoHook.regularActiveTodos.map((todo) => (
                         <SortableItem key={todo.todoId} id={todo.todoId}>
-                          <TodoCard
-                            status="swipeable"
-                            onDelete={() => handleDeleteClick(todo.todoId)}
-                            onClick={() => handleClickTodo(todo.todoId)}
-                            pinned={todo.isPinned}
-                            onPin={(isPinned) => todoHook.handleTogglePin(todo.todoId, isPinned)}
-                          >
-                            <TodoCard.Icon
-                              onClick={() => todoHook.handleToggleComplete(todo.todoId, todo.isCompleted)}
-                              checked={todo.isCompleted}
-                            />
-                            <TodoCard.Content>
-                              <TodoCard.Title dayTag={getDayTag(todo.routineType)}>
-                                {todo.title}
-                              </TodoCard.Title>
-                              {todo.dueDate && (
-                                <TodoCard.Time>{formatTime(todo.dueDate)}</TodoCard.Time>
+                          {(dragListeners) => (
+                            <div className='flex w-full items-center gap-3'>
+                              <div className="flex-1 min-w-0">
+                                <TodoCard
+                                  status="swipeable"
+                                  onDelete={() => handleDeleteClick(todo.todoId)}
+                                  onClick={() => handleClickTodo(todo.todoId)}
+                                  pinned={todo.isPinned}
+                                  onPin={(isPinned) => todoHook.handleTogglePin(todo.todoId, isPinned)}
+                                >
+                                  <TodoCard.Icon
+                                    onClick={() => todoHook.handleToggleComplete(todo.todoId, todo.isCompleted)}
+                                    checked={todo.isCompleted}
+                                  />
+                                  <TodoCard.Content>
+                                    <TodoCard.Title dayTag={getDayTag(todo.routineType)}>
+                                      {todo.title}
+                                    </TodoCard.Title>
+                                    {todo.dueDate && (
+                                      <TodoCard.Time>{formatTime(todo.dueDate)}</TodoCard.Time>
+                                    )}
+                                  </TodoCard.Content>
+                                  <TodoCard.Category
+                                    category={todo.tagTitle ?? ''}
+                                    usePin
+                                    pinned={todo.isPinned}
+                                    setPinned={(isPinned) => todoHook.handleTogglePin(todo.todoId, isPinned)}
+                                  />
+                                </TodoCard>
+                              </div>
+                              {priorityEdit && (
+                                <img src={dragBar} alt="" {...dragListeners} className="cursor-grab touch-none shrink-0" />
                               )}
-                            </TodoCard.Content>
-                            <TodoCard.Category
-                              category={todo.tagTitle ?? ''}
-                              usePin
-                              pinned={todo.isPinned}
-                              setPinned={(isPinned) => todoHook.handleTogglePin(todo.todoId, isPinned)}
-                            />
-                          </TodoCard>
+                            </div>
+                          )}
                         </SortableItem>
                       ))}
                     </SortableContext>
@@ -350,7 +384,9 @@ export default function Home() {
                 )}
 
                 <>
-                  <div className="flex items-center mt-8 mb-2 justify-between">
+                  <div 
+                  onClick={() => todoHook.setIsCompletedOpen((prev) => !prev)}
+                  className="flex items-center mt-8 mb-2 justify-between">
                     <div className='flex items-center gap-1'>
                       <img src={completeSvg} alt="" />
                       <p className="font-bold text-[14px] text-bluegray-darker">완료 투두</p>
@@ -360,7 +396,7 @@ export default function Home() {
                         'w-5 h-5 transition-transform duration-300 cursor-pointer',
                         todoHook.isCompletedOpen ? 'rotate-[180deg]' : 'rotate-90',
                       )}
-                      onClick={() => todoHook.setIsCompletedOpen((prev) => !prev)}
+                      
                     />
                   </div>
                   {todoHook.isCompletedOpen && todoHook.completedTodos.map((todo) => (
