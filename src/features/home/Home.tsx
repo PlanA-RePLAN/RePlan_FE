@@ -206,7 +206,7 @@ export default function Home() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div>
+        <div className={selectedTab === 'all' ? 'pointer-events-none' : ''}>
           <DatePicker
             onClose={() => {}}
             onConfirm={(date) => calendar.setSelectedDate(date)}
