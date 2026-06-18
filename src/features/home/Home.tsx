@@ -109,10 +109,10 @@ function SortableItem({ id, children }: { id: number; children: (dragListeners: 
 
 
 export default function Home() {
-  const [showEdit, setShowEdit] = useState(false)
   const [priorityEdit, setPriorityEdit] = useState(false)
   const [selectedTab, setSelectedTab] = useState<'all' | 'day' | 'week' | 'month'>('all')
-  const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>('priority')
+  const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>('dueDate')
+  const showEdit = sort === 'priority'
   const [allTags] = useState<CustomTag[]>(PRESET_TAGS)
 
   const calendar = useCalendar()
@@ -283,15 +283,14 @@ export default function Home() {
                   onChange={(item) => {
                     if (item === '마감기한순') {
                       setSort('dueDate');
-                      setShowEdit(false);
+                      setPriorityEdit(false);
                     }
                     else if (item === '최신등록순') {
                       setSort('latest');
-                      setShowEdit(false);
+                      setPriorityEdit(false);
                     }
                     else {
-                      setSort('priority'); 
-                      setShowEdit(true);
+                      setSort('priority');
                     }
                   }}
                 />
