@@ -37,9 +37,6 @@ export function useOAuthLogin() {
     if (!KAKAO_JS_KEY || !window.Kakao) return
     if (window.Kakao.isInitialized()) return
     window.Kakao.init(KAKAO_JS_KEY)
-    return () => {
-      if (window.Kakao?.isInitialized()) window.Kakao.cleanup()
-    }
   }, [])
 
   // 구글 SDK 초기화
