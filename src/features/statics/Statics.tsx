@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/shared/utils/cn'
+import { getMonthlyReport } from '@/shared/api/statics'
+import { MonthlyReport } from '@/shared/types/statics'
 import ReportTab from './components/ReportTab'
 import DeepAnalysisTab from './components/DeepAnalysisTab'
 import TipNoteTab from './components/TipNoteTab'
@@ -14,6 +16,26 @@ const TABS: { id: Tab; label: string }[] = [
 
 export default function Statics() {
   const [activeTab, setActiveTab] = useState<Tab>('report')
+  const now = new Date()
+  const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(now.getMonth() + 1)
+  const [reportData, setReportData] = useState<MonthlyReport | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken') ?? ''
+    setIsLoading(true)
+    getMonthlyReport(accessToken, year, month)
+      .then((res) => {
+        if (res.success && res.data) {
+          setReportData(res.data)
+        } else {
+          setReportData(null)
+        }
+      })
+      .catch(() => setReportData(null))
+      .finally(() => setIsLoading(false))
+  }, [year, month])
 
   return (
     <div className="flex flex-col">
@@ -40,9 +62,33 @@ export default function Statics() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'report' && <ReportTab />}
-      {activeTab === 'analysis' && <DeepAnalysisTab />}
-      {activeTab === 'tip' && <TipNoteTab />}
+      {activeTab === 'report' && (
+        <ReportTab
+          data={reportData}
+          isLoading={isLoading}
+          year={year}
+          month={month}
+          onMonthChange={(y, m) => {
+            setYear(y)
+            setMonth(m)
+          }}
+        />
+      )}
+      {activeTab === 'analysis' && (
+        <DeepAnalysisTab
+          data={reportData}
+          isLoading={isLoading}
+          year={year}
+          month={month}
+          onMonthChange={(y, m) => {
+            setYear(y)
+            setMonth(m)
+          }}
+        />
+      )}
+      {activeTab === 'tip' && (
+        <TipNoteTab data={reportData} isLoading={isLoading} />
+      )}
     </div>
   )
 }

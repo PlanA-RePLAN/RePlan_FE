@@ -5,19 +5,25 @@ import PatternIcon from '@/icons/PatternIcon'
 import AIIcon from '@/icons/AIIcon'
 import InsightLightIcon from '@/icons/InsightLightIcon'
 import TodoTag from '@/shared/components/TodoTag'
-import StarCircleIcon from '@/icons/StarCircleIcon'
+import BottomSheet from '@/shared/components/BottomSheet'
+import MonthPeaker from '@/features/goal/components/MonthPeaker'
+import { MonthlyReport } from '@/shared/types/statics'
 import SectionHeader from './SectionHeader'
+import StatisticsEmptyState from './StatisticsEmptyState'
 import ChartViewToggleIcon from '@/icons/ChartViewToggleIcon'
 import ChartViewToggle2Icon from '@/icons/ChartViewToggle2Icon'
 
-// ── Bar Chart ─────────────────────────────────────────
-const FAILURE_CAUSES = [
-  { label: '컨디션 난조', pct: 37, color: '#579DEC', count: '24회' },
-  { label: '목표 개선 필요', pct: 25, color: '#70B2FC', count: '19회' },
-  { label: '기타', pct: 20, color: '#93C6FF', count: '13회' },
-  { label: '심리적 저항', pct: 18, color: '#AFD5FF', count: '7회' },
-]
+interface DeepAnalysisTabProps {
+  data: MonthlyReport | null
+  isLoading: boolean
+  year: number
+  month: number
+  onMonthChange: (year: number, month: number) => void
+}
 
+const CAUSE_COLORS = ['#579DEC', '#70B2FC', '#93C6FF', '#AFD5FF']
+
+// ── Bar Chart ─────────────────────────────────────────
 function BarRow({
   label,
   pct,
@@ -91,16 +97,24 @@ function RankItem({
         className="flex items-center justify-center border-[1.5px] rounded-full px-3 py-1 shrink-0"
         style={{ borderColor: color }}
       >
-        <span className="" style={{ color }}>
-          {count}
-        </span>
+        <span style={{ color }}>{count}</span>
       </div>
     </div>
   )
 }
 
 // ── Pattern Table ─────────────────────────────────────
-function PatternTable() {
+function PatternTable({
+  highTag,
+  lowTag,
+  highDay,
+  lowDay,
+}: {
+  highTag: string | null
+  lowTag: string | null
+  highDay: string | null
+  lowDay: string | null
+}) {
   return (
     <div className="border border-bluegray-light-active rounded-xl overflow-hidden">
       {/* Header */}
@@ -126,11 +140,15 @@ function PatternTable() {
           </span>
         </div>
         <div className="border-l border-bluegray-light-active flex-1 flex items-center justify-center py-2.5">
-          <TodoTag category="Study" />
+          {highTag ? (
+            <TodoTag category={highTag} />
+          ) : (
+            <span className="text-sm text-bluegray-normal">-</span>
+          )}
         </div>
         <div className="border-l border-bluegray-light-active flex-1 flex items-center justify-center py-2.5">
           <span className="text-sm font-bold text-bluegray-dark-active">
-            월요일
+            {highDay ?? '-'}
           </span>
         </div>
       </div>
@@ -143,48 +161,15 @@ function PatternTable() {
           </span>
         </div>
         <div className="border-l border-bluegray-light-active flex-1 flex items-center justify-center py-2.5">
-          <TodoTag category="Project" />
+          {lowTag ? (
+            <TodoTag category={lowTag} />
+          ) : (
+            <span className="text-sm text-bluegray-normal">-</span>
+          )}
         </div>
         <div className="border-l border-bluegray-light-active flex-1 flex items-center justify-center py-2.5">
           <span className="text-sm font-bold text-bluegray-dark-active">
-            수요일
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Cause Chip ────────────────────────────────────────
-function CauseChip({
-  title,
-  tag,
-  day,
-  cause,
-}: {
-  title: string
-  tag: string
-  day?: string
-  cause: string
-}) {
-  return (
-    <div className="border border-bluegray-light-active rounded-xl px-4 py-4 w-full">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <StarCircleIcon />
-          <span className="text-sm font-medium text-bluegray-dark-active">
-            {title}
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <TodoTag category={tag} />
-          {day && (
-            <span className="text-sm font-bold text-bluegray-dark-active">
-              {day}
-            </span>
-          )}
-          <span className="text-sm font-bold text-bluegray-dark-active">
-            {cause}
+            {lowDay ?? '-'}
           </span>
         </div>
       </div>
@@ -214,121 +199,155 @@ function AIInsightCard({ title, body }: { title: string; body: string }) {
 }
 
 // ── DeepAnalysisTab ───────────────────────────────────
-export default function DeepAnalysisTab() {
+export default function DeepAnalysisTab({
+  data,
+  isLoading,
+  year,
+  month,
+  onMonthChange,
+}: DeepAnalysisTabProps) {
   const [chartView, setChartView] = useState<'bar' | 'list'>('bar')
+  const [isPickerOpen, setIsPickerOpen] = useState(false)
+
+  const analysis = data?.analysisData
+  const aiInsight = data?.aiInsight
+  const failureCauses = analysis?.failureCauses ?? []
+  const topCause = failureCauses[0]?.cause ?? null
+
+  const causesWithColor = failureCauses.map((c, i) => ({
+    ...c,
+    color: CAUSE_COLORS[i] ?? '#AFD5FF',
+  }))
+
+  const isEmpty = !isLoading && !data
 
   return (
     <div className="px-5 pb-32">
       {/* Month Selector */}
-      <button className="flex items-center gap-1 mt-5">
+      <button
+        className="flex items-center gap-1 mt-5"
+        onClick={() => setIsPickerOpen(true)}
+      >
         <span className="text-base font-bold text-bluegray-black">
-          2026년 5월
+          {year}년 {month}월
         </span>
         <ChevronDownStrokeIcon width={24} height={24} color="#202021" />
       </button>
 
-      {/* Headline */}
-      <p className="mt-4.25 text-2xl font-bold leading-[1.3] tracking-[-0.03em]">
-        <span className="text-bluegray-black">이번 달 주된 실패 원인은</span>
-        <br />
-        <span className="text-blue-normal">컨디션 난조</span>
-        <span className="text-bluegray-black">였어요</span>
-      </p>
+      <BottomSheet isOpen={isPickerOpen} onClose={() => setIsPickerOpen(false)}>
+        <MonthPeaker
+          year={year}
+          value={month}
+          onClose={() => setIsPickerOpen(false)}
+          onConfirm={(y, m) => {
+            onMonthChange(y, m)
+            setIsPickerOpen(false)
+          }}
+        />
+      </BottomSheet>
 
-      <div className="mt-7 flex flex-col gap-10">
-        {/* 실패 원인 분포 */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <SectionHeader icon={<BarChartIcon />} title="실패 원인 분포" />
-            <div className="flex items-center gap-2">
-              <button onClick={() => setChartView('bar')}>
-                <ChartViewToggleIcon
-                  color={chartView === 'bar' ? '#202021' : '#E4E6E9'}
-                />
-              </button>
-              <button onClick={() => setChartView('list')}>
-                <ChartViewToggle2Icon
-                  color={chartView === 'list' ? '#202021' : '#E4E6E9'}
-                />
-              </button>
-            </div>
-          </div>
+      {isEmpty && <StatisticsEmptyState />}
 
-          {chartView === 'bar' ? (
-            <div className="flex flex-col gap-3">
-              {FAILURE_CAUSES.map((item, i) => (
-                <BarRow
-                  key={item.label}
-                  label={item.label}
-                  pct={item.pct}
-                  color={item.color}
-                  isFirst={i === 0}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {FAILURE_CAUSES.map((item, i) => (
-                <RankItem
-                  key={item.label}
-                  rank={i + 1}
-                  label={item.label}
-                  color={item.color}
-                  count={item.count}
-                />
-              ))}
-            </div>
+      {!isEmpty && (
+        <>
+          {topCause && (
+            <p className="mt-4.25 text-2xl font-bold leading-[1.3] tracking-[-0.03em]">
+              <span className="text-bluegray-black">
+                이번 달 주된 실패 원인은
+              </span>
+              <br />
+              <span className="text-blue-normal">{topCause}</span>
+              <span className="text-bluegray-black">였어요</span>
+            </p>
           )}
-        </div>
 
-        {/* 패턴 분석 */}
-        <div className="flex flex-col gap-4">
-          <SectionHeader icon={<PatternIcon />} title="패턴 분석" />
-          <div className="flex flex-col gap-6">
-            {/* 태그+요일 */}
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-bluegray-dark-active">
-                태그+요일
-              </span>
-              <PatternTable />
-            </div>
-            {/* 원인 조합 */}
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-bluegray-dark-active">
-                원인 조합
-              </span>
-              <div className="flex flex-col gap-3">
-                <CauseChip
-                  title="실패율 높은 원인 + 태그"
-                  tag="Study"
-                  cause="심리적 저항"
-                />
-                <CauseChip
-                  title="실패율 높은 원인 + 요일 + 태그"
-                  tag="Study"
-                  day="수요일"
-                  cause="심리적 저항"
-                />
+          <div className="mt-7 flex flex-col gap-10">
+            {/* 실패 원인 분포 */}
+            {causesWithColor.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <SectionHeader
+                    icon={<BarChartIcon />}
+                    title="실패 원인 분포"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setChartView('bar')}>
+                      <ChartViewToggleIcon
+                        color={chartView === 'bar' ? '#202021' : '#E4E6E9'}
+                      />
+                    </button>
+                    <button onClick={() => setChartView('list')}>
+                      <ChartViewToggle2Icon
+                        color={chartView === 'list' ? '#202021' : '#E4E6E9'}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {chartView === 'bar' ? (
+                  <div className="flex flex-col gap-3">
+                    {causesWithColor.map((item, i) => (
+                      <BarRow
+                        key={item.cause}
+                        label={item.cause}
+                        pct={item.percentage}
+                        color={item.color}
+                        isFirst={i === 0}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {causesWithColor.map((item, i) => (
+                      <RankItem
+                        key={item.cause}
+                        rank={i + 1}
+                        label={item.cause}
+                        color={item.color}
+                        count={`${item.count}회`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 패턴 분석 */}
+            <div className="flex flex-col gap-4">
+              <SectionHeader icon={<PatternIcon />} title="패턴 분석" />
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-semibold text-bluegray-dark-active">
+                    태그+요일
+                  </span>
+                  <PatternTable
+                    highTag={analysis?.highAchievementTag ?? null}
+                    lowTag={analysis?.lowAchievementTag ?? null}
+                    highDay={analysis?.highAchievementDay ?? null}
+                    lowDay={analysis?.lowAchievementDay ?? null}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* AI 인사이트 */}
-        <div className="flex flex-col gap-4">
-          <SectionHeader icon={<AIIcon />} title="AI 인사이트" />
-          <div className="flex flex-col gap-3">
-            <AIInsightCard
-              title="Study 태그와 Study 태그 투두를 함께 진행 시 성공률이 하락해요"
-              body="한 가지 분류의 태그를 몰아서 하기 보다, 하루 계획에 다양한 종류의 투두를 구성해보는 거 어떨까요?"
-            />
-            <AIInsightCard
-              title="수요일에는 3개 이상의 투두를 달성하지 못했어요"
-              body="수요일에 정기적으로 스케줄이 바쁘거나 일정이 있는 것으로 추측돼요. 수요일이 데드라인이더라도 목표 달성률이 높은 월요일에 미리 할 일을 처리해 보는 거 어떨까요?"
-            />
+            {/* AI 인사이트 */}
+            {aiInsight && aiInsight.insights.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <SectionHeader icon={<AIIcon />} title="AI 인사이트" />
+                <div className="flex flex-col gap-3">
+                  {aiInsight.insights.map((item, i) => (
+                    <AIInsightCard
+                      key={i}
+                      title={item.title}
+                      body={item.body}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   )
 }
