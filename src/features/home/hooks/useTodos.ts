@@ -30,6 +30,7 @@ interface UseTodosParams {
 
 export function useTodos({ selectedTab, sort, selectedDate, selectedYear, selectedMonth }: UseTodosParams) {
   const [todos, setTodos] = useState<Todo[]>([])
+  const [calendarTodos, setCalendarTodos] = useState<Todo[]>([])
   const [selectedTodo, setSelectedTodo] = useState<TodoDetail | null>(null)
   const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null)
   const [showToast, setShowToast] = useState(false)
@@ -41,7 +42,7 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
   const refetchTodos = async () => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
     const apiSort = sort === 'latest' ? 'priority' : sort
-    const today = toDateStr(new Date())
+    const baseDate = selectedDate ? toDateStr(selectedDate) : toDateStr(new Date())
 
     let apiFilter: 'all' | 'day' | 'week' | 'month'
     let apiDate: string | undefined
@@ -49,15 +50,15 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
     switch (selectedTab) {
       case 'day':
         apiFilter = 'day'
-        apiDate = today
+        apiDate = baseDate
         break
       case 'week':
         apiFilter = 'week'
-        apiDate = today
+        apiDate = baseDate
         break
       case 'month':
         apiFilter = 'month'
-        apiDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`
+        apiDate = baseDate
         break
       default:
         apiFilter = 'all'
@@ -68,9 +69,21 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
     if (res.success) setTodos(res.data ?? [])
   }
 
+
+  const refetchCalendarTodos = async () => {
+    const accessToken = localStorage.getItem('accessToken') ?? ''
+    const monthDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`
+    const res = await getTodos(accessToken, 'month', 'dueDate', monthDate)
+    if (res.success) setCalendarTodos(res.data ?? [])
+  }
+
   useEffect(() => {
     refetchTodos()
-  }, [selectedTab, sort, selectedYear, selectedMonth])
+  }, [selectedTab, sort, selectedYear, selectedMonth, selectedDate])
+
+  useEffect(() => {
+    refetchCalendarTodos()
+  }, [selectedYear, selectedMonth])
 
   const fetchTodo = async (todoId: number) => {
     try {
@@ -254,7 +267,7 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
     }
   }
 
-  const filteredTodos = selectedDate
+  const filteredTodos = selectedDate && selectedTab !== 'week' && selectedTab !== 'month'
     ? todos.filter((t) => t.dueDate?.startsWith(toDateStr(selectedDate)) ?? false)
     : selectedTab === 'all'
     ? todos.filter((t) => {
@@ -271,7 +284,7 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
   const regularActiveTodos = sortedTodos.filter((t) => !t.isPinned && !t.isCompleted)
   const completedTodos = sortedTodos.filter((t) => t.isCompleted)
 
-  const calendarDueDates = todos
+  const calendarDueDates = calendarTodos
     .filter((t) => t.dueDate)
     .map((t) => new Date(t.dueDate!))
 
