@@ -285,7 +285,7 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
   const completedTodos = sortedTodos.filter((t) => t.isCompleted)
 
   const calendarDueDates = calendarTodos
-    .filter((t) => t.dueDate)
+    .filter((t) => t.dueDate && t.routineType === null)
     .map((t) => new Date(t.dueDate!))
 
   return {
