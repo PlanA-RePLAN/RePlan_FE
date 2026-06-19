@@ -10,7 +10,7 @@ export default function ProgressBar({
   currentStep,
 }: ProgressBarProps) {
   return (
-    <div className="gap-3.5 flex w-full">
+    <div className="gap-2 flex w-full">
       {Array.from({ length: totalSteps }, (_, index) => (
         <div
           key={index}

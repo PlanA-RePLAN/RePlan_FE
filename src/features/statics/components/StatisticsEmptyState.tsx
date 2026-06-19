@@ -2,7 +2,7 @@ import StatisticsEmptyIcon from '@/icons/StatisticsEmptyIcon'
 
 export default function StatisticsEmptyState() {
   return (
-    <div className="flex flex-col items-center gap-6 pt-[120px] pb-32">
+    <div className="flex flex-col items-center gap-6 pt-30 pb-32">
       <StatisticsEmptyIcon />
       <div className="flex flex-col items-center gap-2 text-center">
         <p className="text-base font-bold text-bluegray-black tracking-[-0.015em]">

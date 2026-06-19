@@ -4,12 +4,15 @@ import { useNavigate } from 'react-router-dom'
 import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import ProposeGoal from './ProposeGoal'
 import WritingGoal from './WritingGoal'
+import WritingGoalDetails from './WritingGoalDetails'
 import AskQuestion from './AskQuestion'
 import ProgressBar from './components/ProgressBar'
 
 // utils
 import { useState } from 'react'
 import OnboardingComplete from './OnboardingComplete'
+
+const TOTAL_STEPS = 4
 
 export default function OnBoarding() {
   const [currentStep, setCurrentStep] = useState(0)
@@ -24,15 +27,16 @@ export default function OnBoarding() {
   }
 
   const moveNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1)
     }
   }
 
   const steps = [
     <WritingGoal moveNext={moveNext} key={0} />,
-    <AskQuestion moveNext={moveNext} key={1} />,
-    <ProposeGoal moveNext={moveNext} key={2} />,
+    <WritingGoalDetails moveNext={moveNext} key={1} />,
+    <AskQuestion moveNext={moveNext} key={2} />,
+    <ProposeGoal moveNext={moveNext} key={3} />,
   ]
   return (
     <BackHeaderLayout
@@ -40,13 +44,13 @@ export default function OnBoarding() {
       onBack={moveBack}
       className="border-none"
     >
-      {currentStep < 3 && (
+      {currentStep < TOTAL_STEPS && (
         <div className="font-light px-5">
-          <ProgressBar totalSteps={3} currentStep={currentStep + 1} />
+          <ProgressBar totalSteps={TOTAL_STEPS} currentStep={currentStep + 1} />
           <div className="pt-8">{steps[currentStep]}</div>
         </div>
       )}
-      {currentStep === 3 && <OnboardingComplete />}
+      {currentStep === TOTAL_STEPS && <OnboardingComplete />}
     </BackHeaderLayout>
   )
 }
