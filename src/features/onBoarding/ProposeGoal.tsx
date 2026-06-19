@@ -62,6 +62,7 @@ function toTodoDetail(t: ProposedTodo): TodoDetail {
     tagTitle: t.selectedTagId === '미선택' ? null : t.selectedTagId,
     tagColor: null,
     routineType: REPEAT_TO_ROUTINE[t.repeat],
+    routineDate: t.routineDate ?? null,
     subTodos: t.subTodos.map((s) => ({
       todoId: s.id,
       title: s.title,

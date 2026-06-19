@@ -24,19 +24,25 @@ export default function Goal() {
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined)
   const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined)
 
-  const filteredGoalGroup = goalGroup.filter((group) => {
-    const [year, month] = group.date.split('-').map(Number)
-  if (selectedYear && selectedMonth) {
-    return year === selectedYear && month === selectedMonth
-  }
-  if (selectedYear) {
-    return year === selectedYear
-  }
-  if (selectedMonth) {
-    return month === selectedMonth
-  }
-  return true  
-})
+  const filteredGoalGroup = goalGroup
+    .filter((group) => {
+      const [year, month] = group.date.split('-').map(Number)
+      if (selectedYear && selectedMonth) {
+        return year === selectedYear && month === selectedMonth
+      }
+      if (selectedYear) {
+        return year === selectedYear
+      }
+      if (selectedMonth) {
+        return month === selectedMonth
+      }
+      return true
+    })
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .map((group) => ({
+      ...group,
+      goals: [...group.goals].sort((a, b) => b.id - a.id),
+    }))
 
 useEffect(()=>{
   const fetchGoals = async () => {
