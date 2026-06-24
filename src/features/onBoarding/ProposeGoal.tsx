@@ -8,7 +8,7 @@ import TodoCard from '@/shared/components/TodoCard'
 import CheckBoxIcon from '@/icons/CheckBoxIcon'
 import TodoInfoSheet from './components/TodoInfoSheet'
 import TodoEditSheet from './components/TodoEditSheet'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { format } from 'date-fns'
 import { cn } from '@/shared/utils/cn'
 import {
@@ -17,11 +17,13 @@ import {
   PRESET_TAGS,
   ROUTINE_TO_REPEAT,
   REPEAT_TO_ROUTINE,
+  tagToCustomTag,
 } from './type/types'
 import { useOnboardingStore } from '@/store/onboardingStore'
 import type { AiRecommendedTodo } from '@/shared/types/goal'
 import type { TodoDetail } from '@/shared/types/todo'
 import { createGoalWithTodos } from '@/shared/api/goal'
+import { getTags } from '@/shared/api/tags'
 
 interface ProposeGoalProps {
   moveNext: () => void
@@ -105,6 +107,17 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
 
   const [todos, setTodos] = useState<ProposedTodo[]>(initialTodos)
   const [allTags, setAllTags] = useState<CustomTag[]>(PRESET_TAGS)
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      const res = await getTags(accessToken)
+      if (res.success && res.data) {
+        setAllTags([...PRESET_TAGS, ...res.data.map(tagToCustomTag)])
+      }
+    }
+    fetchTags()
+  }, [])
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [selectedTodo, setSelectedTodo] = useState<ProposedTodo | null>(null)
   const [infoOpen, setInfoOpen] = useState(false)

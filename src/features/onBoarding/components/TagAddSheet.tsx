@@ -4,6 +4,7 @@ import Input from '@/shared/components/Input'
 import { useState } from 'react'
 import { type CustomTag, TAG_COLORS } from '../type/types'
 import { cn } from '@/shared/utils/cn'
+import { createTag } from '@/shared/api/tags'
 
 interface TagAddSheetProps {
   isOpen: boolean
@@ -18,6 +19,7 @@ export default function TagAddSheet({
 }: TagAddSheetProps) {
   const [tagName, setTagName] = useState('')
   const [selectedColorId, setSelectedColorId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const handleClose = () => {
     setTagName('')
@@ -25,17 +27,29 @@ export default function TagAddSheet({
     onClose()
   }
 
-  const handleConfirm = () => {
-    if (!tagName.trim() || !selectedColorId) return
+  const handleConfirm = async () => {
+    if (!tagName.trim() || !selectedColorId || loading) return
     const color = TAG_COLORS.find((c) => c.id === selectedColorId)!
-    onConfirm({
-      id: `custom-${Date.now()}`,
-      label: tagName.trim(),
-      bgColor: color.bgColor,
-      textColor: color.textColor,
-    })
-    setTagName('')
-    setSelectedColorId(null)
+    setLoading(true)
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      const res = await createTag(accessToken, {
+        title: tagName.trim(),
+        color: color.textColor,
+      })
+      if (res.success && res.data) {
+        onConfirm({
+          id: String(res.data.tagId),
+          label: res.data.title,
+          bgColor: color.bgColor,
+          textColor: color.textColor,
+        })
+        setTagName('')
+        setSelectedColorId(null)
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -45,7 +59,7 @@ export default function TagAddSheet({
           title="태그 추가"
           onClose={handleClose}
           onConfirm={handleConfirm}
-          confirmDisabled={!tagName.trim() || !selectedColorId}
+          confirmDisabled={!tagName.trim() || !selectedColorId || loading}
         />
 
         <p className="text-sm font-medium text-bluegray-black mb-2">

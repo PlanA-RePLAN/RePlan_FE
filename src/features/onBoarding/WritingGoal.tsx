@@ -15,6 +15,7 @@ import EndScheduleInput from './components/EndScheduleInput'
 import { useOnboardingStore, NO_DEADLINE_DATE } from '@/store/onboardingStore'
 
 export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
+  // store에서 관리되는 전역 변수
   const storeGoalValue = useOnboardingStore((s) => s.goalValue)
   const storeDeadlineDate = useOnboardingStore((s) => s.deadlineDate)
   const storeDeadlineTime = useOnboardingStore((s) => s.deadlineTime)
@@ -26,6 +27,7 @@ export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
     storeDeadlineDate && !isSameDay(storeDeadlineDate, NO_DEADLINE_DATE),
   )
 
+  // local state
   const [goal, setGoal] = useState(storeGoalValue)
   const [endDate, setEndDate] = useState<Date | null>(
     hasStoredDeadline ? storeDeadlineDate : null,
