@@ -31,6 +31,22 @@ export interface Todo {
   isOverdue: boolean
 }
 
+export interface CreateTodoRequest {
+  title: string
+  dueDate?: string | null
+  tagId?: number | null
+  goalId?: number | null
+}
+
+export interface CreateTodoResponse {
+  todoId: number
+  title: string
+  dueDate: string | null
+  tagId: number | null
+  parentId: number | null
+  completed: boolean
+}
+
 export type TodoTagId = '미선택' | 'Study' | 'Project' | 'Health' | 'Other'
 
 export interface TodoTagDef {

@@ -1,22 +1,6 @@
-import { Todo, TodoDetail } from '../types/todo'
+import { Todo, TodoDetail, CreateTodoRequest, CreateTodoResponse } from '../types/todo'
 import { ApiResponse } from '../types/auth'
 import client from './client'
-
-export interface CreateTodoRequest {
-  title: string
-  dueDate?: string | null
-  tagId?: number | null
-  goalId?: number | null
-}
-
-export interface CreateTodoResponse {
-  todoId: number
-  title: string
-  dueDate: string | null
-  tagId: number | null
-  parentId: number | null
-  completed: boolean
-}
 
 export async function getTodos(
     accessToken: string,
