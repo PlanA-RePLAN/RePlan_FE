@@ -10,12 +10,33 @@ export interface GoalGroup {
   goals: Goal[]
 }
 
+export interface GoalExploreRequest {
+  goal: string
+  deadlineDate?: string | null
+  deadlineTime?: string | null
+}
+
+export interface ExploreQuestion {
+  question: string
+  chips: string[]
+}
+
+export interface GoalExploreData {
+  valid: boolean
+  message: string | null
+  questions: ExploreQuestion[]
+}
+
+export interface QuestionAnswer {
+  question: string
+  answer: string
+}
+
 export interface RefineGoalRequest {
   goal: string
-  deadline: string
-  currentLevel?: string
-  availableTime?: string
-  notes?: string
+  deadlineDate?: string | null
+  deadlineTime?: string | null
+  answers: QuestionAnswer[]
 }
 
 export interface RefineField {
@@ -34,26 +55,29 @@ export interface RefineNoteItem {
   content: string
 }
 
-export interface RefineNotes {
-  value: RefineNoteItem[]
+export interface RefineSolution {
+  question: string
+  items: RefineNoteItem[]
   reason: string
 }
 
 export interface RefineGoalData {
   goal: RefineField
   deadline: RefineDeadline
-  currentLevel: RefineField
-  availableTime: RefineField
-  notes: RefineNotes
+  solutions: RefineSolution[]
+}
+
+export interface SolutionInput {
+  question: string
+  items: RefineNoteItem[]
 }
 
 export interface AiTodoRequest {
   goal: string
   deadlineDate?: string | null
   deadlineTime?: string | null
-  currentLevel?: string | null
-  availableTime?: string | null
-  notes?: string | null
+  solutions?: SolutionInput[]
+  refreshCount?: number
 }
 
 export interface AiRecommendedTodo {

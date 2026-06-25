@@ -1,5 +1,7 @@
 import {
   GoalGroup,
+  type GoalExploreRequest,
+  type GoalExploreData,
   type RefineGoalData,
   type RefineGoalRequest,
   type AiTodoRequest,
@@ -29,6 +31,18 @@ export async function deleteGoal(
   const res = await client.delete<ApiResponse<null>>(`/api/goals/${id}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
+  return res.data
+}
+
+export async function exploreGoal(
+  accessToken: string,
+  body: GoalExploreRequest,
+): Promise<ApiResponse<GoalExploreData>> {
+  const res = await client.post<ApiResponse<GoalExploreData>>(
+    '/api/goals/ai/explore',
+    body,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
   return res.data
 }
 
