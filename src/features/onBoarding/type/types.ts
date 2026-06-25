@@ -1,5 +1,6 @@
 import { TODO_TAGS, type TodoTagDef } from '@/shared/types/todo'
 import type { Tag } from '@/shared/types/tag'
+import { getTags } from '@/shared/api/tags'
 
 export type RepeatType = '없음' | '데일리' | '위클리' | '먼슬리'
 export type RoutineType = 'DAILY' | 'WEEKLY' | 'MONTHLY'
@@ -81,6 +82,25 @@ export function tagToCustomTag(tag: Tag): CustomTag {
     bgColor: `${tag.color}1A`,
     textColor: tag.color,
   }
+}
+
+// 백엔드에 저장된 커스텀 태그인지 (id가 숫자 문자열인 tagId). 프리셋 태그는 'Study' 등 고정 문자열 id를 씀
+export function isCustomTag(tag: CustomTag): boolean {
+  return /^\d+$/.test(tag.id)
+}
+
+// CustomTag.id를 API에 보낼 tagId로 변환. 미선택/프리셋처럼 실제 서버 태그가 아니면 null
+export function resolveBackendTagId(tagId: string): number | null {
+  return /^\d+$/.test(tagId) ? Number(tagId) : null
+}
+
+// 프리셋 + 서버에 저장된 커스텀 태그를 합쳐서 조회
+export async function fetchAllTags(accessToken: string): Promise<CustomTag[]> {
+  const res = await getTags(accessToken)
+  if (res.success && res.data) {
+    return [...PRESET_TAGS, ...res.data.map(tagToCustomTag)]
+  }
+  return PRESET_TAGS
 }
 
 export const TAG_COLORS: CustomTag[] = [

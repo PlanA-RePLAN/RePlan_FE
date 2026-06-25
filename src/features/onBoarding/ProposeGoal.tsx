@@ -17,13 +17,14 @@ import {
   PRESET_TAGS,
   ROUTINE_TO_REPEAT,
   REPEAT_TO_ROUTINE,
-  tagToCustomTag,
+  fetchAllTags,
+  resolveBackendTagId,
+  isCustomTag,
 } from './type/types'
 import { useOnboardingStore } from '@/store/onboardingStore'
 import type { AiRecommendedTodo } from '@/shared/types/goal'
 import type { TodoDetail } from '@/shared/types/todo'
 import { createGoalWithTodos } from '@/shared/api/goal'
-import { getTags } from '@/shared/api/tags'
 
 interface ProposeGoalProps {
   moveNext: () => void
@@ -54,15 +55,16 @@ function timeToHHmm(time: string | null): string | null {
   return `${String(h).padStart(2, '0')}:${mStr}`
 }
 
-function toTodoDetail(t: ProposedTodo): TodoDetail {
+function toTodoDetail(t: ProposedTodo, allTags: CustomTag[]): TodoDetail {
+  const tag = allTags.find((tag) => tag.id === t.selectedTagId)
   return {
     todoId: t.id,
     title: t.title,
     dueDate: t.deadlineDate ? format(t.deadlineDate, 'yyyy-MM-dd') : null,
     isCompleted: false,
     tagId: null,
-    tagTitle: t.selectedTagId === '미선택' ? null : t.selectedTagId,
-    tagColor: null,
+    tagTitle: tag && tag.id !== '미선택' ? tag.label : null,
+    tagColor: tag && isCustomTag(tag) ? tag.textColor : null,
     routineType: REPEAT_TO_ROUTINE[t.repeat],
     routineDate: t.routineDate ?? null,
     subTodos: t.subTodos.map((s) => ({
@@ -109,15 +111,13 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
   const [allTags, setAllTags] = useState<CustomTag[]>(PRESET_TAGS)
 
   useEffect(() => {
-    const fetchTags = async () => {
-      const accessToken = localStorage.getItem('accessToken') ?? ''
-      const res = await getTags(accessToken)
-      if (res.success && res.data) {
-        setAllTags([...PRESET_TAGS, ...res.data.map(tagToCustomTag)])
-      }
-    }
-    fetchTags()
+    const accessToken = localStorage.getItem('accessToken') ?? ''
+    fetchAllTags(accessToken).then(setAllTags)
   }, [])
+
+  const handleTagDelete = (tagId: string) => {
+    setAllTags((prev) => prev.filter((t) => t.id !== tagId))
+  }
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [selectedTodo, setSelectedTodo] = useState<ProposedTodo | null>(null)
   const [infoOpen, setInfoOpen] = useState(false)
@@ -185,7 +185,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
           dueTime: !isRecurring(t) ? timeToHHmm(t.deadlineTime) : null,
           routineType: isRecurring(t) ? REPEAT_TO_ROUTINE[t.repeat] : null,
           routineDate: isRecurring(t) ? (t.routineDate ?? null) : null,
-          tagId: null,
+          tagId: resolveBackendTagId(t.selectedTagId),
           subTodos: !isRecurring(t) ? t.subTodos.map((s) => s.title) : [],
         })),
       })
@@ -223,43 +223,43 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
           </button>
         </div>
 
-        {todos.map((todo, index) => (
-          <div
-            className="flex gap-4.25 items-center max-w-full overflow-hidden"
-            key={index}
-          >
-            <button
-              onClick={(e) => handleSelect(todo.id, e)}
-              className={cn(
-                'w-5.5 h-5.5 shrink-0 border-bluegray-light-active border rounded-[5px] flex items-center justify-center',
-                selectedIds.includes(todo.id) && 'border-none',
-              )}
+        {todos.map((todo, index) => {
+          const selectedTag = allTags.find((t) => t.id === todo.selectedTagId)
+          return (
+            <div
+              className="flex gap-4.25 items-center max-w-full overflow-hidden"
+              key={index}
             >
-              {selectedIds.includes(todo.id) && (
-                <CheckBoxIcon color="#579DEC" />
-              )}
-            </button>
-            <div className="flex-1" onClick={() => handleTodoClick(todo)}>
-              <TodoCard
-                status={selectedIds.includes(todo.id) ? 'focused' : 'default'}
+              <button
+                onClick={(e) => handleSelect(todo.id, e)}
+                className={cn(
+                  'w-5.5 h-5.5 shrink-0 border-bluegray-light-active border rounded-[5px] flex items-center justify-center',
+                  selectedIds.includes(todo.id) && 'border-none',
+                )}
               >
-                <TodoCard.Content>
-                  <TodoCard.Title dayTag={todo.dayTag}>
-                    {todo.title}
-                  </TodoCard.Title>
-                  <TodoCard.Time>{todo.time}</TodoCard.Time>
-                </TodoCard.Content>
-                <TodoCard.Category
-                  category={
-                    (todo.selectedTagId as Parameters<
-                      typeof TodoCard.Category
-                    >[0]['category']) ?? '미선택'
-                  }
-                />
-              </TodoCard>
+                {selectedIds.includes(todo.id) && (
+                  <CheckBoxIcon color="#579DEC" />
+                )}
+              </button>
+              <div className="flex-1" onClick={() => handleTodoClick(todo)}>
+                <TodoCard
+                  status={selectedIds.includes(todo.id) ? 'focused' : 'default'}
+                >
+                  <TodoCard.Content>
+                    <TodoCard.Title dayTag={todo.dayTag}>
+                      {todo.title}
+                    </TodoCard.Title>
+                    <TodoCard.Time>{todo.time}</TodoCard.Time>
+                  </TodoCard.Content>
+                  <TodoCard.Category
+                    category={selectedTag?.label ?? '미선택'}
+                    color={selectedTag?.textColor}
+                  />
+                </TodoCard>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="fixed left-0 bottom-10 w-full flex gap-2 px-5">
@@ -276,7 +276,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
             isOpen={infoOpen}
             onClose={() => setInfoOpen(false)}
             onEdit={handleEditOpen}
-            todo={toTodoDetail(selectedTodo)}
+            todo={toTodoDetail(selectedTodo, allTags)}
             allTags={allTags}
             onSubTodoAdd={handleSubTodoAdd}
           />
@@ -290,6 +290,8 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
             todo={selectedTodo}
             allTags={allTags}
             onTagAdd={handleTagAdd}
+            onTagsLoaded={setAllTags}
+            onTagDelete={handleTagDelete}
           />
         </>
       )}
