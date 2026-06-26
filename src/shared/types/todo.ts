@@ -47,6 +47,14 @@ export interface CreateTodoResponse {
   completed: boolean
 }
 
+export interface UpdateTodoRequest {
+  title: string
+  dueDate: string | null
+  tagId: number | null
+  routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
+  routineDate: number | null
+}
+
 export type TodoTagId = '미선택' | 'Study' | 'Project' | 'Health' | 'Other'
 
 export interface TodoTagDef {

@@ -1,4 +1,4 @@
-import { Todo, TodoDetail, CreateTodoRequest, CreateTodoResponse } from '../types/todo'
+import { Todo, TodoDetail, CreateTodoRequest, CreateTodoResponse, UpdateTodoRequest } from '../types/todo'
 import { ApiResponse } from '../types/auth'
 import client from './client'
 
@@ -80,14 +80,6 @@ export async function toggleTodoComplete(
         { headers: { Authorization: `Bearer ${accessToken}` } }
     )
     return res.data
-}
-
-export interface UpdateTodoRequest {
-  title: string
-  dueDate: string | null
-  tagId: number | null
-  routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
-  routineDate: number | null
 }
 
 export async function updateTodo(
