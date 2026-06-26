@@ -23,7 +23,7 @@ export default function NotificaationList({
         <div className="flex flex-col gap-0.5 pb-3 border-b border-bluegray-light-hover">
             <h3 className="font-bold text-[14px]">{title}</h3>
             <p className="text-bluegray-dark text-[14px]">{content}</p>
-            <p className="font-light text-bluegray-normal text-[12px]">{notificationTime}</p>
+            <p className=" text-bluegray-normal text-[12px]">{notificationTime}</p>
         </div>
     </div>
   )
