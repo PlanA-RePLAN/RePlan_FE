@@ -1,6 +1,8 @@
 // utils
-import { useState } from "react"
+import { useState, useEffect, ReactElement } from "react"
 import { cn } from "@/shared/utils/cn"
+import { getNotifications } from "@/shared/api/notification"
+import { NotificationCategory, Notification as NotificationItem, NotificationTypeName } from "@/shared/types/notification"
 
 // components
 import BackHeaderLayout from "@/shared/components/BackHeaderLayout"
@@ -13,32 +15,48 @@ import StatisticsIcon from "@/icons/StatisticsIcon"
 const TABS = ['투두', '통계', '기타'] as const
 type Tab = typeof TABS[number]
 
-const NOTIFICATION_SECTIONS = [
-  { type: 'todo', label: '투두 알림', icon: <NotificationIcon/>, 
-    title: "'단어 50개 암기 후..'투두", content: "주요 투두로 설정한 투두의 마감 시간이 하루 남았어요.", notificationTime: "10시간 전", isRead: true  
-  },
-  
-  { type: 'todo', label: '리플랜 알림', icon: <ReplanNotificationIcon/>,
-    title: "오늘 실패한 투두 2개 있어요.", content: "실패한 투두의 리플랜을 진행해보세요", notificationTime: "1일 전", isRead: false
-  },
+const TAB_CATEGORY_MAP: Record<Tab, NotificationCategory> = {
+  '투두': 'TODO',
+  '통계': 'STATS',
+  '기타': 'ETC',
+}
 
-  { type: 'static', label: '통계 알림', icon: <ReplanNotificationIcon/>,
-    title: "5월 통계", content: "월간 통계 및 분석이 도착했어요. 지금 바로 확인해보세요!", notificationTime: "1일 전", isRead: false
-  },
-]
+const NOTIFICATION_ICON_MAP: Record<NotificationTypeName, ReactElement> = {
+  TODO_DUE_SOON: <NotificationIcon />,
+  TODO_FAILED_REPLAN: <ReplanNotificationIcon />,
+  REPORT_READY: <StatisticsIcon />,
+}
 
-const TAB_TYPE_MAP: Record<Tab, string> = {
-  '투두': 'todo',
-  '통계': 'static',
-  '기타': 'etc',
+function formatRelativeTime(createdAt: string): string {
+  const diff = Date.now() - new Date(createdAt).getTime()
+  const minutes = Math.floor(diff / 1000 / 60)
+  if (minutes < 60) return `${minutes}분 전`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}시간 전`
+  const days = Math.floor(hours / 24)
+  return `${days}일 전`
 }
 
 export default function Notification() {
   const [activeTab, setActiveTab] = useState<Tab>('투두')
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
 
-  const filteredNotifications = NOTIFICATION_SECTIONS.filter(
-    (item) => item.type === TAB_TYPE_MAP[activeTab]
-  )
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const accessToken = localStorage.getItem('accessToken') ?? ''
+        const res = await getNotifications(accessToken, {
+          category: TAB_CATEGORY_MAP[activeTab],
+        })
+        if (res.success && res.data) {
+          setNotifications(res.data.items)
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    }
+    fetchNotifications()
+  }, [activeTab])
 
   return (
     <div>
@@ -60,15 +78,15 @@ export default function Notification() {
             ))}
           </div>
           <div>
-            {filteredNotifications.length > 0 ? (
-              filteredNotifications.map((item) => (
+            {notifications.length > 0 ? (
+              notifications.map((item) => (
                 <NotificaationList
-                  key={item.title}
-                  icon={item.icon}
+                  key={item.id}
+                  icon={NOTIFICATION_ICON_MAP[item.type]}
                   title={item.title}
-                  content={item.content}
-                  notificationTime={item.notificationTime}
-                  isRead={item.isRead}
+                  content={item.body}
+                  notificationTime={formatRelativeTime(item.createdAt)}
+                  isRead={item.read}
                 />
               ))
             ) : (
