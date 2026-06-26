@@ -4,10 +4,11 @@ interface NotificationItemProps {
     title: string
     content: string
     checked: boolean
+    onChange: (value: boolean) => void
 }
 
 export default function NotificationItem({
-    title, content, checked
+    title, content, checked, onChange
 }:NotificationItemProps) {
   return (
     <div className="p-5 flex justify-between items-center border-b border-bluegray-light-hover">
@@ -15,7 +16,7 @@ export default function NotificationItem({
             <h3 className="text-[16px]">{title}</h3>
         <p className="text-[12px] text-bluegray-dark">{content}</p>
         </div>
-        <Toggle checked={checked} onChange={()=>{}}/>
+        <Toggle checked={checked} onChange={onChange}/>
     </div>
   )
 }

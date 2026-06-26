@@ -39,3 +39,15 @@ export async function getNotificationsSetting(
   )
   return res.data
 }
+
+export async function updateNotificationsSetting(
+    accessToken: string,
+    body: Partial<NotificationSetting>
+): Promise<ApiResponse<NotificationSetting>>{
+    const res = await client.patch<ApiResponse<NotificationSetting>>(
+        '/api/notifications/settings',
+         body,
+        { headers: { Authorization: `Bearer ${accessToken}`}},
+    )
+    return res.data
+}
