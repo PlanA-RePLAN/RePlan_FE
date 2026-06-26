@@ -51,7 +51,7 @@ const TABS = [
 ]
 
 const WEEKDAY_NUM_TO_NAME: Record<number, string> = {
-  1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토', 7: '일',
+  1: '월', 2: '화', 4: '수', 8: '목', 16: '금', 32: '토', 64: '일',
 }
 
 function formatTime(dueDate: string | null): string | undefined {
