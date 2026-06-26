@@ -6,13 +6,14 @@ interface NotificaationListProps{
     content: string
     notificationTime: string
     isRead: boolean
+    onClick: () => void
 }
 
 export default function NotificaationList({
-    icon, title, content, notificationTime, isRead
+    icon, title, content, notificationTime, isRead, onClick
 }:NotificaationListProps) {
   return (
-    <div className="flex items-start gap-3 pt-3">
+    <div className="flex items-start gap-3 pt-3" onClick={onClick}>
         <div className="relative">
             {icon}
             { !isRead && (

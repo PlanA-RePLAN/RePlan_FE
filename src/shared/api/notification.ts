@@ -51,3 +51,15 @@ export async function updateNotificationsSetting(
     )
     return res.data
 }
+
+export async function markNotificationAsRead(
+  accessToken: string,
+  notificationId : number
+): Promise<ApiResponse<null>>{
+  const res = await client.patch<ApiResponse<null>>(
+    `/api/notifications/${notificationId}/read`,
+    {},
+    { headers: { Authorization: `Bearer ${accessToken}`}},
+  )
+  return res.data
+}
