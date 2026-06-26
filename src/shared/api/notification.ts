@@ -1,6 +1,16 @@
 import { ApiResponse } from '../types/auth'
-import { NotificationCategory, NotificationListData } from '../types/notification'
+import { NotificationCategory, NotificationList, NotificationSetting } from '../types/notification'
 import client from './client'
+
+export async function getUnreadNotificationCount(
+  accessToken: string,
+): Promise<ApiResponse<{ count: number }>> {
+  const res = await client.get<ApiResponse<{ count: number }>>(
+    '/api/notifications/unread-count',
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  return res.data
+}
 
 export async function getNotifications(
   accessToken: string,
@@ -9,13 +19,23 @@ export async function getNotifications(
     cursor?: number
     size?: number
   },
-): Promise<ApiResponse<NotificationListData>> {
-  const res = await client.get<ApiResponse<NotificationListData>>(
+): Promise<ApiResponse<NotificationList>> {
+  const res = await client.get<ApiResponse<NotificationList>>(
     '/api/notifications',
     {
       params,
       headers: { Authorization: `Bearer ${accessToken}` },
     },
+  )
+  return res.data
+}
+
+export async function getNotificationsSetting(
+  accessToken: string,
+): Promise<ApiResponse<NotificationSetting>> {
+  const res = await client.get<ApiResponse<NotificationSetting>>(
+    '/api/notifications/settings',
+    { headers: { Authorization: `Bearer ${accessToken}` } },
   )
   return res.data
 }

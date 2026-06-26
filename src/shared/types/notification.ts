@@ -16,8 +16,14 @@ export interface Notification {
   createdAt: string
 }
 
-export interface NotificationListData {
+export interface NotificationList {
   items: Notification[]
   nextCursor: number | null
   hasNext: boolean
+}
+
+export interface NotificationSetting {
+    todoDue: boolean
+    todoFailed: boolean
+    report: boolean
 }
