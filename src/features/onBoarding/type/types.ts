@@ -1,4 +1,5 @@
 import { TODO_TAGS, type TodoTagDef } from '@/shared/types/todo'
+import type { Tag } from '@/shared/types/tag'
 
 export type RepeatType = '없음' | '데일리' | '위클리' | '먼슬리'
 export type RoutineType = 'DAILY' | 'WEEKLY' | 'MONTHLY'
@@ -62,6 +63,25 @@ export const PRESET_TAGS: CustomTag[] = TODO_TAGS.map(
     textColor: t.textColor,
   }),
 )
+
+// 서버에서 조회/생성된 태그를 CustomTag 형태로 변환
+// color가 없으면 '미선택' 프리셋과 동일한 무채색 스타일을 사용
+export function tagToCustomTag(tag: Tag): CustomTag {
+  if (!tag.color) {
+    return {
+      id: String(tag.tagId),
+      label: tag.title,
+      bgColor: 'transparent',
+      textColor: '#A9AFB9',
+    }
+  }
+  return {
+    id: String(tag.tagId),
+    label: tag.title,
+    bgColor: `${tag.color}1A`,
+    textColor: tag.color,
+  }
+}
 
 export const TAG_COLORS: CustomTag[] = [
   { id: 'coral', label: '', bgColor: '#ffebe7', textColor: '#f76f4d' },

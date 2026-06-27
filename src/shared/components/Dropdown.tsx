@@ -18,7 +18,7 @@ export default function Dropdown({ items, defaultValue, onChange }: DropdownProp
   }
 
   return (
-    <div className="relative flex">
+    <div className={`relative flex ${isOpen ? 'z-11' : 'z-1'}`}>
       <div
         onClick={() => setIsOpen((prev) => !prev)}
         className="px-3 py-1.5 rounded-2xl bg-white border border-bluegray-light-hover flex items-center justify-center gap-1.25 cursor-pointer"

@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { deleteGoal } from '@/shared/api/goal'
-import checkSvg from '@/assets/check.svg'
+const checkSvg = '/assets/check.svg'
 
 // type
 import { type Goal } from '@/shared/types'
@@ -94,7 +94,7 @@ export default function GoalSection({
           {click && (
             <div
               onClick={() => handleDelete()}
-              className="absolute flex justify-center items-center right-5 w-16.5 h-7.25 rounded-lg cursor-pointer shadow-[0px_4px_12px_rgba(0,0,0,0.08)] z-10"
+              className="absolute z-50 flex justify-center items-center right-5 w-16.5 h-7.25 rounded-lg cursor-pointer shadow-[0px_4px_12px_rgba(0,0,0,0.08)] bg-white"
             >
               <p className="text-xs text-bluegray-darker">삭제하기</p>
             </div>

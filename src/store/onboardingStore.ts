@@ -5,6 +5,10 @@ import type {
 } from '@/shared/types/goal'
 import type { SurveyContent } from '@/features/onBoarding/components/SurveyCard'
 
+// 종료 날짜를 선택하지 않았을 때 deadline 필드가 빈 값으로 API에 전송되는 것을
+// 막기 위한 기본값 (먼 미래로 설정해 "마감 없음"을 의미)
+export const NO_DEADLINE_DATE = new Date(2099, 11, 31)
+
 interface OnboardingState {
   // raw API response
   refineData: RefineGoalData | null
@@ -41,7 +45,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
   refineData: null,
   aiRecommendation: null,
   goalValue: '',
-  deadlineDate: null,
+  deadlineDate: NO_DEADLINE_DATE,
   deadlineTime: null,
   currentLevel: '',
   availableTime: '',

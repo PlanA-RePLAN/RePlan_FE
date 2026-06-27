@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { cn } from '@/shared/utils/cn'
+import { isSameDay } from 'date-fns'
 
 // components
 import Description from '@/shared/components/Description'
@@ -9,49 +9,41 @@ import MainButton from '@/shared/components/MainButton'
 import GoalIcon from '@/icons/GoalIcon'
 import ExampleTag from './components/ExampleTag'
 import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
-import ListItem from '@/shared/components/ListItem'
-import WandStar from '@/icons/WandStar'
-import ChecvronRightIcon from '@/icons/ChevronLeftIcon'
-import MenuIcon from '@/icons/MenuIcon'
-import TrendingUpIcon from '@/icons/TrendingUpIcon'
-import ClockIcon from '@/icons/ClockIcon'
-import { refineGoal } from '@/shared/api/goal'
+import EndScheduleInput from './components/EndScheduleInput'
 
 // stores
-import { useOnboardingStore } from '@/store/onboardingStore'
+import { useOnboardingStore, NO_DEADLINE_DATE } from '@/store/onboardingStore'
 
 export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
-  const [goal, setGoal] = useState('')
-  const [period, setPeriod] = useState('')
-  const [isOpen, setIsOpen] = useState(false)
-  const [currentLevel, setCurrentLevel] = useState('')
-  const [availableTime, setAvailableTime] = useState('')
-  const [specialNote, setSpecialNote] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  const setRefineData = useOnboardingStore((s) => s.setRefineData)
+  // store에서 관리되는 전역 변수
+  const storeGoalValue = useOnboardingStore((s) => s.goalValue)
+  const storeDeadlineDate = useOnboardingStore((s) => s.deadlineDate)
+  const storeDeadlineTime = useOnboardingStore((s) => s.deadlineTime)
   const setGoalValue = useOnboardingStore((s) => s.setGoalValue)
+  const setDeadlineDate = useOnboardingStore((s) => s.setDeadlineDate)
+  const setDeadlineTime = useOnboardingStore((s) => s.setDeadlineTime)
 
-  const handleSubmit = async () => {
-    if (!goal.trim() || !period.trim()) return
-    setLoading(true)
-    try {
-      const accessToken = localStorage.getItem('accessToken') ?? ''
-      const res = await refineGoal(accessToken, {
-        goal: goal.trim(),
-        deadline: period.trim(),
-        currentLevel: currentLevel.trim() || undefined,
-        availableTime: availableTime.trim() || undefined,
-        notes: specialNote.trim() || undefined,
-      })
-      if (res.success && res.data) {
-        setGoalValue(goal.trim())
-        setRefineData(res.data)
-        moveNext()
-      }
-    } finally {
-      setLoading(false)
-    }
+  const hasStoredDeadline = Boolean(
+    storeDeadlineDate && !isSameDay(storeDeadlineDate, NO_DEADLINE_DATE),
+  )
+
+  // local state
+  const [goal, setGoal] = useState(storeGoalValue)
+  const [endDate, setEndDate] = useState<Date | null>(
+    hasStoredDeadline ? storeDeadlineDate : null,
+  )
+  const [useEndDate, setUseEndDate] = useState(hasStoredDeadline)
+  const [endTime, setEndTime] = useState<string | null>(storeDeadlineTime)
+  const [useEndTime, setUseEndTime] = useState(storeDeadlineTime !== null)
+
+  const isFilled = Boolean(goal.trim())
+
+  const handleSubmit = () => {
+    if (!isFilled) return
+    setGoalValue(goal.trim())
+    setDeadlineDate(useEndDate && endDate ? endDate : NO_DEADLINE_DATE)
+    setDeadlineTime(useEndDate && useEndTime ? endTime : null)
+    moveNext()
   }
 
   return (
@@ -72,10 +64,31 @@ export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
             목표
           </div>
         </Input.Label>
-        <div className="flex gap-1.25 py-2">
-          <ExampleTag tag="토익 850점 달성하기" />
-          <ExampleTag tag="5kg 감량하기" />
-          <ExampleTag tag="책 완독하기" />
+        <div className="flex gap-1.25 py-2 overflow-x-auto">
+          <ExampleTag
+            tag="토익 850점 달성하기"
+            onClick={() => setGoal('토익 850점 달성하기')}
+          />
+          <ExampleTag
+            tag="5kg 감량하기"
+            onClick={() => setGoal('5kg 감량하기')}
+          />
+          <ExampleTag
+            tag="책 완독하기"
+            onClick={() => setGoal('책 완독하기')}
+          />
+          <ExampleTag
+            tag="자격증 취득하기"
+            onClick={() => setGoal('자격증 취득하기')}
+          />
+          <ExampleTag
+            tag="저축 목표 달성하기"
+            onClick={() => setGoal('저축 목표 달성하기')}
+          />
+          <ExampleTag
+            tag="운동 습관 만들기"
+            onClick={() => setGoal('운동 습관 만들기')}
+          />
         </div>
         <Input.Field height={49} placeholder="목표를 입력해주세요" />
         <Input.Bottom>
@@ -83,166 +96,31 @@ export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
         </Input.Bottom>
       </Input>
 
-      {/* --------- 마감기한 입력 ------------ */}
-      <div className="h-5" />
-      <Input
-        value={period}
-        setValue={setPeriod}
-        maxLength={80}
-        showCount="always"
-      >
-        <Input.Label option="secondary">
-          <div className="flex gap-2 text-bluegray-black items-center">
-            <CalendarClearSharpIcon width={20} height={20} color="#3B3D41" />
-            마감기한
-          </div>
-        </Input.Label>
-        <div className="flex gap-1.25 py-2">
-          <ExampleTag tag="올해 8월까지" />
-          <ExampleTag tag="2029/05/03" />
-          <ExampleTag tag="안 정할래요" />
+      {/* --------- 종료 일정 ------------ */}
+      <div className="h-8" />
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2 items-center text-bluegray-black text-sm font-medium">
+          <CalendarClearSharpIcon width={20} height={20} color="#3B3D41" />
+          종료 일정
         </div>
-        <Input.Field height={95} placeholder="마감기한을 입력해주세요" />
-        <Input.Bottom>
-          <Input.Count />
-        </Input.Bottom>
-      </Input>
+        <EndScheduleInput
+          date={endDate}
+          time={endTime}
+          useDate={useEndDate}
+          useTime={useEndTime}
+          onUseDateChange={setUseEndDate}
+          onUseTimeChange={setUseEndTime}
+          onDateChange={setEndDate}
+          onTimeChange={setEndTime}
+        />
+      </div>
 
-      {/* ------------- 추가 작성 사항 -------------- */}
-      <ListItem
-        className={cn(
-          'bg-blue-light mt-6 px-0 border border-white mb-35',
-          isOpen && 'border-blue-light-active pb-0',
-        )}
-      >
-        <div className="flex flex-col gap-1 px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2">
-              <WandStar />
-              <div className="text-bluegray-dark-active text-sm font-bold">
-                더 채울수록 딱 맞는 플랜이 나와요!
-              </div>
-            </div>
-            <button onClick={() => setIsOpen((v) => !v)}>
-              <ChecvronRightIcon
-                className={cn(
-                  'transition-transform duration-300',
-                  isOpen ? '-rotate-90' : 'rotate-90',
-                )}
-                width={20}
-              />
-            </button>
-          </div>
-          <div
-            className={cn(
-              'text-bluegray-normal-hover text-xs font-medium',
-              isOpen && 'pb-4',
-            )}
-          >
-            선택 항목 3가지 입력하기
-          </div>
-        </div>
-
-        {/* 펼쳐지는 입력 영역 */}
-        <div
-          className={cn(
-            'grid transition-all duration-500 ease-in-out bg-white',
-            isOpen ? 'grid-rows-[1fr] pb-5 rounded-b-xl' : 'grid-rows-[0fr]',
-          )}
-        >
-          <div className="overflow-hidden px-4">
-            <div className="flex flex-col gap-6 pt-4">
-              {/* 현재 수준 */}
-              <Input
-                value={currentLevel}
-                setValue={setCurrentLevel}
-                maxLength={120}
-                showCount="always"
-              >
-                <Input.Label option="secondary">
-                  <div className="flex gap-2 text-bluegray-black items-center">
-                    <TrendingUpIcon />
-                    현재 수준
-                  </div>
-                </Input.Label>
-                <div className="flex gap-1.5 py-2 flex-wrap">
-                  <ExampleTag tag="수능 영어 3등급" />
-                  <ExampleTag tag="운동/식단 안하는 중" />
-                  <ExampleTag tag="23p까지 읽음" />
-                </div>
-                <Input.Field
-                  height={95}
-                  placeholder="현재 어느 정도인지를 작성해주세요"
-                />
-                <Input.Bottom>
-                  <Input.Count />
-                </Input.Bottom>
-              </Input>
-
-              {/* 투자 가능 시간 */}
-              <Input
-                value={availableTime}
-                setValue={setAvailableTime}
-                maxLength={120}
-                showCount="always"
-              >
-                <Input.Label option="secondary">
-                  <div className="flex gap-2 text-bluegray-black items-center">
-                    <ClockIcon filled={true} />
-                    투자 가능 시간
-                  </div>
-                </Input.Label>
-                <div className="flex gap-1.5 py-2 flex-wrap">
-                  <ExampleTag tag="주 5회 2시간" />
-                  <ExampleTag tag="토일 5시간씩" />
-                  <ExampleTag tag="자투리 시간" />
-                </div>
-                <Input.Field
-                  height={95}
-                  placeholder="언제 얼마나 시간을 낼 수 있나요?"
-                />
-                <Input.Bottom>
-                  <Input.Count />
-                </Input.Bottom>
-              </Input>
-
-              {/* 특이사항 */}
-              <Input
-                value={specialNote}
-                setValue={setSpecialNote}
-                maxLength={150}
-                showCount="always"
-              >
-                <Input.Label option="secondary">
-                  <div className="flex gap-2 text-bluegray-black items-center">
-                    <MenuIcon width={20} height={20} />
-                    특이사항
-                  </div>
-                </Input.Label>
-                <div className="flex gap-1.5 py-2 flex-wrap">
-                  <ExampleTag tag="해커스 토익 기출 VOCA 사용" />
-                  <ExampleTag tag="주중 시간 없음" />
-                  <ExampleTag tag="없음" />
-                </div>
-                <Input.Field
-                  height={95}
-                  placeholder="참고할 것들이 있으면 알려주세요"
-                />
-                <Input.Bottom>
-                  <Input.Count />
-                </Input.Bottom>
-              </Input>
-            </div>
-          </div>
-        </div>
-      </ListItem>
+      <div className="h-30" />
       <div className="fixed pb-13 pt-10 bottom-0 left-0 right-0 w-full px-5 bg-linear-to-b from-transparent from-0% to-white to-20%">
         <MainButton
-          option={
-            goal.trim() && period.trim() && !loading ? 'primary' : 'disabled'
-          }
+          option={isFilled ? 'primary' : 'disabled'}
           onClick={handleSubmit}
-          title={loading ? '분석 중...' : '다음으로'}
+          title="다음으로"
         />
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import cameraSvg from '@/assets/camera.svg'
+const cameraSvg = '/assets/camera.svg'
 
 // components
 import Title from '@/shared/components/Title'
@@ -9,21 +9,24 @@ import ProfileInput from './components/ProfileInput'
 import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import MainButton from '@/shared/components/MainButton'
 import { registerOAuth } from '@/shared/api/auth'
+import { useImageUpload } from '@/shared/hooks/useImageUpload'
 
 export default function ProfileSetup() {
   const [name, setName] = useState('')
   const [isNameValid, setIsNameValid] = useState(false)
+  const { previewUrl, fileInputRef, handleImageChange, uploadImage } = useImageUpload('new')
   const navigate = useNavigate()
 
   const handleClick = async () => {
     const tempToken = sessionStorage.getItem('tempToken')
-    if(!tempToken) {
+    if (!tempToken) {
       navigate('/')
       return
     }
-    try{
-      const res = await registerOAuth(tempToken, name)
-      if(!res.success || !res.data){
+    try {
+      const s3Key = await uploadImage(tempToken)
+      const res = await registerOAuth(tempToken, name, s3Key ?? undefined)
+      if (!res.success || !res.data) {
         sessionStorage.removeItem('tempToken')
         navigate('/')
         return
@@ -32,7 +35,7 @@ export default function ProfileSetup() {
       localStorage.setItem('refreshToken', res.data.refreshToken!)
       sessionStorage.removeItem('tempToken')
       navigate('/onboarding')
-    }catch{
+    } catch {
       navigate('/')
     }
   }
@@ -46,12 +49,25 @@ export default function ProfileSetup() {
             <div>프로필을 입력해주세요!</div>
           </Title>
         </div>
-        <div className="flex justify-center relative w-30 mt-10">
-          <DefaultProfileIcon />
+        <div
+          className="flex justify-center relative w-30 mt-10 cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {previewUrl
+            ? <img src={previewUrl} alt="프로필" className="w-30 h-30 rounded-full object-cover" />
+            : <DefaultProfileIcon />
+          }
           <div className="w-7 h-7 bg-white border border-bluegray-light-hover flex justify-center items-center rounded-full absolute bottom-0 right-0">
             <img src={cameraSvg} alt="" />
           </div>
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageChange}
+        />
         <div className="w-full mt-10 relative">
           <ProfileInput
             value={name}

@@ -1,4 +1,4 @@
-import dangerSvg from '@/assets/danger.svg'
+const dangerSvg = '/assets/danger.svg'
 import Input from '@/shared/components/Input'
 import DuplicateCheckButton from './DuplicateCheckButton'
 import { useState } from 'react'
@@ -49,12 +49,12 @@ export default function ProfileInput({
           {isDuplicate ? (
             <>
               <img src={dangerSvg} alt="" className="mr-2" />
-              <span className="text-danger font-bold">플렌에이</span>는 이미
+              <span className="text-danger font-bold">{value}</span>는 이미
               등록된 이름입니다.
             </>
           ) : (
             <>
-              <span className="text-blue-normal font-bold">플렌에이</span>는
+              <span className="text-blue-normal font-bold">{value}</span>는
               사용하실 수 있는 이름입니다.
             </>
           )}
