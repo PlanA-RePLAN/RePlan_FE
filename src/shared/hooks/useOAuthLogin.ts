@@ -14,6 +14,7 @@ export function useOAuthLogin() {
   const googleBtnRef = useRef<HTMLDivElement>(null)
   const googleInitialized = useRef(false)
   const naverInitialized = useRef(false)
+  const kakaoLoading = useRef(false)
 
   const handleAuthResponse = (res: ApiResponse<OAuthLoginData>) => {
     if (!res.success || !res.data) {
@@ -107,6 +108,8 @@ export function useOAuthLogin() {
   }, [])
 
   const loginWithKakao = async () => {
+    if (kakaoLoading.current) return
+    kakaoLoading.current = true
     try {
       const accessToken = await new Promise<string>((resolve, reject) => {
         window.Kakao.Auth.login({
@@ -119,6 +122,8 @@ export function useOAuthLogin() {
       handleAuthResponse(res)
     } catch {
       setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      kakaoLoading.current = false
     }
   }
 
