@@ -12,3 +12,5 @@ build/
 CLAUDE.md
 android/app/google-services.json
 ios/App/App/GoogleService-Info.plist
+*.xcuserstate
+xcschememanagement.plist
