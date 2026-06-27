@@ -32,13 +32,10 @@ import type { Todo, TodoDetail } from '@/shared/types/todo'
 import type { CustomTag, ProposedTodo } from '@/features/onBoarding/type/types'
 import { PRESET_TAGS, ROUTINE_TO_REPEAT, REPEAT_TO_ROUTINE } from '@/features/onBoarding/type/types'
 
+//assests
 const symbolSvg = '/assets/symbol.svg'
 const addSvg = '/assets/add.svg'
 const completeSvg = '/assets/completeIcon.svg'
-
-// assets
-import symbolSvg from '@/assets/symbol.svg'
-import addSvg from '@/assets/add.svg'
 
 // components
 import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'
