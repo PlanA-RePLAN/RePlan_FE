@@ -36,6 +36,10 @@ const symbolSvg = '/assets/symbol.svg'
 const addSvg = '/assets/add.svg'
 const completeSvg = '/assets/completeIcon.svg'
 
+// assets
+import symbolSvg from '@/assets/symbol.svg'
+import addSvg from '@/assets/add.svg'
+
 // components
 import ChevronDownStrokeIcon from '@/icons/ChevronDownStrokeIcon'
 import DatePicker from '../onBoarding/components/DatePicker'
