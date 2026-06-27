@@ -63,3 +63,30 @@ export async function markNotificationAsRead(
   )
   return res.data
 }
+
+ export async function registerToken(
+  accessToken: string,
+  token: string,
+  platform: 'WEB' | 'ANDROID' | 'IOS',
+): Promise<ApiResponse<null>> {
+  const res = await client.post<ApiResponse<null>>(
+    '/api/notifications/tokens',
+    { token, platform },
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  return res.data
+}
+
+export async function deleteToken(
+  accessToken: string,
+  token: string,
+): Promise<ApiResponse<null>> {
+  const res = await client.delete<ApiResponse<null>>(
+    '/api/notifications/tokens',
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { token },
+    },
+  )
+  return res.data
+}
