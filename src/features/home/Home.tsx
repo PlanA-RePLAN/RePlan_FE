@@ -151,10 +151,6 @@ export default function Home() {
   const [isCompletedOpen, setIsCompletedOpen] = useState(false)
   const [calendarDueDates, setCalendarDueDates] = useState<Date[]>([])
 
-  const handleShowToast = () => {
-    setShowToast(true)
-  }
-
   const handleClickCompletedTodo = () => setIsCompletedOpen((prev) => !prev)
 
   const emptyTodo: ProposedTodo = {
