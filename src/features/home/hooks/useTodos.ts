@@ -8,6 +8,7 @@ import {
   createTodo as createTodoApi,
   pinTodo,
   updateTodo as updateTodoApi,
+  getPinnedTodos,
 } from '@/shared/api/todo'
 import { createRoutine } from '@/shared/api/routine'
 import type { Todo, TodoDetail } from '@/shared/types/todo'
@@ -31,6 +32,7 @@ interface UseTodosParams {
 export function useTodos({ selectedTab, sort, selectedDate, selectedYear, selectedMonth }: UseTodosParams) {
   const [todos, setTodos] = useState<Todo[]>([])
   const [calendarTodos, setCalendarTodos] = useState<Todo[]>([])
+  const [pinnedTodoList, setPinnedTodoList] = useState<Todo[]>([])
   const [selectedTodo, setSelectedTodo] = useState<TodoDetail | null>(null)
   const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null)
   const [showToast, setShowToast] = useState(false)
@@ -70,6 +72,12 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
   }
 
 
+  const refetchPinnedTodos = async () => {
+    const accessToken = localStorage.getItem('accessToken') ?? ''
+    const res = await getPinnedTodos(accessToken)
+    if (res.success) setPinnedTodoList(res.data ?? [])
+  }
+
   const refetchCalendarTodos = async () => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
     const monthDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`
@@ -84,6 +92,10 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
   useEffect(() => {
     refetchCalendarTodos()
   }, [selectedYear, selectedMonth])
+
+  useEffect(() => {
+    refetchPinnedTodos()
+  }, [])
 
   const fetchTodo = async (todoId: number) => {
     try {
@@ -235,6 +247,7 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
       await pinTodo(accessToken, todoId, isPinned)
+      await refetchPinnedTodos()
     } catch (error) {
       setTodos((prev) =>
         prev.map((t) => (t.todoId === todoId ? { ...t, isPinned: !isPinned } : t))
@@ -280,7 +293,7 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
   const sortedTodos =
     sort === 'latest' ? [...filteredTodos].sort((a, b) => b.todoId - a.todoId) : filteredTodos
 
-  const pinnedTodos = sortedTodos.filter((t) => t.isPinned && !t.isCompleted)
+  const pinnedTodos = pinnedTodoList
   const regularActiveTodos = sortedTodos.filter((t) => !t.isPinned && !t.isCompleted)
   const completedTodos = sortedTodos.filter((t) => t.isCompleted)
 

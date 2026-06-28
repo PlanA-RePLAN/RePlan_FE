@@ -95,6 +95,16 @@ export async function updateTodo(
   return res.data
 }
 
+export async function getPinnedTodos(
+    accessToken: string,
+): Promise<ApiResponse<Todo[]>> {
+    const res = await client.get<ApiResponse<Todo[]>>(
+        '/api/todos/pinned',
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+    return res.data
+}
+
 export async function pinTodo(
     accessToken: string,
     todoId: number,
