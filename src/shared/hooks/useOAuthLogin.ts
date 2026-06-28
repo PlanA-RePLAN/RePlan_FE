@@ -109,6 +109,13 @@ export function useOAuthLogin() {
 
   const loginWithKakao = async () => {
     if (kakaoLoading.current) return
+    if (!window.Kakao) {
+      setError('카카오 로그인을 사용할 수 없습니다. 다시 시도해주세요.')
+      return
+    }
+    if (!window.Kakao.isInitialized()) {
+      window.Kakao.init(KAKAO_JS_KEY)
+    }
     kakaoLoading.current = true
     try {
       const accessToken = await new Promise<string>((resolve, reject) => {
@@ -120,7 +127,8 @@ export function useOAuthLogin() {
       })
       const res = await kakaoOAuthLogin(accessToken)
       handleAuthResponse(res)
-    } catch {
+    } catch (err) {
+      console.error('[Kakao] 로그인 에러:', err)
       setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.')
     } finally {
       kakaoLoading.current = false
