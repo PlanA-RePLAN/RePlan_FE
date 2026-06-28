@@ -13,5 +13,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging()
 
 messaging.onBackgroundMessage((payload) => {
-console.log('[sw] background message', payload)
+  console.log('[sw] background message', payload)
+  const title = payload.notification?.title ?? 'RePlan'
+  const body = payload.notification?.body ?? ''
+  self.registration.showNotification(title, {
+    body,
+    icon: '/assets/pwa-192x192.png',
+  })
 })
