@@ -101,7 +101,7 @@ export default function Notification() {
                 />
               ))
             ) : (
-              <div className="flex flex-col min-h-[calc(100vh-116px)] justify-center items-center">
+              <div className="flex flex-col min-h-[calc(100vh-240px)] justify-center items-center">
                 <StatisticsIcon />
                 <h2 className="font-bold text-[16px] mt-6">아직 받은 알림이 없어요</h2>
                 <p className="font-medium text-[12px] mt-2 text-bluegray-normal">새로운 알림이 오면 여기서 확인할 수 있어요</p>
