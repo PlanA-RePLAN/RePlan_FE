@@ -18,6 +18,7 @@ export function useOAuthLogin() {
   const googleBtnRef = useRef<HTMLDivElement>(null)
   const googleInitialized = useRef(false)
   const naverInitialized = useRef(false)
+  const kakaoLoading = useRef(false)
 
   const handleAuthResponse = (res: ApiResponse<OAuthLoginData>) => {
     if (!res.success || !res.data) {
@@ -42,9 +43,6 @@ export function useOAuthLogin() {
     if (!KAKAO_JS_KEY || !window.Kakao) return
     if (window.Kakao.isInitialized()) return
     window.Kakao.init(KAKAO_JS_KEY)
-    return () => {
-      if (window.Kakao?.isInitialized()) window.Kakao.cleanup()
-    }
   }, [])
 
   // 구글 SDK 초기화
@@ -153,6 +151,15 @@ export function useOAuthLogin() {
   }
 
   const loginWithKakao = async () => {
+    if (kakaoLoading.current) return
+    if (!window.Kakao) {
+      setError('카카오 로그인을 사용할 수 없습니다. 다시 시도해주세요.')
+      return
+    }
+    if (!window.Kakao.isInitialized()) {
+      window.Kakao.init(KAKAO_JS_KEY)
+    }
+    kakaoLoading.current = true
     try {
       if (Capacitor.isNativePlatform()) {
         await loginWithKakaoNative()
@@ -173,6 +180,8 @@ export function useOAuthLogin() {
     } catch (err) {
       console.error('[Kakao] 로그인 에러:', err)
       setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      kakaoLoading.current = false
     }
   }
 
