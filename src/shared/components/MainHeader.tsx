@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getUnreadNotificationCount } from '@/shared/api/notification'
-import { useEffect, useState } from 'react'
 import { getProfile } from '../api/user'
 import BellIcon from '@/icons/BellIcon'
 import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
@@ -52,7 +51,7 @@ export default function MainHeader() {
         <DefaultProfileIcon width={28} height={28} />
         <p className="font-bold text-base">{name}</p>
       </div>
-      <button onClick={() => navigate('/notification')}>
+      <button onClick={handleNotificationClick}>
         <BellIcon hasNotification={hasUnread} />
       </button>
     </div>
