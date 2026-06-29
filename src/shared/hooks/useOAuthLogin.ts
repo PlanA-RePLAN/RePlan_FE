@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { kakaoOAuthLogin, googleOAuthLogin, naverOAuthLogin } from '@/shared/api/auth'
 import type { ApiResponse, OAuthLoginData } from '@/shared/types/auth'
 import { setupPush } from '@/shared/firebase'
+import { Capacitor } from '@capacitor/core'
+import { Browser } from '@capacitor/browser'
+import { App } from '@capacitor/app'
 
 const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID
+const KAKAO_NATIVE_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI as string
 
 export function useOAuthLogin() {
   const navigate = useNavigate()
@@ -32,8 +36,9 @@ export function useOAuthLogin() {
     }
   }
 
-  // 카카오 SDK 초기화
+  // 카카오 SDK 초기화 (웹 전용)
   useEffect(() => {
+    if (Capacitor.isNativePlatform()) return
     if (!KAKAO_JS_KEY || !window.Kakao) return
     if (window.Kakao.isInitialized()) return
     window.Kakao.init(KAKAO_JS_KEY)
@@ -109,18 +114,64 @@ export function useOAuthLogin() {
       .catch(() => setError('네이버 로그인에 실패했습니다. 다시 시도해주세요.'))
   }, [])
 
+  const loginWithKakaoNative = () => {
+    return new Promise<void>((resolve, reject) => {
+      const listenerPromise = App.addListener('appUrlOpen', async (data) => {
+        if (!data.url.startsWith('com.plana.replan://oauth')) return
+        const listener = await listenerPromise
+        listener.remove()
+        await Browser.close()
+        const url = new URL(data.url)
+        const code = url.searchParams.get('code')
+        if (!code) { reject(new Error('No authorization code')); return }
+        try {
+          const params = new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id: KAKAO_JS_KEY,
+            redirect_uri: KAKAO_NATIVE_REDIRECT_URI,
+            code,
+          })
+          const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString(),
+          })
+          const tokenData = await tokenRes.json()
+          if (!tokenData.access_token) { reject(new Error('No access token')); return }
+          const res = await kakaoOAuthLogin(tokenData.access_token)
+          handleAuthResponse(res)
+          resolve()
+        } catch (err) {
+          reject(err)
+        }
+      })
+      Browser.open({
+        url: `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_JS_KEY}&redirect_uri=${encodeURIComponent(KAKAO_NATIVE_REDIRECT_URI)}&response_type=code`,
+        presentationStyle: 'popover',
+      })
+    })
+  }
+
   const loginWithKakao = async () => {
     try {
+      if (Capacitor.isNativePlatform()) {
+        await loginWithKakaoNative()
+        return
+      }
       const accessToken = await new Promise<string>((resolve, reject) => {
         window.Kakao.Auth.login({
           scope: 'account_email',
           success: (authObj) => resolve(authObj.access_token),
-          fail: reject,
+          fail: (err) => {
+            console.error('[Kakao] fail 콜백:', JSON.stringify(err))
+            reject(err)
+          },
         })
       })
       const res = await kakaoOAuthLogin(accessToken)
       handleAuthResponse(res)
-    } catch {
+    } catch (err) {
+      console.error('[Kakao] 로그인 에러:', err)
       setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.')
     }
   }

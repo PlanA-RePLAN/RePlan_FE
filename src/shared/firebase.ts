@@ -13,14 +13,12 @@ const app = initializeApp({
     appId: import.meta.env.VITE_FIREBASE_APP_ID,
 })
 
-const messaging = getMessaging(app)
-
 async function requestFcmToken(): Promise<string | null> {
     const permission = await Notification.requestPermission()
     if (permission !== 'granted')
         return null
     const registration = await navigator.serviceWorker.ready
-    return getToken(messaging, {
+    return getToken(getMessaging(app), {
         vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
         serviceWorkerRegistration: registration,
     })
