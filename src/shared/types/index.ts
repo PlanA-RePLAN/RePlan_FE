@@ -8,3 +8,4 @@ export type User = {
 export type { Goal, GoalGroup } from './goal'
 export type { Todo } from './todo'
 export type { Routine } from './routine'
+export type { Notification } from './notification'

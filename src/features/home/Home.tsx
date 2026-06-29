@@ -25,6 +25,7 @@ import { useCalendar } from './hooks/useCalendar'
 import { useBottomSheets } from './hooks/useBottomSheets'
 import { useTodos } from './hooks/useTodos'
 
+//assests
 const symbolSvg = '/assets/symbol.svg'
 const addSvg = '/assets/add.svg'
 const completeSvg = '/assets/completeIcon.svg'

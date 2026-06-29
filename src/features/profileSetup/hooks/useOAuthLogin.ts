@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { kakaoOAuthLogin, googleOAuthLogin, naverOAuthLogin } from '@/shared/api/auth'
 import type { ApiResponse, OAuthLoginData } from '@/shared/types/auth'
+import { setupPush } from '@/shared/firebase'
 
 const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -23,6 +24,7 @@ export function useOAuthLogin() {
     if (!isNewUser && accessToken && refreshToken) {
       localStorage.setItem('accessToken', accessToken)
       localStorage.setItem('refreshToken', refreshToken)
+      setupPush()
       navigate('/home')
     } else if (isNewUser && tempToken) {
       sessionStorage.setItem('tempToken', tempToken)

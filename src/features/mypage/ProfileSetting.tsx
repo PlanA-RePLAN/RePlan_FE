@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { getProfile, editProfile, logout, deleteAccount } from '@/shared/api/user'
+import { deleteToken } from '@/shared/api/notification'
 import { useImageUpload } from '@/shared/hooks/useImageUpload'
 
 const cameraSvg = '/assets/camera.svg'
@@ -75,10 +76,13 @@ export default function ProfileSetting() {
 
   const handleLogout = async () => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
+    const fcmToken = localStorage.getItem('fcmToken')
+    if (fcmToken) await deleteToken(accessToken, fcmToken)
     const res = await logout(accessToken)
     if (res.success){
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
+      localStorage.removeItem('fcmToken')
       navigate('/')
     }
   }

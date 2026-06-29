@@ -3,6 +3,13 @@ import TipStarIcon from '@/icons/TipStarIcon'
 import TodoTag from '@/shared/components/TodoTag'
 import ClockIcon from '@/icons/ClockIcon'
 import { cn } from '@/shared/utils/cn'
+import { MonthlyReport, SuggestedTodo } from '@/shared/types/statics'
+import StatisticsEmptyState from './StatisticsEmptyState'
+
+interface TipNoteTabProps {
+  data: MonthlyReport | null
+  isLoading: boolean
+}
 
 // ── Day Label colors ──────────────────────────────────
 const DAY_LABEL_COLORS: Record<string, string> = {
@@ -20,7 +27,7 @@ interface SuggestedTodoProps {
   onToggle: () => void
 }
 
-function SuggestedTodo({
+function SuggestedTodoItem({
   title,
   time,
   category,
@@ -85,7 +92,7 @@ function SuggestedTodo({
 }
 
 // ── Tip Card ──────────────────────────────────────────
-function TipCard() {
+function TipCard({ message }: { message: string }) {
   return (
     <div className="bg-bluegray-light rounded-xl p-4">
       <div className="flex gap-3 items-start">
@@ -94,12 +101,10 @@ function TipCard() {
         </div>
         <div className="flex flex-col gap-4 flex-1">
           <p className="text-sm font-bold text-bluegray-black leading-[1.5] tracking-[-0.01em]">
-            유성님을 위한 투두리스트 작성 팁
+            투두리스트 작성 팁
           </p>
           <p className="text-sm font-medium text-bluegray-dark-active leading-[1.5] tracking-[-0.015em]">
-            과부하 + 컨디션 저하 + 계획력 부족이 지난달의 주된 패턴이에요.
-            {'\n'}다음 달에는 무리하지 않고, 집중도와 회복력을 높이는 구조의
-            투두리스트를 제안하는 게 핵심입니다.
+            {message}
           </p>
         </div>
       </div>
@@ -107,26 +112,12 @@ function TipCard() {
   )
 }
 
-// ── Suggested Todos ───────────────────────────────────
-const SUGGESTED_TODOS = [
-  {
-    id: 1,
-    title: '11시 이전 취침',
-    time: '11:00 AM',
-    category: 'Study',
-    dayType: 'D' as const,
-  },
-  {
-    id: 2,
-    title: '모의고사 풀이',
-    time: '11:00 AM',
-    category: 'Study',
-    dayType: 'M' as const,
-  },
-]
-
 // ── TipNoteTab ────────────────────────────────────────
-export default function TipNoteTab() {
+export default function TipNoteTab({ data, isLoading }: TipNoteTabProps) {
+  const aiInsight = data?.aiInsight
+  const todos: SuggestedTodo[] = aiInsight?.suggestedTodos ?? []
+  const tipMessage = aiInsight?.tipMessage ?? null
+
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set())
 
   const toggle = (id: number) =>
@@ -137,9 +128,18 @@ export default function TipNoteTab() {
       } else {
         next.add(id)
       }
-
       return next
     })
+
+  const isEmpty = !isLoading && !data
+
+  if (isEmpty) {
+    return (
+      <div className="px-5">
+        <StatisticsEmptyState />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col">
@@ -147,33 +147,36 @@ export default function TipNoteTab() {
       <div className="px-5 pt-7">
         {/* Title */}
         <h1 className="text-2xl font-bold leading-[1.3] tracking-[-0.03em]">
-          <span className="text-bluegray-black">유성님을 위한 </span>
           <span className="text-blue-normal">Todo 리스트</span>
           <span className="text-bluegray-black"> 제안</span>
         </h1>
 
-        {/* Tip Card — 24px below title */}
-        <div className="mt-6">
-          <TipCard />
+        {/* Tip Card */}
+        {tipMessage && (
+          <div className="mt-6">
+            <TipCard message={tipMessage} />
+          </div>
+        )}
+      </div>
+
+      {/* Todo List */}
+      {todos.length > 0 && (
+        <div className="px-5 mt-6 flex flex-col gap-4">
+          {todos.map((todo, i) => (
+            <SuggestedTodoItem
+              key={i}
+              title={todo.title}
+              time={todo.time}
+              category={todo.category}
+              dayType={todo.dayType}
+              checked={checkedIds.has(i)}
+              onToggle={() => toggle(i)}
+            />
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* Todo List — 24px below tip card */}
-      <div className="px-5 mt-6 flex flex-col gap-4">
-        {SUGGESTED_TODOS.map((todo) => (
-          <SuggestedTodo
-            key={todo.id}
-            title={todo.title}
-            time={todo.time}
-            category={todo.category}
-            dayType={todo.dayType}
-            checked={checkedIds.has(todo.id)}
-            onToggle={() => toggle(todo.id)}
-          />
-        ))}
-      </div>
-
-      {/* Gradient + Buttons */}
+      {/* Buttons */}
       <div className="px-5 mt-6 pb-32">
         <div className="flex gap-2">
           <button className="flex-1 h-14 bg-bluegray-light-hover rounded-xl text-sm font-semibold text-bluegray-black">
