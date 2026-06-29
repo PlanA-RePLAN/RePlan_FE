@@ -13,12 +13,14 @@ import NotificationSetting from './features/mypage/NotificationSetting'
 import ReplanPage from '@/features/replan'
 import Statics from './features/statics/Statics'
 import Notification from '@/features/notification/Notification'
+import KakaoCallback from '@/features/oauth/KakaoCallback'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Nav 미사용 페이지 */}
+        <Route path="/oauth/kakao" element={<KakaoCallback />} />
         <Route path="/" element={<Index />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
         <Route path="/onboarding" element={<OnBoarding />} />

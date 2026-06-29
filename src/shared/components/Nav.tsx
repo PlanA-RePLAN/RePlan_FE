@@ -16,7 +16,7 @@ export default function Nav() {
   const navigate = useNavigate()
 
   return (
-    <div className="flex z-1000 justify-around items-center w-full h-27 px-10.75 fixed bottom-0 bg-white border border-bluegray-light-hover">
+    <div className="flex z-1000 justify-center gap-15 items-center w-full h-27 px-10.5 fixed bottom-0 bg-white border border-bluegray-light-hover">
       {NAV_ITEMS.map((item) => {
         const isActive = location.pathname === item.path
         const Icon = item.icon
