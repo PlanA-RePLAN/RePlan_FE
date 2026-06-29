@@ -12,6 +12,7 @@ build/
 CLAUDE.md
 android/app/google-services.json
 ios/App/App/GoogleService-Info.plist
+ios/App/App/AuthKey_*.p8
 *.xcuserstate
 xcschememanagement.plist
 ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
