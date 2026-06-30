@@ -1,16 +1,20 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { kakaoOAuthLogin, googleOAuthLogin, naverOAuthLogin } from '@/shared/api/auth'
+import { kakaoOAuthLogin, googleOAuthLogin, naverOAuthLogin, appleOAuthLogin } from '@/shared/api/auth'
 import type { ApiResponse, OAuthLoginData } from '@/shared/types/auth'
 import { setupPush } from '@/shared/firebase'
 import { Capacitor } from '@capacitor/core'
 import { Browser } from '@capacitor/browser'
 import { App } from '@capacitor/app'
+import { SocialLogin } from '@capgo/capacitor-social-login'
 
 const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+const GOOGLE_IOS_CLIENT_ID = import.meta.env.VITE_GOOGLE_IOS_CLIENT_ID
 const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID
 const KAKAO_NATIVE_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI as string
+const APPLE_CLIENT_ID = import.meta.env.VITE_APPLE_CLIENT_ID
+const APPLE_REDIRECT_URI = import.meta.env.VITE_APPLE_REDIRECT_URI
 
 export function useOAuthLogin() {
   const navigate = useNavigate()
@@ -37,6 +41,37 @@ export function useOAuthLogin() {
     }
   }
 
+  // 앱일 때만 SocialLogin 초기화 (구글 + 애플)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    SocialLogin.initialize({
+      google: {
+        iOSClientId: GOOGLE_IOS_CLIENT_ID,
+        webClientId: GOOGLE_CLIENT_ID,
+      },
+    }).catch((err: unknown) => console.warn('[SocialLogin] 초기화 실패:', err))
+  }, [])
+
+  // 브라우저일 때만 애플 웹 SDK 로드 + 초기화
+  useEffect(() => {
+    if (Capacitor.isNativePlatform() || !APPLE_CLIENT_ID) return
+    const initApple = () => {
+      window.AppleID.auth.init({
+        clientId: APPLE_CLIENT_ID,
+        scope: 'name email',
+        redirectURI: APPLE_REDIRECT_URI,
+        usePopup: true,
+      })
+    }
+    if (window.AppleID) { initApple(); return }
+    const script = document.createElement('script')
+    script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js'
+    script.async = true
+    script.onload = () => initApple()
+    document.head.appendChild(script)
+    return () => { document.head.removeChild(script) }
+  }, [])
+
   // 카카오 SDK 초기화 (웹 전용)
   useEffect(() => {
     if (Capacitor.isNativePlatform()) return
@@ -45,7 +80,7 @@ export function useOAuthLogin() {
     window.Kakao.init(KAKAO_JS_KEY)
   }, [])
 
-  // 구글 SDK 초기화
+  // 구글 웹 SDK 초기화 (브라우저 전용)
   const initGoogleBtn = useCallback(() => {
     if (!GOOGLE_CLIENT_ID || !window.google || !googleBtnRef.current) return
     if (googleInitialized.current) return
@@ -69,12 +104,15 @@ export function useOAuthLogin() {
   }, [navigate])
 
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return
+    if (Capacitor.isNativePlatform() || !GOOGLE_CLIENT_ID) return
     if (window.google) { initGoogleBtn(); return }
-    const interval = setInterval(() => {
-      if (window.google) { initGoogleBtn(); clearInterval(interval) }
-    }, 200)
-    return () => clearInterval(interval)
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    script.onload = () => initGoogleBtn()
+    document.head.appendChild(script)
+    return () => { document.head.removeChild(script) }
   }, [initGoogleBtn])
 
   // 네이버 SDK 초기화
@@ -185,14 +223,51 @@ export function useOAuthLogin() {
     }
   }
 
-  const loginWithGoogle = () => {
-    const googleBtn = googleBtnRef.current?.querySelector('div[role="button"]') as HTMLElement
-    googleBtn?.click()
+  const loginWithGoogle = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const result = await SocialLogin.login({
+          provider: 'google',
+          options: { scopes: ['profile', 'email'] },
+        })
+        if (result.result.responseType !== 'online' || !result.result.idToken) {
+          throw new Error('idToken이 없습니다')
+        }
+        handleAuthResponse(await googleOAuthLogin(result.result.idToken))
+      } else {
+        const googleBtn = googleBtnRef.current?.querySelector('div[role="button"]') as HTMLElement
+        googleBtn?.click()
+      }
+    } catch (err) {
+      console.error('[Google] 로그인 에러:', err)
+      setError('구글 로그인에 실패했습니다. 다시 시도해주세요.')
+    }
   }
 
   const loginWithNaver = () => {
     document.querySelector<HTMLAnchorElement>('#naverIdLogin a')?.click()
   }
 
-  return { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver }
+  const loginWithApple = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const result = await SocialLogin.login({
+          provider: 'apple',
+          options: { scopes: ['name', 'email'] },
+        })
+        const identityToken = result.result.idToken
+        const authorizationCode = result.result.accessToken?.token
+        if (!identityToken || !authorizationCode) throw new Error('토큰이 없습니다')
+        handleAuthResponse(await appleOAuthLogin(identityToken, authorizationCode))
+      } else {
+        const res = await window.AppleID.auth.signIn()
+        handleAuthResponse(await appleOAuthLogin(res.authorization.id_token, res.authorization.code))
+      }
+    } catch (err) {
+      console.error('[Apple] 로그인 에러:', err)
+      setError('애플 로그인에 실패했습니다. 다시 시도해주세요.')
+    }
+  }
+
+  return { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver, loginWithApple }
 }

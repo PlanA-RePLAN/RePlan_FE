@@ -11,12 +11,13 @@ const LOGIN_OPTION = [
 ] as const
 
 export default function LoginPage() {
-  const { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver } = useOAuthLogin()
+  const { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver, loginWithApple } = useOAuthLogin()
 
   const handleLogin = (option: string) => {
     if (option === 'kakao') loginWithKakao()
     if (option === 'google') loginWithGoogle()
     if (option === 'naver') loginWithNaver()
+    if (option === 'apple') loginWithApple()
   }
 
   return (
