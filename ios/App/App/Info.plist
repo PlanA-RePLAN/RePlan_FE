@@ -70,6 +70,12 @@
 				<string>com.plana.replan</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.962040178174-dj7qbl6vsug1ddfng3251295sguegej2</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>
