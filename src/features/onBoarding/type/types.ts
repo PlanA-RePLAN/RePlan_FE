@@ -42,7 +42,7 @@ export interface ProposedTodo {
   id: number
   title: string
   time: string
-  dayTag: 'D' | 'M'
+  dayTag?: 'D' | 'W' | 'M'
   selectedTagId: string
   repeat: RepeatType
   repeatTimeEnabled?: boolean

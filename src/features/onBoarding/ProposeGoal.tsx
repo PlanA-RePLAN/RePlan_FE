@@ -79,8 +79,14 @@ function mapAiTodo(todo: AiRecommendedTodo, index: number): ProposedTodo {
   const repeat = todo.routineType
     ? (ROUTINE_TO_REPEAT[todo.routineType] ?? '없음')
     : '없음'
-  const dayTag: 'D' | 'M' =
-    todo.routineType === 'WEEKLY' || todo.routineType === 'MONTHLY' ? 'M' : 'D'
+  const dayTag: 'D' | 'W' | 'M' | undefined =
+    todo.routineType === 'MONTHLY'
+      ? 'M'
+      : todo.routineType === 'WEEKLY'
+        ? 'W'
+        : todo.routineType === 'DAILY'
+          ? 'D'
+          : undefined
 
   return {
     id: index + 1,
@@ -218,7 +224,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
 
       <ListItem className="mt-6 mb-8 border-none">{goalValue}</ListItem>
 
-      <div>
+      <div className="mb-30">
         <div className="flex items-center gap-2 w-full">
           <MenuIcon />
           <div className="font-bold text-[16px] text-bluegray-black">
@@ -268,12 +274,17 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
         })}
       </div>
 
-      <div className="fixed left-0 bottom-10 w-full flex gap-2 px-5">
-        <MainButton
-          option={selectedIds.length === 0 || loading ? 'disabled' : 'primary'}
-          onClick={handleSubmit}
-          title={loading ? '저장 중...' : '선택한 투두 추가하기'}
-        />
+      <div className="fixed left-0 bottom-0 w-full">
+        <div className="h-10 bg-linear-to-t from-white to-transparent" />
+        <div className="bg-white pb-10 flex gap-2 px-5">
+          <MainButton
+            option={
+              selectedIds.length === 0 || loading ? 'disabled' : 'primary'
+            }
+            onClick={handleSubmit}
+            title={loading ? '저장 중...' : '선택한 투두 추가하기'}
+          />
+        </div>
       </div>
 
       {selectedTodo && (
