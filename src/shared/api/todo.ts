@@ -1,22 +1,6 @@
-import { Todo, TodoDetail } from '../types/todo'
+import { Todo, TodoDetail, CreateTodoRequest, CreateTodoResponse, UpdateTodoRequest } from '../types/todo'
 import { ApiResponse } from '../types/auth'
 import client from './client'
-
-export interface CreateTodoRequest {
-  title: string
-  dueDate?: string | null
-  tagId?: number | null
-  goalId?: number | null
-}
-
-export interface CreateTodoResponse {
-  todoId: number
-  title: string
-  dueDate: string | null
-  tagId: number | null
-  parentId: number | null
-  completed: boolean
-}
 
 export async function getTodos(
     accessToken: string,
@@ -98,14 +82,6 @@ export async function toggleTodoComplete(
     return res.data
 }
 
-export interface UpdateTodoRequest {
-  title: string
-  dueDate: string | null
-  tagId: number | null
-  routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
-  routineDate: number | null
-}
-
 export async function updateTodo(
   accessToken: string,
   todoId: number,
@@ -117,6 +93,16 @@ export async function updateTodo(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
   return res.data
+}
+
+export async function getPinnedTodos(
+    accessToken: string,
+): Promise<ApiResponse<Todo[]>> {
+    const res = await client.get<ApiResponse<Todo[]>>(
+        '/api/todos/pinned',
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+    return res.data
 }
 
 export async function pinTodo(
