@@ -206,7 +206,13 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
         </Title>
         <Description>
           <div>마음에 드는 리스트를 골라주세요.</div>
-          <div>마음에 들지 않는다면 수정할 수 있어요!</div>
+          <div>
+            마음에 들지 않는다면{' '}
+            <span className="text-blue-normal font-bold">
+              투두를 클릭해서 수정
+            </span>
+            할 수 있어요!
+          </div>
         </Description>
       </div>
 
