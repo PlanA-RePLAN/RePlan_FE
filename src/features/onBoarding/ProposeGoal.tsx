@@ -14,7 +14,6 @@ import { cn } from '@/shared/utils/cn'
 import {
   type ProposedTodo,
   type CustomTag,
-  PRESET_TAGS,
   ROUTINE_TO_REPEAT,
   REPEAT_TO_ROUTINE,
   fetchAllTags,
@@ -61,6 +60,7 @@ function toTodoDetail(t: ProposedTodo, allTags: CustomTag[]): TodoDetail {
     todoId: t.id,
     title: t.title,
     dueDate: t.deadlineDate ? format(t.deadlineDate, 'yyyy-MM-dd') : null,
+    dueTime: t.deadlineTime ? timeToHHmm(t.deadlineTime) : null,
     isCompleted: false,
     tagId: null,
     tagTitle: tag && tag.id !== '미선택' ? tag.label : null,
@@ -93,7 +93,7 @@ function mapAiTodo(todo: AiRecommendedTodo, index: number): ProposedTodo {
     title: todo.title,
     time: formatTime24to12(todo.dueTime),
     dayTag,
-    selectedTagId: 'Study',
+    selectedTagId: todo.tagId != null ? String(todo.tagId) : '미선택',
     repeat,
     routineDate: todo.routineDate ?? null,
     deadlineDate: todo.dueDate ? new Date(todo.dueDate) : null,
@@ -114,7 +114,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
   )
 
   const [todos, setTodos] = useState<ProposedTodo[]>(initialTodos)
-  const [allTags, setAllTags] = useState<CustomTag[]>(PRESET_TAGS)
+  const [allTags, setAllTags] = useState<CustomTag[]>([])
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -169,6 +169,17 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
     setAllTags((prev) => [...prev, tag])
   }
 
+  // 요일 → 인덱스: 월=0, 화=1, 수=2, 목=3, 금=4, 토=5, 일=6
+  const DAY_TO_INDEX: Record<string, number> = {
+    월: 0,
+    화: 1,
+    수: 2,
+    목: 3,
+    금: 4,
+    토: 5,
+    일: 6,
+  }
+
   const handleSubmit = async () => {
     if (selectedIds.length === 0 || loading) return
     setLoading(true)
@@ -190,9 +201,16 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
               : null,
           dueTime: !isRecurring(t) ? timeToHHmm(t.deadlineTime) : null,
           routineType: isRecurring(t) ? REPEAT_TO_ROUTINE[t.repeat] : null,
-          routineDate: isRecurring(t) ? (t.routineDate ?? null) : null,
+          routineDays: isRecurring(t)
+            ? t.repeat === '위클리'
+              ? (t.weeklyDay ?? []).map((d) => DAY_TO_INDEX[d] ?? 0)
+              : t.repeat === '먼슬리'
+                ? (t.monthlyDay ?? [1])
+                : null
+            : null,
           tagId: resolveBackendTagId(t.selectedTagId),
-          subTodos: !isRecurring(t) ? t.subTodos.map((s) => s.title) : [],
+          subTodos: !isRecurring(t) ? t.subTodos.map((s) => s.title) : null,
+          subRoutines: isRecurring(t) ? t.subTodos.map((s) => s.title) : null,
         })),
       })
       if (res.success) {
@@ -264,7 +282,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
                     <TodoCard.Time>{todo.time}</TodoCard.Time>
                   </TodoCard.Content>
                   <TodoCard.Category
-                    category={selectedTag?.label ?? '미선택'}
+                    category={selectedTag?.label ?? ''}
                     color={selectedTag?.textColor}
                   />
                 </TodoCard>

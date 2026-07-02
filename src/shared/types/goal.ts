@@ -87,6 +87,8 @@ export interface AiRecommendedTodo {
   dueTime: string | null
   routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
   routineDate: number | null
+  tagId: number | null
+  tagName: string | null
 }
 
 export interface AiTodoRecommendationData {
@@ -100,9 +102,10 @@ export interface CreateGoalTodoItem {
   dueDate?: string | null
   dueTime?: string | null
   routineType?: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
-  routineDate?: number | null
+  routineDays?: number[] | null
   tagId?: number | null
-  subTodos?: string[]
+  subTodos?: string[] | null
+  subRoutines?: string[] | null
 }
 
 export interface CreateGoalWithTodosRequest {

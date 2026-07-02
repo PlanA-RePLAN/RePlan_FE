@@ -75,13 +75,13 @@ export default function TodoEditSheet({
     todo.repeatTimeEnabled ?? false,
   )
   const [dailyTime, setDailyTime] = useState(todo.repeatTime ?? '08:00 AM')
-  const [weeklyDay, setWeeklyDay] = useState(todo.weeklyDay ?? '월')
+  const [weeklyDay, setWeeklyDay] = useState<string[]>(todo.weeklyDay ?? ['월'])
   const [weeklyTimeEnabled, setWeeklyTimeEnabled] = useState(
     todo.repeatTimeEnabled ?? false,
   )
   const [weeklyTime, setWeeklyTime] = useState(todo.repeatTime ?? '08:00 AM')
-  const [monthlyDay, setMonthlyDay] = useState(
-    todo.monthlyDay ?? new Date().getDate(),
+  const [monthlyDay, setMonthlyDay] = useState<number[]>(
+    todo.monthlyDay ?? [new Date().getDate()],
   )
   const [monthlyTimeEnabled, setMonthlyTimeEnabled] = useState(
     todo.repeatTimeEnabled ?? false,
@@ -111,10 +111,10 @@ export default function TodoEditSheet({
       setEditDeadlineTime(todo.deadlineTime)
       setDailyTimeEnabled(todo.repeatTimeEnabled ?? false)
       setDailyTime(todo.repeatTime ?? '08:00 AM')
-      setWeeklyDay(todo.weeklyDay ?? '월')
+      setWeeklyDay(todo.weeklyDay ?? ['월'])
       setWeeklyTimeEnabled(todo.repeatTimeEnabled ?? false)
       setWeeklyTime(todo.repeatTime ?? '08:00 AM')
-      setMonthlyDay(todo.monthlyDay ?? new Date().getDate())
+      setMonthlyDay(todo.monthlyDay ?? [new Date().getDate()])
       setMonthlyTimeEnabled(todo.repeatTimeEnabled ?? false)
       setMonthlyTime(todo.repeatTime ?? '08:00 AM')
       setEditSubTodos(todo.subTodos)
@@ -269,8 +269,8 @@ export default function TodoEditSheet({
           )}
           {editRepeat === '위클리' && (
             <WeeklyDaySetting
-              selectedDay={weeklyDay}
-              onDayChange={setWeeklyDay}
+              selectedDays={weeklyDay}
+              onDaysChange={setWeeklyDay}
               timeEnabled={weeklyTimeEnabled}
               onTimeEnabledChange={setWeeklyTimeEnabled}
               time={weeklyTime}
@@ -279,8 +279,8 @@ export default function TodoEditSheet({
           )}
           {editRepeat === '먼슬리' && (
             <MonthlySetting
-              selectedDay={monthlyDay}
-              onDayChange={setMonthlyDay}
+              selectedDays={monthlyDay}
+              onDaysChange={setMonthlyDay}
               timeEnabled={monthlyTimeEnabled}
               onTimeEnabledChange={setMonthlyTimeEnabled}
               time={monthlyTime}

@@ -8,6 +8,7 @@ export interface TodoDetail {
   todoId: number
   title: string
   dueDate: string | null
+  dueTime: string | null
   isCompleted: boolean
   tagId: number | null
   tagTitle: string | null
