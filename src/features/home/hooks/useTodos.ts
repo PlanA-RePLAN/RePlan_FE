@@ -17,8 +17,14 @@ import { REPEAT_TO_ROUTINE } from '@/features/onBoarding/type/types'
 import { arrayMove } from '@dnd-kit/sortable'
 import type { DragEndEvent } from '@dnd-kit/core'
 
-const WEEKDAY_NAME_TO_NUM: Record<string, number> = {
-  월: 1, 화: 2, 수: 4, 목: 8, 금: 16, 토: 32, 일: 64,
+const WEEKDAY_NAME_TO_INDEX: Record<string, number> = {
+  월: 0,
+  화: 1,
+  수: 2,
+  목: 3,
+  금: 4,
+  토: 5,
+  일: 6,
 }
 
 interface UseTodosParams {
@@ -29,7 +35,13 @@ interface UseTodosParams {
   selectedMonth: number
 }
 
-export function useTodos({ selectedTab, sort, selectedDate, selectedYear, selectedMonth }: UseTodosParams) {
+export function useTodos({
+  selectedTab,
+  sort,
+  selectedDate,
+  selectedYear,
+  selectedMonth,
+}: UseTodosParams) {
   const [todos, setTodos] = useState<Todo[]>([])
   const [calendarTodos, setCalendarTodos] = useState<Todo[]>([])
   const [pinnedTodoList, setPinnedTodoList] = useState<Todo[]>([])
@@ -44,7 +56,9 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
   const refetchTodos = async () => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
     const apiSort = sort === 'latest' ? 'priority' : sort
-    const baseDate = selectedDate ? toDateStr(selectedDate) : toDateStr(new Date())
+    const baseDate = selectedDate
+      ? toDateStr(selectedDate)
+      : toDateStr(new Date())
 
     let apiFilter: 'all' | 'day' | 'week' | 'month'
     let apiDate: string | undefined
@@ -70,7 +84,6 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
     const res = await getTodos(accessToken, apiFilter, apiSort, apiDate)
     if (res.success) setTodos(res.data ?? [])
   }
-
 
   const refetchPinnedTodos = async () => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -119,18 +132,24 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
           const [timePart, meridiem] = proposed.deadlineTime.split(' ')
           const [h, m] = timePart.split(':').map(Number)
           const hours24 =
-            meridiem === 'PM' && h !== 12 ? h + 12 : meridiem === 'AM' && h === 12 ? 0 : h
+            meridiem === 'PM' && h !== 12
+              ? h + 12
+              : meridiem === 'AM' && h === 12
+                ? 0
+                : h
           date.setHours(hours24, m, 0, 0)
         }
         dueDate = date.toISOString()
       }
 
       if (routineType) {
-        let routineDate: number | null = null
-        if (routineType === 'WEEKLY' && proposed.weeklyDay) {
-          routineDate = WEEKDAY_NAME_TO_NUM[proposed.weeklyDay] ?? null
-        } else if (routineType === 'MONTHLY' && proposed.monthlyDay) {
-          routineDate = proposed.monthlyDay
+        let routineDays: number[] | null = null
+        if (routineType === 'WEEKLY' && proposed.weeklyDay?.length) {
+          routineDays = proposed.weeklyDay.map(
+            (d) => WEEKDAY_NAME_TO_INDEX[d] ?? 0,
+          )
+        } else if (routineType === 'MONTHLY' && proposed.monthlyDay?.length) {
+          routineDays = proposed.monthlyDay
         }
 
         let routineTime: string | null = null
@@ -138,7 +157,11 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
           const [timePart, meridiem] = proposed.repeatTime.split(' ')
           const [h, m] = timePart.split(':').map(Number)
           const hours24 =
-            meridiem === 'PM' && h !== 12 ? h + 12 : meridiem === 'AM' && h === 12 ? 0 : h
+            meridiem === 'PM' && h !== 12
+              ? h + 12
+              : meridiem === 'AM' && h === 12
+                ? 0
+                : h
           routineTime = `${String(hours24).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`
         }
 
@@ -147,7 +170,7 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
           routineType,
           dueDate,
           routineTime,
-          routineDate,
+          routineDays,
           tagId: null,
           goalId: null,
         })
@@ -178,7 +201,11 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
           const [timePart, meridiem] = updated.deadlineTime.split(' ')
           const [h, m] = timePart.split(':').map(Number)
           const hours24 =
-            meridiem === 'PM' && h !== 12 ? h + 12 : meridiem === 'AM' && h === 12 ? 0 : h
+            meridiem === 'PM' && h !== 12
+              ? h + 12
+              : meridiem === 'AM' && h === 12
+                ? 0
+                : h
           date.setHours(hours24, m, 0, 0)
         }
         const pad = (n: number) => String(n).padStart(2, '0')
@@ -186,11 +213,13 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
       }
 
       const routineType = REPEAT_TO_ROUTINE[updated.repeat]
-      let routineDate: number | null = null
-      if (routineType === 'WEEKLY' && updated.weeklyDay) {
-        routineDate = WEEKDAY_NAME_TO_NUM[updated.weeklyDay] ?? null
-      } else if (routineType === 'MONTHLY' && updated.monthlyDay) {
-        routineDate = updated.monthlyDay
+      let routineDays: number[] | null = null
+      if (routineType === 'WEEKLY' && updated.weeklyDay?.length) {
+        routineDays = updated.weeklyDay.map(
+          (d) => WEEKDAY_NAME_TO_INDEX[d] ?? 0,
+        )
+      } else if (routineType === 'MONTHLY' && updated.monthlyDay?.length) {
+        routineDays = updated.monthlyDay
       }
 
       await updateTodoApi(accessToken, selectedTodo.todoId, {
@@ -198,7 +227,7 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
         dueDate,
         tagId: selectedTodo.tagId,
         routineType,
-        routineDate,
+        routineDays,
       })
 
       await refetchTodos()
@@ -218,23 +247,28 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
   }
 
   const handleToggleComplete = async (todoId: number, isCompleted: boolean) => {
-    if (!isCompleted) {      const todayStr = toDateStr(new Date())
+    if (!isCompleted) {
+      const todayStr = toDateStr(new Date())
       const todayTodos = todos.filter((t) => t.dueDate?.startsWith(todayStr))
       const willAllTodayComplete =
         todayTodos.length > 0 &&
-        todayTodos.filter((t) => !t.isCompleted).every((t) => t.todoId === todoId)
+        todayTodos
+          .filter((t) => !t.isCompleted)
+          .every((t) => t.todoId === todoId)
       if (willAllTodayComplete) setShowToast(true)
     }
 
     setTodos((prev) =>
-      prev.map((t) => (t.todoId === todoId ? { ...t, isCompleted: !isCompleted } : t))
+      prev.map((t) =>
+        t.todoId === todoId ? { ...t, isCompleted: !isCompleted } : t,
+      ),
     )
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
       await toggleTodoComplete(accessToken, todoId, !isCompleted)
     } catch (error) {
       setTodos((prev) =>
-        prev.map((t) => (t.todoId === todoId ? { ...t, isCompleted } : t))
+        prev.map((t) => (t.todoId === todoId ? { ...t, isCompleted } : t)),
       )
       console.error(error)
     }
@@ -242,7 +276,7 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
 
   const handleTogglePin = async (todoId: number, isPinned: boolean) => {
     setTodos((prev) =>
-      prev.map((t) => (t.todoId === todoId ? { ...t, isPinned } : t))
+      prev.map((t) => (t.todoId === todoId ? { ...t, isPinned } : t)),
     )
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -250,7 +284,9 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
       await refetchPinnedTodos()
     } catch (error) {
       setTodos((prev) =>
-        prev.map((t) => (t.todoId === todoId ? { ...t, isPinned: !isPinned } : t))
+        prev.map((t) =>
+          t.todoId === todoId ? { ...t, isPinned: !isPinned } : t,
+        ),
       )
       console.error(error)
     }
@@ -267,34 +303,52 @@ export function useTodos({ selectedTab, sort, selectedDate, selectedYear, select
 
     const newRegularTodos = newTodos.filter((t) => !t.isPinned)
     const movedIndex = newRegularTodos.findIndex((t) => t.todoId === active.id)
-    const prevTodoId = movedIndex > 0 ? newRegularTodos[movedIndex - 1].todoId : null
+    const prevTodoId =
+      movedIndex > 0 ? newRegularTodos[movedIndex - 1].todoId : null
     const nextTodoId =
-      movedIndex < newRegularTodos.length - 1 ? newRegularTodos[movedIndex + 1].todoId : null
+      movedIndex < newRegularTodos.length - 1
+        ? newRegularTodos[movedIndex + 1].todoId
+        : null
 
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
-      await updateTodoOrder(accessToken, active.id as number, prevTodoId, nextTodoId)
+      await updateTodoOrder(
+        accessToken,
+        active.id as number,
+        prevTodoId,
+        nextTodoId,
+      )
     } catch (error) {
       console.error(error)
       setTodos(todos)
     }
   }
 
-  const filteredTodos = selectedDate && selectedTab !== 'week' && selectedTab !== 'month'
-    ? todos.filter((t) => t.dueDate?.startsWith(toDateStr(selectedDate)) ?? false)
-    : selectedTab === 'all'
-    ? todos.filter((t) => {
-        if (!t.dueDate) return true
-        const date = new Date(t.dueDate)
-        return date.getFullYear() === selectedYear && date.getMonth() + 1 === selectedMonth
-      })
-    : todos
+  const filteredTodos =
+    selectedDate && selectedTab !== 'week' && selectedTab !== 'month'
+      ? todos.filter(
+          (t) => t.dueDate?.startsWith(toDateStr(selectedDate)) ?? false,
+        )
+      : selectedTab === 'all'
+        ? todos.filter((t) => {
+            if (!t.dueDate) return true
+            const date = new Date(t.dueDate)
+            return (
+              date.getFullYear() === selectedYear &&
+              date.getMonth() + 1 === selectedMonth
+            )
+          })
+        : todos
 
   const sortedTodos =
-    sort === 'latest' ? [...filteredTodos].sort((a, b) => b.todoId - a.todoId) : filteredTodos
+    sort === 'latest'
+      ? [...filteredTodos].sort((a, b) => b.todoId - a.todoId)
+      : filteredTodos
 
   const pinnedTodos = pinnedTodoList
-  const regularActiveTodos = sortedTodos.filter((t) => !t.isPinned && !t.isCompleted)
+  const regularActiveTodos = sortedTodos.filter(
+    (t) => !t.isPinned && !t.isCompleted,
+  )
   const completedTodos = sortedTodos.filter((t) => t.isCompleted)
 
   const calendarDueDates = calendarTodos
