@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://54.180.141.175/api/:path*"
+      "destination": "https://plana-replan.site/api/:path*"
     }
   ]
 }
