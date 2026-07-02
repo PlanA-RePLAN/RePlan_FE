@@ -195,11 +195,10 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
         todos: selectedTodos.map((t) => ({
           type: isRecurring(t) ? 'RECURRING' : 'ONE_TIME',
           title: t.title,
-          dueDate:
-            !isRecurring(t) && t.deadlineDate
-              ? format(t.deadlineDate, 'yyyy-MM-dd')
-              : null,
-          dueTime: !isRecurring(t) ? timeToHHmm(t.deadlineTime) : null,
+          dueDate: t.deadlineDate ? format(t.deadlineDate, 'yyyy-MM-dd') : null,
+          dueTime: isRecurring(t)
+            ? timeToHHmm(t.repeatTime ?? t.deadlineTime)
+            : timeToHHmm(t.deadlineTime),
           routineType: isRecurring(t) ? REPEAT_TO_ROUTINE[t.repeat] : null,
           routineDays: isRecurring(t)
             ? t.repeat === '위클리'
