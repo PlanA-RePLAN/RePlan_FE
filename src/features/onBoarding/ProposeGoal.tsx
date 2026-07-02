@@ -29,6 +29,16 @@ interface ProposeGoalProps {
   moveNext: () => void
 }
 
+const WEEKDAY_NAME_TO_INDEX: Record<string, number> = {
+  월: 0,
+  화: 1,
+  수: 2,
+  목: 3,
+  금: 4,
+  토: 5,
+  일: 6,
+}
+
 function formatTime24to12(time: string | null): string {
   if (!time) return ''
   const [hStr, mStr] = time.split(':')
@@ -66,7 +76,12 @@ function toTodoDetail(t: ProposedTodo, allTags: CustomTag[]): TodoDetail {
     tagTitle: tag && tag.id !== '미선택' ? tag.label : null,
     tagColor: tag && isCustomTag(tag) ? tag.textColor : null,
     routineType: REPEAT_TO_ROUTINE[t.repeat],
-    routineDate: t.routineDate ?? null,
+    routineDays:
+      t.repeat === '위클리'
+        ? (t.weeklyDay ?? []).map((d) => WEEKDAY_NAME_TO_INDEX[d] ?? 0)
+        : t.repeat === '먼슬리'
+          ? (t.monthlyDay ?? null)
+          : null,
     subTodos: t.subTodos.map((s) => ({
       todoId: s.id,
       title: s.title,

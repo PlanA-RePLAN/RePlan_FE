@@ -49,14 +49,14 @@ const TABS = [
   { label: 'Month', value: 'month' },
 ]
 
-const WEEKDAY_NUM_TO_NAME: Record<number, string> = {
-  1: '월',
-  2: '화',
-  4: '수',
-  8: '목',
-  16: '금',
-  32: '토',
-  64: '일',
+const WEEKDAY_INDEX_TO_NAME: Record<number, string> = {
+  0: '월',
+  1: '화',
+  2: '수',
+  3: '목',
+  4: '금',
+  5: '토',
+  6: '일',
 }
 
 function formatTime(dueDate: string | null): string | undefined {
@@ -88,12 +88,16 @@ function todoDetailToProposed(todo: TodoDetail): ProposedTodo {
     repeat: todo.routineType
       ? (ROUTINE_TO_REPEAT[todo.routineType] ?? '없음')
       : '없음',
-    weeklyDay: todo.routineDate
-      ? Object.entries(WEEKDAY_NUM_TO_NAME)
-          .filter(([bit]) => todo.routineDate! & Number(bit))
-          .map(([, name]) => name)
-      : undefined,
-    monthlyDay: todo.routineDate != null ? [todo.routineDate] : undefined,
+    weeklyDay:
+      todo.routineType === 'WEEKLY' && todo.routineDays
+        ? todo.routineDays
+            .map((i) => WEEKDAY_INDEX_TO_NAME[i])
+            .filter((n): n is string => !!n)
+        : undefined,
+    monthlyDay:
+      todo.routineType === 'MONTHLY' && todo.routineDays
+        ? todo.routineDays
+        : undefined,
     deadlineDate,
     deadlineTime,
     subTodos: todo.subTodos.map((s) => ({ id: s.todoId, title: s.title })),

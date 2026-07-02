@@ -14,7 +14,7 @@ export interface TodoDetail {
   tagTitle: string | null
   tagColor: string | null
   routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
-  routineDate: number | null
+  routineDays: number[] | null
   subTodos: SubTodoDetail[]
 }
 
@@ -53,7 +53,8 @@ export interface UpdateTodoRequest {
   dueDate: string | null
   tagId: number | null
   routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
-  routineDate: number | null
+  routineDays: number[] | null
+  routineTime?: string | null
 }
 
 export type TodoTagId = '미선택' | 'Study' | 'Project' | 'Health' | 'Other'
