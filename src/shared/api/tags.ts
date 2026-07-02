@@ -20,3 +20,13 @@ export async function createTag(
   })
   return res.data
 }
+
+export async function deleteTag(
+  accessToken: string,
+  tagId: number,
+): Promise<ApiResponse<null>> {
+  const res = await client.delete<ApiResponse<null>>(`/api/tags/${tagId}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return res.data
+}

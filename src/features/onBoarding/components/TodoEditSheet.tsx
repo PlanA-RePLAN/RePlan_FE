@@ -10,10 +10,14 @@ import {
   type RepeatType,
   type SubTodo,
   REPEAT_OPTIONS,
+  fetchAllTags,
+  isCustomTag,
 } from '../type/types'
+import { deleteTag } from '@/shared/api/tags'
 import TagAddSheet from './TagAddSheet'
 import DeadlineInput from './DeadlineInput'
 import TodoTag from '@/shared/components/TodoTag'
+import { getTodoTag } from '@/shared/types/todo'
 import CheckIcon from '@/icons/CheckIcon'
 import ClearIcon from '@/icons/ClearIcon'
 import DailyTimeSetting from './DailyTimeSetting'
@@ -28,6 +32,8 @@ interface TodoEditSheetProps {
   todo: ProposedTodo
   allTags: CustomTag[]
   onTagAdd: (tag: CustomTag) => void
+  onTagsLoaded?: (tags: CustomTag[]) => void
+  onTagDelete?: (tagId: string) => void
   title?: string
 }
 
@@ -46,6 +52,8 @@ export default function TodoEditSheet({
   todo,
   allTags,
   onTagAdd,
+  onTagsLoaded,
+  onTagDelete,
   title = '투두 수정',
 }: TodoEditSheetProps) {
   const [editTitle, setEditTitle] = useState(todo.title)
@@ -67,13 +75,13 @@ export default function TodoEditSheet({
     todo.repeatTimeEnabled ?? false,
   )
   const [dailyTime, setDailyTime] = useState(todo.repeatTime ?? '08:00 AM')
-  const [weeklyDay, setWeeklyDay] = useState(todo.weeklyDay ?? '월')
+  const [weeklyDay, setWeeklyDay] = useState<string[]>(todo.weeklyDay ?? ['월'])
   const [weeklyTimeEnabled, setWeeklyTimeEnabled] = useState(
     todo.repeatTimeEnabled ?? false,
   )
   const [weeklyTime, setWeeklyTime] = useState(todo.repeatTime ?? '08:00 AM')
-  const [monthlyDay, setMonthlyDay] = useState(
-    todo.monthlyDay ?? new Date().getDate(),
+  const [monthlyDay, setMonthlyDay] = useState<number[]>(
+    todo.monthlyDay ?? [new Date().getDate()],
   )
   const [monthlyTimeEnabled, setMonthlyTimeEnabled] = useState(
     todo.repeatTimeEnabled ?? false,
@@ -82,6 +90,15 @@ export default function TodoEditSheet({
   const [editSubTodos, setEditSubTodos] = useState<SubTodo[]>(todo.subTodos)
   const [addingSubTodo, setAddingSubTodo] = useState(false)
   const [tagAddOpen, setTagAddOpen] = useState(false)
+  const [deletingTagId, setDeletingTagId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isOpen && onTagsLoaded) {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      fetchAllTags(accessToken).then(onTagsLoaded)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   useEffect(() => {
     if (isOpen) {
@@ -94,10 +111,10 @@ export default function TodoEditSheet({
       setEditDeadlineTime(todo.deadlineTime)
       setDailyTimeEnabled(todo.repeatTimeEnabled ?? false)
       setDailyTime(todo.repeatTime ?? '08:00 AM')
-      setWeeklyDay(todo.weeklyDay ?? '월')
+      setWeeklyDay(todo.weeklyDay ?? ['월'])
       setWeeklyTimeEnabled(todo.repeatTimeEnabled ?? false)
       setWeeklyTime(todo.repeatTime ?? '08:00 AM')
-      setMonthlyDay(todo.monthlyDay ?? new Date().getDate())
+      setMonthlyDay(todo.monthlyDay ?? [new Date().getDate()])
       setMonthlyTimeEnabled(todo.repeatTimeEnabled ?? false)
       setMonthlyTime(todo.repeatTime ?? '08:00 AM')
       setEditSubTodos(todo.subTodos)
@@ -141,6 +158,27 @@ export default function TodoEditSheet({
     setTagAddOpen(false)
   }
 
+  const handleTagDelete = async (tag: CustomTag) => {
+    if (deletingTagId || !onTagDelete) return
+    // 프리셋 태그(Study/Project/Health/Other)는 서버에 존재하지 않으므로 목록에서만 제거
+    if (!isCustomTag(tag)) {
+      onTagDelete(tag.id)
+      if (editTagId === tag.id) setEditTagId('미선택')
+      return
+    }
+    setDeletingTagId(tag.id)
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      const res = await deleteTag(accessToken, Number(tag.id))
+      if (res.success) {
+        onTagDelete(tag.id)
+        if (editTagId === tag.id) setEditTagId('미선택')
+      }
+    } finally {
+      setDeletingTagId(null)
+    }
+  }
+
   return (
     <>
       <BottomSheet isOpen={isOpen} onClose={onClose}>
@@ -176,9 +214,24 @@ export default function TodoEditSheet({
                     <div className="w-2.5 h-2.5 rounded-full bg-bluegray-black" />
                   )}
                 </button>
-                <TodoTag category={tag.label} />
-                {tag.label !== '미선택' && (
-                  <button>
+                {getTodoTag(tag.id) ? (
+                  <TodoTag category={tag.id} />
+                ) : (
+                  <div
+                    style={{
+                      backgroundColor: tag.bgColor,
+                      color: tag.textColor,
+                    }}
+                    className="w-17 py-1 rounded-full text-xs font-semibold flex items-center justify-center"
+                  >
+                    {tag.label}
+                  </div>
+                )}
+                {onTagDelete && tag.id !== '미선택' && (
+                  <button
+                    onClick={() => handleTagDelete(tag)}
+                    disabled={deletingTagId === tag.id}
+                  >
                     <ClearIcon />
                   </button>
                 )}
@@ -216,8 +269,8 @@ export default function TodoEditSheet({
           )}
           {editRepeat === '위클리' && (
             <WeeklyDaySetting
-              selectedDay={weeklyDay}
-              onDayChange={setWeeklyDay}
+              selectedDays={weeklyDay}
+              onDaysChange={setWeeklyDay}
               timeEnabled={weeklyTimeEnabled}
               onTimeEnabledChange={setWeeklyTimeEnabled}
               time={weeklyTime}
@@ -226,8 +279,8 @@ export default function TodoEditSheet({
           )}
           {editRepeat === '먼슬리' && (
             <MonthlySetting
-              selectedDay={monthlyDay}
-              onDayChange={setMonthlyDay}
+              selectedDays={monthlyDay}
+              onDaysChange={setMonthlyDay}
               timeEnabled={monthlyTimeEnabled}
               onTimeEnabledChange={setMonthlyTimeEnabled}
               time={monthlyTime}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { isSameDay } from 'date-fns'
+import { format, isSameDay } from 'date-fns'
 
 // components
 import Description from '@/shared/components/Description'
@@ -10,9 +10,28 @@ import GoalIcon from '@/icons/GoalIcon'
 import ExampleTag from './components/ExampleTag'
 import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
 import EndScheduleInput from './components/EndScheduleInput'
+import GoalToast from './components/GoalToast'
+
+// api
+import { exploreGoal } from '@/shared/api/goal'
 
 // stores
 import { useOnboardingStore, NO_DEADLINE_DATE } from '@/store/onboardingStore'
+
+function timeToHHmm(time: string | null): string | null {
+  if (!time) return null
+  const [timePart, period] = time.trim().split(' ')
+  if (!period) return timePart
+  const [hStr, mStr] = timePart.split(':')
+  let h = parseInt(hStr)
+  if (h > 12) return `${String(h).padStart(2, '0')}:${mStr}`
+  if (period === 'AM') {
+    h = h === 12 ? 0 : h
+  } else {
+    h = h === 12 ? 12 : h + 12
+  }
+  return `${String(h).padStart(2, '0')}:${mStr}`
+}
 
 export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
   // store에서 관리되는 전역 변수
@@ -35,15 +54,42 @@ export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
   const [useEndDate, setUseEndDate] = useState(hasStoredDeadline)
   const [endTime, setEndTime] = useState<string | null>(storeDeadlineTime)
   const [useEndTime, setUseEndTime] = useState(storeDeadlineTime !== null)
+  const [loading, setLoading] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  const setQuestions = useOnboardingStore((s) => s.setQuestions)
 
   const isFilled = Boolean(goal.trim())
 
-  const handleSubmit = () => {
-    if (!isFilled) return
-    setGoalValue(goal.trim())
-    setDeadlineDate(useEndDate && endDate ? endDate : NO_DEADLINE_DATE)
-    setDeadlineTime(useEndDate && useEndTime ? endTime : null)
-    moveNext()
+  const handleSubmit = async () => {
+    if (!isFilled || loading) return
+    setLoading(true)
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      const deadlineDate =
+        useEndDate && endDate ? format(endDate, 'yyyy-MM-dd') : null
+      const deadlineTime = useEndDate && useEndTime ? timeToHHmm(endTime) : null
+      const res = await exploreGoal(accessToken, {
+        goal: goal.trim(),
+        deadlineDate,
+        deadlineTime,
+      })
+      if (res.success && res.data) {
+        if (!res.data.valid) {
+          setToastMessage(
+            res.data.message ?? '달성할 수 있는 목표를 입력해주세요.',
+          )
+          return
+        }
+        setGoalValue(goal.trim())
+        setDeadlineDate(useEndDate && endDate ? endDate : NO_DEADLINE_DATE)
+        setDeadlineTime(useEndDate && useEndTime ? endTime : null)
+        setQuestions(res.data.questions)
+        moveNext()
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -118,11 +164,18 @@ export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
       <div className="h-30" />
       <div className="fixed pb-13 pt-10 bottom-0 left-0 right-0 w-full px-5 bg-linear-to-b from-transparent from-0% to-white to-20%">
         <MainButton
-          option={isFilled ? 'primary' : 'disabled'}
+          option={isFilled && !loading ? 'primary' : 'disabled'}
           onClick={handleSubmit}
-          title="다음으로"
+          title={loading ? '분석 중...' : '다음으로'}
         />
       </div>
+
+      {toastMessage && (
+        <GoalToast
+          message={toastMessage}
+          onClose={() => setToastMessage(null)}
+        />
+      )}
     </div>
   )
 }
