@@ -17,7 +17,7 @@ async function requestFcmToken(): Promise<string | null> {
     const permission = await Notification.requestPermission()
     if (permission !== 'granted')
         return null
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/firebase-cloud-messaging-push-scope' })
     return getToken(getMessaging(app), {
         vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
         serviceWorkerRegistration: registration,
