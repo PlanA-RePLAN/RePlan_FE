@@ -57,8 +57,8 @@ export async function setupPush() {
 
 export function listenForegroundPush() {
     onMessage(getMessaging(app), (payload) => {
-        const title = payload.notification?.title ?? payload.data?.title ?? 'RePlan'
-        const body = payload.notification?.body ?? payload.data?.body ?? ''
+        const title = payload.data?.title ?? 'RePlan'
+        const body  = payload.data?.body  ?? ''
         if (Notification.permission === 'granted') {
             new Notification(title, { body, icon: '/assets/pwa-192x192.png' })
         }
