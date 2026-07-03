@@ -31,6 +31,17 @@ export async function naverOAuthLogin(
   return res.data
 }
 
+export async function appleOAuthLogin(
+  identityToken: string,
+  authorizationCode: string,
+): Promise<ApiResponse<OAuthLoginData>> {
+  const res = await client.post<ApiResponse<OAuthLoginData>>(
+    '/api/auth/oauth/apple',
+    { identityToken, authorizationCode },
+  )
+  return res.data
+}
+
 export async function checkNickname(
   nickname: string,
 ): Promise<ApiResponse<NicknameCheckData>>{
