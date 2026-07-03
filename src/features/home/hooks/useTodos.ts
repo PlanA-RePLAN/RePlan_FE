@@ -139,7 +139,8 @@ export function useTodos({
                 : h
           date.setHours(hours24, m, 0, 0)
         }
-        dueDate = date.toISOString()
+        const pad = (n: number) => String(n).padStart(2, '0')
+        dueDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`
       }
 
       if (routineType) {
@@ -325,27 +326,26 @@ export function useTodos({
   }
 
   const filteredTodos =
-    selectedDate && selectedTab !== 'week' && selectedTab !== 'month'
-      ? todos.filter(
-          (t) => t.dueDate?.startsWith(toDateStr(selectedDate)) ?? false,
-        )
-      : selectedTab === 'all'
-        ? todos.filter((t) => {
-            if (!t.dueDate) return true
-            const date = new Date(t.dueDate)
-            return (
-              date.getFullYear() === selectedYear &&
-              date.getMonth() + 1 === selectedMonth
-            )
-          })
-        : todos
+    selectedTab === 'all'
+      ? todos.filter((t) => {
+          if (!t.dueDate) return true
+          const date = new Date(t.dueDate)
+          return (
+            date.getFullYear() === selectedYear &&
+            date.getMonth() + 1 === selectedMonth
+          )
+        })
+      : todos
 
   const sortedTodos =
     sort === 'latest'
       ? [...filteredTodos].sort((a, b) => b.todoId - a.todoId)
       : filteredTodos
 
-  const pinnedTodos = pinnedTodoList
+  const pinnedTodos =
+    selectedTab === 'day' || selectedTab === 'week' || selectedTab === 'month'
+      ? sortedTodos.filter((t) => t.isPinned && !t.isCompleted)
+      : pinnedTodoList
   const regularActiveTodos = sortedTodos.filter(
     (t) => !t.isPinned && !t.isCompleted,
   )

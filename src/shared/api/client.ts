@@ -21,10 +21,10 @@ client.interceptors.response.use(
         window.location.href = '/'
         return Promise.reject(error)
       }
-
+  
       try {
         const res = await axios.post(
-          `/api/auth/reissue`,
+          `${BASE_URL}/api/auth/reissue`,
           {},
           { headers: { Authorization: `Bearer ${refreshToken}` } },
         )
