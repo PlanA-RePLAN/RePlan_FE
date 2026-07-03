@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getMessaging, getToken } from 'firebase/messaging'
+import { getMessaging, getToken, onMessage } from 'firebase/messaging'
 import { registerToken } from '@/shared/api/notification'
 import { FirebaseMessaging } from '@capacitor-firebase/messaging'
 import { Capacitor } from '@capacitor/core'
@@ -17,7 +17,7 @@ async function requestFcmToken(): Promise<string | null> {
     const permission = await Notification.requestPermission()
     if (permission !== 'granted')
         return null
-    const registration = await navigator.serviceWorker.ready
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
     return getToken(getMessaging(app), {
         vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
         serviceWorkerRegistration: registration,
@@ -53,4 +53,14 @@ async function setupNativePush() {
 export async function setupPush() {
     if (Capacitor.isNativePlatform()) return setupNativePush()
     return setupWebPush()
+}
+
+export function listenForegroundPush() {
+    onMessage(getMessaging(app), (payload) => {
+        const title = payload.notification?.title ?? payload.data?.title ?? 'RePlan'
+        const body = payload.notification?.body ?? payload.data?.body ?? ''
+        if (Notification.permission === 'granted') {
+            new Notification(title, { body, icon: '/assets/pwa-192x192.png' })
+        }
+    })
 }
