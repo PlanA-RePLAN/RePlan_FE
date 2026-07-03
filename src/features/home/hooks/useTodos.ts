@@ -139,7 +139,8 @@ export function useTodos({
                 : h
           date.setHours(hours24, m, 0, 0)
         }
-        dueDate = date.toISOString()
+        const pad = (n: number) => String(n).padStart(2, '0')
+        dueDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`
       }
 
       if (routineType) {
