@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 const logoSvg = '/assets/logo.svg'
 import Button from '@/features/profileSetup/components/Button'
 import GoogleIcon from '@/icons/GoogleIcon'
@@ -11,7 +13,14 @@ const LOGIN_OPTION = [
 ] as const
 
 export default function LoginPage() {
+  const navigate = useNavigate()
   const { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver, loginWithApple } = useOAuthLogin()
+
+  useEffect(() => {
+    if (localStorage.getItem('accessToken')) {
+      navigate('/home', { replace: true })
+    }
+  }, [])
 
   const handleLogin = (option: string) => {
     if (option === 'kakao') loginWithKakao()
