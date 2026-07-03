@@ -24,7 +24,7 @@ client.interceptors.response.use(
   
       try {
         const res = await axios.post(
-          `${BASE_URL}/api/auth/reissue`,
+          `${BASE_URL || ''}/api/auth/reissue`,
           {},
           { headers: { Authorization: `Bearer ${refreshToken}` } },
         )
