@@ -260,6 +260,10 @@ export function useOAuthLogin() {
         if (!identityToken || !authorizationCode) throw new Error('토큰이 없습니다')
         handleAuthResponse(await appleOAuthLogin(identityToken, authorizationCode))
       } else {
+        if (!window.AppleID) {
+          setError('애플 로그인을 사용할 수 없습니다. 다시 시도해주세요.')
+          return
+        }
         const res = await window.AppleID.auth.signIn()
         handleAuthResponse(await appleOAuthLogin(res.authorization.id_token, res.authorization.code))
       }
