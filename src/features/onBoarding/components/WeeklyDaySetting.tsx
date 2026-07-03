@@ -6,8 +6,8 @@ import { cn } from '@/shared/utils/cn'
 const DAYS = ['월', '화', '수', '목', '금', '토', '일']
 
 interface WeeklyDaySettingProps {
-  selectedDay: string
-  onDayChange: (day: string) => void
+  selectedDays: string[]
+  onDaysChange: (days: string[]) => void
   timeEnabled: boolean
   onTimeEnabledChange: (enabled: boolean) => void
   time: string
@@ -15,23 +15,32 @@ interface WeeklyDaySettingProps {
 }
 
 export default function WeeklyDaySetting({
-  selectedDay,
-  onDayChange,
+  selectedDays,
+  onDaysChange,
   timeEnabled,
   onTimeEnabledChange,
   time,
   onTimeChange,
 }: WeeklyDaySettingProps) {
+  const toggle = (day: string) => {
+    if (selectedDays.includes(day)) {
+      if (selectedDays.length === 1) return
+      onDaysChange(selectedDays.filter((d) => d !== day))
+    } else {
+      onDaysChange([...selectedDays, day])
+    }
+  }
+
   return (
     <>
       <div className="flex justify-between my-7 px-1">
         {DAYS.map((day) => (
           <button
             key={day}
-            onClick={() => onDayChange(day)}
+            onClick={() => toggle(day)}
             className={cn(
               'w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium',
-              selectedDay === day
+              selectedDays.includes(day)
                 ? 'bg-bluegray-black text-white'
                 : day === '토'
                   ? 'text-blue-500'
