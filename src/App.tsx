@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { listenForegroundPush } from '@/shared/firebase'
 
 // components
 import Index from '@/features/profileSetup'
@@ -16,6 +18,12 @@ import Notification from '@/features/notification/Notification'
 import KakaoCallback from '@/features/oauth/KakaoCallback'
 
 function App() {
+  useEffect(() => {
+    if (localStorage.getItem('accessToken')) {
+      listenForegroundPush()
+    }
+  }, [])
+
   return (
     <BrowserRouter>
       <Routes>

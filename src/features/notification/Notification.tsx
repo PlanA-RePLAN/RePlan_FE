@@ -9,6 +9,7 @@ import BackHeaderLayout from "@/shared/components/BackHeaderLayout"
 import NotificaationList from "@/features/notification/components/NotificaationList"
 import NotificationIcon from "@/icons/NotificationIcon"
 import ReplanNotificationIcon from "@/icons/ReplanNotificationIcon"
+import StatsNotificationIcon from "@/icons/StatsNotificationIcon"
 import StatisticsIcon from "@/icons/StatisticsIcon"
 
 
@@ -24,7 +25,7 @@ const TAB_CATEGORY_MAP: Record<Tab, NotificationCategory> = {
 const NOTIFICATION_ICON_MAP: Record<NotificationTypeName, ReactElement> = {
   TODO_DUE_SOON: <NotificationIcon />,
   TODO_FAILED_REPLAN: <ReplanNotificationIcon />,
-  REPORT_READY: <StatisticsIcon />,
+  REPORT_READY: <StatsNotificationIcon />,
 }
 
 function formatRelativeTime(createdAt: string): string {
