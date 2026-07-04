@@ -37,7 +37,7 @@ export default function BottomSheet({
         <>
           {/* 딤 배경 */}
           <motion.div
-            className="fixed inset-0 z-100 bg-black"
+            className="fixed inset-0 z-1001 bg-black"
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.2 }}
             exit={{ opacity: 0 }}
@@ -48,7 +48,7 @@ export default function BottomSheet({
           {/* 바텀시트 */}
           <motion.div
             ref={sheetRef}
-            className="fixed bottom-0 left-0 right-0 z-101 bg-white rounded-t-3xl"
+            className="fixed bottom-0 left-0 right-0 z-1002 bg-white rounded-t-3xl"
             style={{ y }}
             drag="y"
             dragControls={dragControls}

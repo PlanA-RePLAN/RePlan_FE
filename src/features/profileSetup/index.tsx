@@ -1,7 +1,9 @@
-import logoSvg from '/assets/logo.svg'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+const logoSvg = '/assets/logo.svg'
 import Button from '@/features/profileSetup/components/Button'
 import GoogleIcon from '@/icons/GoogleIcon'
-import { useOAuthLogin } from '@/shared/hooks/useOAuthLogin'
+import { useOAuthLogin } from '@/features/profileSetup/hooks/useOAuthLogin'
 
 const LOGIN_OPTION = [
   { title: '카카오', img: 'kakao', option: 'kakao', icon: undefined },
@@ -11,12 +13,20 @@ const LOGIN_OPTION = [
 ] as const
 
 export default function LoginPage() {
-  const { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver } = useOAuthLogin()
+  const navigate = useNavigate()
+  const { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver, loginWithApple } = useOAuthLogin()
+
+  useEffect(() => {
+    if (localStorage.getItem('accessToken')) {
+      navigate('/home', { replace: true })
+    }
+  }, [])
 
   const handleLogin = (option: string) => {
     if (option === 'kakao') loginWithKakao()
     if (option === 'google') loginWithGoogle()
     if (option === 'naver') loginWithNaver()
+    if (option === 'apple') loginWithApple()
   }
 
   return (

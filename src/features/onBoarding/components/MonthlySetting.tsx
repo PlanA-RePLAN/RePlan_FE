@@ -8,8 +8,8 @@ import ChevronLeftIcon from '@/icons/ChevronLeftIcon'
 import TimePicker from './TimePicker'
 
 interface MonthlySettingProps {
-  selectedDay: number
-  onDayChange: (day: number) => void
+  selectedDays: number[]
+  onDaysChange: (days: number[]) => void
   timeEnabled: boolean
   onTimeEnabledChange: (enabled: boolean) => void
   time: string
@@ -17,8 +17,8 @@ interface MonthlySettingProps {
 }
 
 export default function MonthlySetting({
-  selectedDay,
-  onDayChange,
+  selectedDays,
+  onDaysChange,
   timeEnabled,
   onTimeEnabledChange,
   time,
@@ -35,14 +35,12 @@ export default function MonthlySetting({
     0,
   ).getDate()
 
-  const selectedDate =
-    selectedDay && selectedDay <= daysInDisplayMonth
-      ? new Date(
-          displayMonth.getFullYear(),
-          displayMonth.getMonth(),
-          selectedDay,
-        )
-      : undefined
+  const selectedDates = selectedDays
+    .filter((day) => day <= daysInDisplayMonth)
+    .map(
+      (day) =>
+        new Date(displayMonth.getFullYear(), displayMonth.getMonth(), day),
+    )
 
   const handlePrev = () =>
     setDisplayMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1))
@@ -72,9 +70,12 @@ export default function MonthlySetting({
 
       {/* Calendar */}
       <DayPicker
-        mode="single"
-        selected={selectedDate}
-        onSelect={(date) => date && onDayChange(date.getDate())}
+        mode="multiple"
+        selected={selectedDates}
+        onSelect={(dates) => {
+          if (!dates || dates.length === 0) return
+          onDaysChange(dates.map((d) => d.getDate()).sort((a, b) => a - b))
+        }}
         month={displayMonth}
         onMonthChange={setDisplayMonth}
         locale={ko}

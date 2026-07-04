@@ -1,5 +1,5 @@
-import { TODO_TAGS, type TodoTagDef } from '@/shared/types/todo'
 import type { Tag } from '@/shared/types/tag'
+import { getTags } from '@/shared/api/tags'
 
 export type RepeatType = '없음' | '데일리' | '위클리' | '먼슬리'
 export type RoutineType = 'DAILY' | 'WEEKLY' | 'MONTHLY'
@@ -41,46 +41,17 @@ export interface ProposedTodo {
   id: number
   title: string
   time: string
-  dayTag: 'D' | 'M'
+  dayTag?: 'D' | 'W' | 'M'
   selectedTagId: string
   repeat: RepeatType
   repeatTimeEnabled?: boolean
   repeatTime?: string
-  weeklyDay?: string
-  monthlyDay?: number
+  weeklyDay?: string[]
+  monthlyDay?: number[]
   routineDate?: number | null
   deadlineDate: Date | null
   deadlineTime: string | null
   subTodos: SubTodo[]
-}
-
-// todo.ts에 정의된 기본 태그를 CustomTag 형태로 변환
-export const PRESET_TAGS: CustomTag[] = TODO_TAGS.map(
-  (t: TodoTagDef): CustomTag => ({
-    id: t.id,
-    label: t.label,
-    bgColor: t.bgColor,
-    textColor: t.textColor,
-  }),
-)
-
-// 서버에서 조회/생성된 태그를 CustomTag 형태로 변환
-// color가 없으면 '미선택' 프리셋과 동일한 무채색 스타일을 사용
-export function tagToCustomTag(tag: Tag): CustomTag {
-  if (!tag.color) {
-    return {
-      id: String(tag.tagId),
-      label: tag.title,
-      bgColor: 'transparent',
-      textColor: '#A9AFB9',
-    }
-  }
-  return {
-    id: String(tag.tagId),
-    label: tag.title,
-    bgColor: `${tag.color}1A`,
-    textColor: tag.color,
-  }
 }
 
 export const TAG_COLORS: CustomTag[] = [
@@ -91,3 +62,52 @@ export const TAG_COLORS: CustomTag[] = [
   { id: 'blue', label: '', bgColor: '#e5edff', textColor: '#7ea4f5' },
   { id: 'pink', label: '', bgColor: '#fff1f1', textColor: '#ffa9a9' },
 ]
+
+// 서버에서 조회/생성된 태그를 CustomTag 형태로 변환
+// color가 없으면 무채색 스타일, color가 있으면 TAG_COLORS에서 bgColor/textColor 쌍을 조회
+export function tagToCustomTag(tag: Tag): CustomTag {
+  if (!tag.color) {
+    return {
+      id: String(tag.tagId),
+      label: tag.title,
+      bgColor: 'transparent',
+      textColor: '#A9AFB9',
+    }
+  }
+  const normalized = tag.color.toLowerCase()
+  const matched =
+    TAG_COLORS.find((c) => c.bgColor === normalized) ??
+    TAG_COLORS.find((c) => c.textColor === normalized)
+  return {
+    id: String(tag.tagId),
+    label: tag.title,
+    bgColor: matched?.bgColor ?? `${tag.color}1A`,
+    textColor: matched?.textColor ?? tag.color,
+  }
+}
+
+const UNSELECTED_TAG: CustomTag = {
+  id: '미선택',
+  label: '미선택',
+  bgColor: 'transparent',
+  textColor: '#a9afb9',
+}
+
+// 백엔드에 저장된 커스텀 태그인지 (id가 숫자 문자열인 tagId)
+export function isCustomTag(tag: CustomTag): boolean {
+  return /^\d+$/.test(tag.id)
+}
+
+// CustomTag.id를 API에 보낼 tagId로 변환. 미선택/프리셋처럼 실제 서버 태그가 아니면 null
+export function resolveBackendTagId(tagId: string): number | null {
+  return /^\d+$/.test(tagId) ? Number(tagId) : null
+}
+
+// 서버에 저장된 태그를 조회 (앞에 미선택 옵션 고정)
+export async function fetchAllTags(accessToken: string): Promise<CustomTag[]> {
+  const res = await getTags(accessToken)
+  if (res.success && res.data) {
+    return [UNSELECTED_TAG, ...res.data.map(tagToCustomTag)]
+  }
+  return [UNSELECTED_TAG]
+}

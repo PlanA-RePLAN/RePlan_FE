@@ -3,6 +3,7 @@ const deleteSvg = '/assets/delete.svg'
 const replanIcon = '/assets/replan_icon.svg'
 import CheckIcon from '@/icons/CheckIcon'
 import TodoTag from './TodoTag'
+import { getTodoTag } from '@/shared/types/todo'
 import { cn } from '@/shared/utils/cn'
 import GoalColoredIcon from '@/icons/GoalColoredIcon'
 import ClockIcon from '@/icons/ClockIcon'
@@ -24,6 +25,7 @@ interface TodoCardProps {
   onClick?: () => void
   pinned?: boolean
   onPin?: (pinned: boolean) => void
+  onReplan?: () => void
 }
 
 function TodoCard({
@@ -34,6 +36,7 @@ function TodoCard({
   onClick,
   pinned = false,
   onPin,
+  onReplan,
 }: TodoCardProps) {
   const controls = useAnimation()
   const motionX = useMotionValue(0)
@@ -109,7 +112,10 @@ function TodoCard({
         </div>
 
         <div className="flex flex-col items-center gap-1.5 px-2">
-          <button className="w-12 h-12 rounded-full bg-blue-normal flex items-center justify-center">
+          <button
+            onClick={onReplan}
+            className="w-12 h-12 rounded-full bg-blue-normal flex items-center justify-center"
+          >
             <img src={replanIcon} alt="" />
           </button>
           <p className="text-[10px] text-bluegray-dark">리플랜하기</p>
@@ -120,7 +126,10 @@ function TodoCard({
         className="relative z-10"
         style={{ x: motionX }}
         drag="x"
-        dragConstraints={{ left: -slideWidth, right: onPin ? PIN_SLIDE_WIDTH : 0 }}
+        dragConstraints={{
+          left: -slideWidth,
+          right: onPin ? PIN_SLIDE_WIDTH : 0,
+        }}
         dragElastic={0}
         dragMomentum={false}
         animate={controls}
@@ -221,6 +230,7 @@ function Time({ children }: TimeProps) {
 // ── Category ──────────────────────────────────────────
 interface CategoryProps {
   category: Category
+  color?: string | null
   usePin?: boolean
   pinned?: boolean
   setPinned?: (pinned: boolean) => void
@@ -228,6 +238,7 @@ interface CategoryProps {
 
 function Category({
   category,
+  color,
   usePin = false,
   pinned = false,
   setPinned,
@@ -245,7 +256,20 @@ function Category({
           <PinIcon checked={pinned} />
         </button>
       )}
-      <TodoTag category={category} />
+      {category &&
+        (getTodoTag(category) ? (
+          <TodoTag category={category} />
+        ) : (
+          <div
+            style={{
+              backgroundColor: color ? `${color}1A` : 'transparent',
+              color: color ?? '#A9AFB9',
+            }}
+            className="w-17 py-1 rounded-full text-xs font-semibold flex items-center justify-center"
+          >
+            {category}
+          </div>
+        ))}
     </div>
   )
 }

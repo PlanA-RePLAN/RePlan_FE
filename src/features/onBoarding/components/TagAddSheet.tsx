@@ -2,6 +2,7 @@ import BottomSheet from '@/shared/components/BottomSheet'
 import BottomSheetHeader from '@/shared/components/BottomSheetHeader'
 import Input from '@/shared/components/Input'
 import { useState } from 'react'
+import axios from 'axios'
 import { type CustomTag, TAG_COLORS } from '../type/types'
 import { cn } from '@/shared/utils/cn'
 import { createTag } from '@/shared/api/tags'
@@ -46,6 +47,12 @@ export default function TagAddSheet({
         })
         setTagName('')
         setSelectedColorId(null)
+      }
+    } catch (e) {
+      if (axios.isAxiosError(e)) {
+        console.error('[createTag] error response', e.response?.data)
+      } else {
+        console.error('[createTag] error', e)
       }
     } finally {
       setLoading(false)

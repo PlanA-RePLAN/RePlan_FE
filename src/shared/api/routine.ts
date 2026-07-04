@@ -1,16 +1,6 @@
 import { ApiResponse } from '../types/auth'
-import { Routine } from '../types/routine'
+import { Routine, CreateRoutineRequest } from '../types/routine'
 import client from './client'
-
-export interface CreateRoutineRequest {
-  title: string
-  routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY'
-  dueDate?: string | null
-  routineTime?: string | null
-  routineDate?: number | null
-  tagId?: number | null
-  goalId?: number | null
-}
 
 export async function createRoutine(
   accessToken: string,
@@ -20,6 +10,32 @@ export async function createRoutine(
     '/api/routines',
     body,
     { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  return res.data
+}
+
+
+export async function getRoutines(
+  accessToken: string,
+  date: string
+): Promise<ApiResponse<Routine[]>>{
+  const res = await client.get<ApiResponse<Routine[]>>(
+    '/api/routines',
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      params: { date }
+    }
+  )
+  return res.data
+}
+
+export async function deleteRoutine(
+  accessToken: string,
+  id: number,
+): Promise<ApiResponse<null>> {
+  const res = await client.delete<ApiResponse<null>>(
+    `/api/routines/${id}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
   )
   return res.data
 }

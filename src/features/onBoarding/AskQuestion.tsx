@@ -4,23 +4,17 @@ import MainButton from '@/shared/components/MainButton'
 import ListItem from '@/shared/components/ListItem'
 import GoalIcon from '@/icons/GoalIcon'
 import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
-import ClockIcon from '@/icons/ClockIcon'
+import MessageQuestionIcon from '@/icons/MessageQuestionIcon'
 import SurveyCard, {
   type SurveyContent,
 } from '@/features/onBoarding/components/SurveyCard'
-import TrendingUpIcon from '@/icons/TrendingUpIcon'
-import MenuIcon from '@/icons/MenuIcon'
 import DeadlineInput from '@/features/onBoarding/components/DeadlineInput'
+import AiLoadingOverlay from '@/features/onBoarding/components/AiLoadingOverlay'
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { useOnboardingStore } from '@/store/onboardingStore'
 import { getAiTodoRecommendations } from '@/shared/api/goal'
-
-function surveyContentToString(content: SurveyContent): string | undefined {
-  if (typeof content === 'string') return content.trim() || undefined
-  if (content.length === 0) return undefined
-  return content.map((item) => `${item.title}: ${item.description}`).join('\n')
-}
+import type { RefineSolution } from '@/shared/types/goal'
 
 function timeToHHmm(time: string | null): string | null {
   if (!time) return null
@@ -52,12 +46,27 @@ export default function AskQuestion({ moveNext }: { moveNext: () => void }) {
   const [useDeadLineTime, setUseDeadLineTime] = useState(
     store.deadlineTime !== null,
   )
-  const [currLevel, setCurrLevel] = useState<SurveyContent>(store.currentLevel)
-  const [canUseTime, setCanUseTime] = useState<SurveyContent>(
-    store.availableTime,
+  const [solutions, setSolutions] = useState<RefineSolution[]>(
+    store.refineData?.solutions ?? [],
   )
-  const [specialNote, setSpecialNote] = useState<SurveyContent>(store.notes)
   const [loading, setLoading] = useState(false)
+
+  const handleSolutionEdit = (index: number, newContent: SurveyContent) => {
+    if (!Array.isArray(newContent)) return
+    setSolutions((prev) =>
+      prev.map((s, i) =>
+        i === index
+          ? {
+              ...s,
+              items: newContent.map((c) => ({
+                title: c.title,
+                content: c.description,
+              })),
+            }
+          : s,
+      ),
+    )
+  }
 
   const handleNext = async () => {
     setLoading(true)
@@ -71,9 +80,11 @@ export default function AskQuestion({ moveNext }: { moveNext: () => void }) {
             : null,
         deadlineTime:
           useDeadLineTime && deadlineTime ? timeToHHmm(deadlineTime) : null,
-        currentLevel: surveyContentToString(currLevel),
-        availableTime: surveyContentToString(canUseTime),
-        notes: surveyContentToString(specialNote),
+        solutions: solutions.map((s) => ({
+          question: s.question,
+          items: s.items,
+        })),
+        refreshCount: 0,
       })
       if (res.success && res.data) {
         store.setAiRecommendation(res.data)
@@ -113,37 +124,31 @@ export default function AskQuestion({ moveNext }: { moveNext: () => void }) {
         onTimeChange={(t) => setDeadlineTime(t)}
       />
 
-      <SurveyCard
-        icon={<TrendingUpIcon />}
-        label="현재 수준"
-        content={currLevel}
-        reason={store.refineData?.currentLevel.reason ?? ''}
-        onEdit={(newContent) => setCurrLevel(newContent)}
-      />
-      <SurveyCard
-        icon={<ClockIcon />}
-        label="투자 가능 시간"
-        content={canUseTime}
-        reason={store.refineData?.availableTime.reason ?? ''}
-        onEdit={(newContent) => setCanUseTime(newContent)}
-      />
-      <SurveyCard
-        icon={<MenuIcon />}
-        label="특이사항"
-        content={specialNote}
-        reason={store.refineData?.notes.reason ?? ''}
-        onEdit={(newContent) => setSpecialNote(newContent)}
-      />
+      {solutions.map((solution, index) => (
+        <SurveyCard
+          key={solution.question}
+          icon={<MessageQuestionIcon />}
+          label={solution.question}
+          content={solution.items.map((item) => ({
+            title: item.title,
+            description: item.content,
+          }))}
+          reason={solution.reason}
+          onEdit={(newContent) => handleSolutionEdit(index, newContent)}
+        />
+      ))}
 
       <div className="h-45" />
       <div className="fixed pb-13 pt-10 bottom-0 left-0 right-0 w-full px-5 bg-linear-to-b from-transparent from-0% to-white to-20%">
         <MainButton
           option={loading ? 'disabled' : 'primary'}
           onClick={handleNext}
-          title={loading ? '분석 중...' : '다음으로'}
+          title="다음으로"
           className="mt-10"
         />
       </div>
+
+      {loading && <AiLoadingOverlay message="추천 투두를 준비하고 있어요!" />}
     </div>
   )
 }

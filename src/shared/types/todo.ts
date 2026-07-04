@@ -8,12 +8,13 @@ export interface TodoDetail {
   todoId: number
   title: string
   dueDate: string | null
+  dueTime: string | null
   isCompleted: boolean
   tagId: number | null
   tagTitle: string | null
   tagColor: string | null
   routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
-  routineDate: number | null
+  routineDays: number[] | null
   subTodos: SubTodoDetail[]
 }
 
@@ -29,6 +30,31 @@ export interface Todo {
   tagColor: string | null
   routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
   isOverdue: boolean
+}
+
+export interface CreateTodoRequest {
+  title: string
+  dueDate?: string | null
+  tagId?: number | null
+  goalId?: number | null
+}
+
+export interface CreateTodoResponse {
+  todoId: number
+  title: string
+  dueDate: string | null
+  tagId: number | null
+  parentId: number | null
+  completed: boolean
+}
+
+export interface UpdateTodoRequest {
+  title: string
+  dueDate: string | null
+  tagId: number | null
+  routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
+  routineDays: number[] | null
+  routineTime?: string | null
 }
 
 export type TodoTagId = '미선택' | 'Study' | 'Project' | 'Health' | 'Other'
