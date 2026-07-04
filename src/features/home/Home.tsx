@@ -250,6 +250,7 @@ export default function Home() {
             onConfirm={(date) => calendar.setSelectedDate(date)}
             onDeselect={() => calendar.setSelectedDate(null)}
             showHeader={false}
+            defaultMonth={new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
             weeks={
               selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined
             }

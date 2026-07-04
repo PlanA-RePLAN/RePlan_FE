@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DayPicker } from 'react-day-picker'
 import { ko } from 'date-fns/locale'
 import { format, startOfWeek, addDays, isSameDay, isToday } from 'date-fns'
@@ -8,6 +8,7 @@ import 'react-day-picker/dist/style.css'
 
 interface DatePickerProps {
   value?: Date
+  defaultMonth?: Date
   onConfirm: (date: Date) => void
   onDeselect?: () => void
   onClose: () => void
@@ -22,6 +23,7 @@ const WEEKDAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
 
 export default function DatePicker({
   value,
+  defaultMonth,
   onConfirm,
   onDeselect,
   onClose,
@@ -32,7 +34,11 @@ export default function DatePicker({
   dueDates = [],
 }: DatePickerProps) {
   const [selected, setSelected] = useState<Date | undefined>(value)
-  const [month, setMonth] = useState<Date>(value ?? new Date())
+  const [month, setMonth] = useState<Date>(defaultMonth ?? value ?? new Date())
+
+  useEffect(() => {
+    if (defaultMonth) setMonth(defaultMonth)
+  }, [defaultMonth])
 
   if (weeks) {
     const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
