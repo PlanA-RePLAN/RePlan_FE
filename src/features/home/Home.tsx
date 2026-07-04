@@ -1,5 +1,6 @@
 // utils
 import { useState, useEffect, useRef } from 'react'
+import { addDays, startOfWeek } from 'date-fns'
 import { cn } from '@/shared/utils/cn'
 import { AnimatePresence } from 'framer-motion'
 import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
@@ -179,7 +180,6 @@ export default function Home() {
 
   const handleSelect = (value: string) => {
     setSelectedTab(value as 'all' | 'day' | 'week' | 'month')
-    calendar.setSelectedDate(null)
   }
 
   const handleClickTodo = async (todoId: number) => {
@@ -217,6 +217,10 @@ export default function Home() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   )
 
+  const [weekViewStart, setWeekViewStart] = useState(() =>
+    startOfWeek(new Date(), { weekStartsOn: 1 })
+  )
+
   const calendarTouchStartX = useRef<number | null>(null)
 
   const handleCalendarTouchStart = (e: React.TouchEvent) => {
@@ -228,9 +232,16 @@ export default function Home() {
     const delta = e.changedTouches[0].clientX - calendarTouchStartX.current
     calendarTouchStartX.current = null
     if (Math.abs(delta) < 50) return
-    const next = new Date(calendar.selectedYear, calendar.selectedMonth - 1 + (delta < 0 ? 1 : -1))
-    calendar.setSelectedYear(next.getFullYear())
-    calendar.setSelectedMonth(next.getMonth() + 1)
+    if (selectedTab === 'week') {
+      const newStart = addDays(weekViewStart, delta < 0 ? 14 : -14)
+      setWeekViewStart(newStart)
+      calendar.setSelectedYear(newStart.getFullYear())
+      calendar.setSelectedMonth(newStart.getMonth() + 1)
+    } else {
+      const next = new Date(calendar.selectedYear, calendar.selectedMonth - 1 + (delta < 0 ? 1 : -1))
+      calendar.setSelectedYear(next.getFullYear())
+      calendar.setSelectedMonth(next.getMonth() + 1)
+    }
   }
 
   return (
@@ -270,12 +281,11 @@ export default function Home() {
               onConfirm={(date) => calendar.setSelectedDate(date)}
               onDeselect={() => calendar.setSelectedDate(null)}
               showHeader={false}
-              defaultMonth={new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
+              value={selectedTab === 'all' ? undefined : calendar.selectedDate ?? undefined}
+              defaultMonth={selectedTab === 'week' ? weekViewStart : new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
               weeks={
                 selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined
               }
-              selectedColor="#EEF5FD"
-              selectedTextColor="none"
               dueDates={todoHook.calendarDueDates}
             />
           </div>
@@ -643,6 +653,9 @@ export default function Home() {
           onConfirm={(year, month) => {
             calendar.setSelectedYear(year)
             calendar.setSelectedMonth(month)
+            if (selectedTab === 'week') {
+              setWeekViewStart(startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }))
+            }
             sheets.setIsMonthBottomSheetOpen(false)
           }}
         />
