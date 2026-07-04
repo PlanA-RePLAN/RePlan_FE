@@ -35,7 +35,6 @@ export default function DatePicker({
 }: DatePickerProps) {
   const [selected, setSelected] = useState<Date | undefined>(value)
   const [month, setMonth] = useState<Date>(defaultMonth ?? value ?? new Date())
-
   useEffect(() => {
     if (defaultMonth) setMonth(defaultMonth)
   }, [defaultMonth])

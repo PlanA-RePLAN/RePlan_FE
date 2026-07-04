@@ -1,5 +1,5 @@
 // utils
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { AnimatePresence } from 'framer-motion'
 import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
@@ -217,6 +217,22 @@ export default function Home() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   )
 
+  const calendarTouchStartX = useRef<number | null>(null)
+
+  const handleCalendarTouchStart = (e: React.TouchEvent) => {
+    calendarTouchStartX.current = e.touches[0].clientX
+  }
+
+  const handleCalendarTouchEnd = (e: React.TouchEvent) => {
+    if (calendarTouchStartX.current === null) return
+    const delta = e.changedTouches[0].clientX - calendarTouchStartX.current
+    calendarTouchStartX.current = null
+    if (Math.abs(delta) < 50) return
+    const next = new Date(calendar.selectedYear, calendar.selectedMonth - 1 + (delta < 0 ? 1 : -1))
+    calendar.setSelectedYear(next.getFullYear())
+    calendar.setSelectedMonth(next.getMonth() + 1)
+  }
+
   return (
     <div className="relative h-dvh flex flex-col px-5">
       <div className="flex gap-1">
@@ -244,20 +260,25 @@ export default function Home() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className={selectedTab === 'all' ? 'pointer-events-none' : ''}>
-          <DatePicker
-            onClose={() => {}}
-            onConfirm={(date) => calendar.setSelectedDate(date)}
-            onDeselect={() => calendar.setSelectedDate(null)}
-            showHeader={false}
-            defaultMonth={new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
-            weeks={
-              selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined
-            }
-            selectedColor="#EEF5FD"
-            selectedTextColor="none"
-            dueDates={todoHook.calendarDueDates}
-          />
+        <div
+          onTouchStart={handleCalendarTouchStart}
+          onTouchEnd={handleCalendarTouchEnd}
+        >
+          <div className={selectedTab === 'all' ? 'pointer-events-none' : ''}>
+            <DatePicker
+              onClose={() => {}}
+              onConfirm={(date) => calendar.setSelectedDate(date)}
+              onDeselect={() => calendar.setSelectedDate(null)}
+              showHeader={false}
+              defaultMonth={new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
+              weeks={
+                selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined
+              }
+              selectedColor="#EEF5FD"
+              selectedTextColor="none"
+              dueDates={todoHook.calendarDueDates}
+            />
+          </div>
         </div>
 
         {todoHook.filteredTodos.length === 0 ? (
