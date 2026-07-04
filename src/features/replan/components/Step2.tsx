@@ -10,14 +10,20 @@ interface Step2Props {
   selectedOptionData: MainOptionItem
   selectedSubOption: string | null
   onSubOptionChange: (key: string) => void
+  directInputText: string
+  onDirectInputTextChange: (text: string) => void
   onNext: () => void
+  isSubmitting: boolean
 }
 
 export default function Step2({
   selectedOptionData,
   selectedSubOption,
   onSubOptionChange,
+  directInputText,
+  onDirectInputTextChange,
   onNext,
+  isSubmitting,
 }: Step2Props) {
   return (
     <div className="px-5 pt-8">
@@ -44,6 +50,8 @@ export default function Step2({
             key={subOption.key}
             isSelected={selectedSubOption === 'directInput'}
             onChange={() => onSubOptionChange('directInput')}
+            text={directInputText}
+            onTextChange={onDirectInputTextChange}
           />
         ) : (
           <ReplanOption
@@ -58,9 +66,9 @@ export default function Step2({
 
       <div className="fixed pb-10 pt-10 bottom-0 left-0 right-0 w-full px-5 bg-linear-to-b from-transparent from-0% to-white to-20%">
         <MainButton
-          option="primary"
+          option={isSubmitting ? 'disabled' : 'primary'}
           onClick={onNext}
-          title="다음으로"
+          title={isSubmitting ? '불러오는 중...' : '다음으로'}
           className="mt-10"
         />
       </div>

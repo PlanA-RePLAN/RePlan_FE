@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import CircleCheckButtonIcon from '@/icons/CircleCheckButtonIcon'
 import ReplanSurveyIcon from '@/icons/ReplanSurveyIcon'
 import { cn } from '@/shared/utils/cn'
@@ -7,14 +6,16 @@ import Input from '@/shared/components/Input'
 interface DirectInputOptionProps {
   isSelected: boolean
   onChange: () => void
+  text: string
+  onTextChange: (text: string) => void
 }
 
 export default function DirectInputOption({
   isSelected,
   onChange,
+  text,
+  onTextChange,
 }: DirectInputOptionProps) {
-  const [text, setText] = useState('')
-
   return (
     <div
       className={cn(
@@ -43,8 +44,16 @@ export default function DirectInputOption({
         <>
           <div className="border-t border-bluegray-light" />
           <div className="px-4 py-3">
-            <Input showCount={undefined} value={text} setValue={setText}>
+            <Input
+              maxLength={128}
+              showCount="focus"
+              value={text}
+              setValue={onTextChange}
+            >
               <Input.Field placeholder="놓친 이유를 입력하세요" />
+              <Input.Bottom>
+                <Input.Count />
+              </Input.Bottom>
             </Input>
           </div>
         </>

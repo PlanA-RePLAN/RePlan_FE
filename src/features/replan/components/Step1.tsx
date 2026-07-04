@@ -1,20 +1,30 @@
 import MainButton from '@/shared/components/MainButton'
 import Title from '@/shared/components/Title'
 import TodoCard from '@/shared/components/TodoCard'
+import type { TodoDetail } from '@/shared/types/todo'
 import { MAIN_OPTIONS, MainOptionKey } from '../replanData'
+import { getDayTag, formatTime } from '../utils'
 import DirectInputOption from './DirectInputOption'
 import ReplanOption from './ReplanOption'
 
 interface Step1Props {
+  anchorTodo: TodoDetail | null
   selectedOption: MainOptionKey | null
   onOptionChange: (key: MainOptionKey) => void
+  directInputText: string
+  onDirectInputTextChange: (text: string) => void
   onNext: () => void
+  isSubmitting: boolean
 }
 
 export default function Step1({
+  anchorTodo,
   selectedOption,
   onOptionChange,
+  directInputText,
+  onDirectInputTextChange,
   onNext,
+  isSubmitting,
 }: Step1Props) {
   return (
     <div className="px-5 pt-8">
@@ -25,13 +35,24 @@ export default function Step1({
         </Title>
       </div>
 
-      <TodoCard status="focused" className="mb-8">
-        <TodoCard.Content>
-          <TodoCard.Title dayTag="M">영어 단어 100개 암기</TodoCard.Title>
-          <TodoCard.Time>9:00 PM</TodoCard.Time>
-        </TodoCard.Content>
-        <TodoCard.Category category="Study" />
-      </TodoCard>
+      {anchorTodo && (
+        <TodoCard status="focused" className="mb-8">
+          <TodoCard.Content>
+            <TodoCard.Title dayTag={getDayTag(anchorTodo.routineType)}>
+              {anchorTodo.title}
+            </TodoCard.Title>
+            {anchorTodo.dueDate && (
+              <TodoCard.Time>{formatTime(anchorTodo.dueDate)}</TodoCard.Time>
+            )}
+          </TodoCard.Content>
+          {anchorTodo.tagTitle && (
+            <TodoCard.Category
+              category={anchorTodo.tagTitle}
+              color={anchorTodo.tagColor}
+            />
+          )}
+        </TodoCard>
+      )}
 
       {MAIN_OPTIONS.map((option) =>
         option.key === 'directInput' ? (
@@ -39,6 +60,8 @@ export default function Step1({
             key={option.key}
             isSelected={selectedOption === 'directInput'}
             onChange={() => onOptionChange('directInput')}
+            text={directInputText}
+            onTextChange={onDirectInputTextChange}
           />
         ) : (
           <ReplanOption
@@ -53,9 +76,9 @@ export default function Step1({
 
       <div className="fixed pb-10 pt-10 bottom-0 left-0 right-0 w-full px-5 bg-linear-to-b from-transparent from-0% to-white to-20%">
         <MainButton
-          option="primary"
+          option={isSubmitting ? 'disabled' : 'primary'}
           onClick={onNext}
-          title="다음으로"
+          title={isSubmitting ? '불러오는 중...' : '다음으로'}
           className="mt-10"
         />
       </div>
