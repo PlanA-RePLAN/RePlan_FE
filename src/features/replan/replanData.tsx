@@ -1,14 +1,22 @@
+import ArrowUpIcon from '@/icons/ArrowUpIcon'
+import BandageIcon from '@/icons/BandageIcon'
 import BatteryIcon from '@/icons/BatteryIcon'
 import BlockIcon from '@/icons/BlockIcon'
 import BrainIcon from '@/icons/BrainIcon'
-import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
-import ChevronDownIcon from '@/icons/ChevronDownIcon'
+import CalendarXIcon from '@/icons/CalendarXIcon'
+import ClockPlusIcon from '@/icons/ClockPlusIcon'
 import FireIcon from '@/icons/FireIcon'
+import HourglassIcon from '@/icons/HourglassIcon'
 import MenuIcon from '@/icons/MenuIcon'
+import PlayIcon from '@/icons/PlayIcon'
 import PoorConditionIcon from '@/icons/PoorConditionIcon'
+import PowerIcon from '@/icons/PowerIcon'
 import ReplanSurveyIcon from '@/icons/ReplanSurveyIcon'
 import RestLeftFillIcon from '@/icons/RestLeftFillIcon'
-import StreamTimeIcon from '@/icons/StreamTimeIcon'
+import ShuffleIcon from '@/icons/ShuffleIcon'
+import SleepIcon from '@/icons/SleepIcon'
+import AlertTriangleIcon from '@/icons/AlertTriangleIcon'
+import MenuListIcon from '@/icons/MenuListIcon'
 
 export type MainOptionKey =
   | 'psychologicalState'
@@ -74,21 +82,6 @@ const SortPriorityIcon = () => (
   </svg>
 )
 
-const AlertTriangleIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M7.1 1.5C7.5 0.8 8.5 0.8 8.9 1.5L15.2 13C15.6 13.7 15.1 14.5 14.3 14.5H1.7C0.9 14.5 0.4 13.7 0.8 13L7.1 1.5Z"
-      fill="#A9AFB9"
-    />
-  </svg>
-)
-
 const FocusScanIcon = () => (
   <svg
     width="16"
@@ -113,7 +106,8 @@ const LightningBoltIcon = () => (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <path d="M9.5 1L4 9H8.5L6.5 15L13 7H8.5L9.5 1Z" fill="#A9AFB9" />
+    <circle cx="8" cy="8" r="7" fill="#A9AFB9" />
+    <path d="M9 3.5L5.5 9H8L7 12.5L10.5 7H8L9 3.5Z" fill="white" />
   </svg>
 )
 
@@ -133,14 +127,7 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
     subOptions: [
       {
         key: 'hardToStart',
-        icon: (
-          <ChevronDownIcon
-            className="rotate-270"
-            color="#A9AFB9"
-            width={20}
-            height={20}
-          />
-        ),
+        icon: <PlayIcon width={20} height={20} />,
         label: '시작하기 막막하거나 부담스러웠어요',
         code: 'MENTAL_HARD_TO_START',
         subSubOptions: [
@@ -173,13 +160,13 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
       },
       {
         key: 'procrastinated',
-        icon: <ReplanSurveyIcon />,
+        icon: <HourglassIcon />,
         label: '당장 안 해도 돼서 미루다 쌓였어요',
         code: 'MENTAL_PROCRASTINATION',
       },
       {
         key: 'distracted',
-        icon: <ReplanSurveyIcon />,
+        icon: <ShuffleIcon />,
         label: '딴짓을 하다가 미뤘어요',
         code: 'MENTAL_DISTRACTION',
       },
@@ -205,7 +192,7 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
       },
       {
         key: 'sleepDeprived',
-        icon: <BlockIcon width={16} height={16} />,
+        icon: <SleepIcon width={16} height={16} />,
         label: '수면부족/피로 누적 상태에요',
         code: 'CONDITION_SLEEP',
         subSubOptions: [
@@ -238,13 +225,13 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
       },
       {
         key: 'physicalPain',
-        icon: <FireIcon />,
+        icon: <BandageIcon />,
         label: '신체적 통증이 있어요',
         code: 'CONDITION_PAIN',
       },
       {
         key: 'burnout',
-        icon: <ChevronDownIcon className="rotate-270" color="#A9AFB9" />,
+        icon: <PowerIcon />,
         label: '번아웃이 왔어요',
         code: 'CONDITION_BURNOUT',
         subSubOptions: [
@@ -279,20 +266,13 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
     subOptions: [
       {
         key: 'failedPlan',
-        icon: <MenuIcon />,
+        icon: <MenuListIcon width={20} height={20} />,
         label: '구체적 계획 수립을 실패했어요',
         code: 'GOAL_NO_PLAN',
       },
       {
         key: 'tooHigh',
-        icon: (
-          <ChevronDownIcon
-            className="rotate-180"
-            color="#A9AFB9"
-            width={20}
-            height={20}
-          />
-        ),
+        icon: <ArrowUpIcon width={20} height={20} />,
         label: '목표가 과했어요',
         code: 'GOAL_TOO_MUCH',
         subSubOptions: [
@@ -319,7 +299,7 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
       },
       {
         key: 'tookLonger',
-        icon: <StreamTimeIcon />,
+        icon: <ClockPlusIcon />,
         label: '시간이 예측보다 더 소요됐어요',
         code: 'GOAL_UNDERESTIMATED',
       },
@@ -372,13 +352,13 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
       },
       {
         key: 'lateSchedule',
-        icon: <CalendarClearSharpIcon width={16} height={16} />,
+        icon: <CalendarXIcon width={20} height={20} />,
         label: '다른 일정이 늦게 끝났어요',
         code: 'INTERRUPT_LATE_END',
       },
       {
         key: 'directInput',
-        icon: <ReplanSurveyIcon width={16} height={16} />,
+        icon: <ReplanSurveyIcon width={20} height={20} />,
         label: '직접 입력',
         code: '',
       },
