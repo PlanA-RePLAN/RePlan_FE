@@ -17,36 +17,29 @@ export type MainOptionKey =
   | 'unexpectedObstacle'
   | 'directInput'
 
-export type StepType = 1 | 2 | 3 | 'todo'
-
-export interface RecommendedTodo {
-  id: string
-  title: string
-  dayTag: 'M' | 'D'
-  category: string
-  time: string
-}
+export type StepType = 1 | 2 | 3 | 'question' | 'result'
 
 export interface SubSubOptionItem {
   key: string
   icon?: React.ReactNode
   label: string
+  code: string
 }
 
 export interface SubOptionItem {
   key: string
   icon: React.ReactNode
   label: string
+  code: string
   step3Title?: string[]
   subSubOptions?: SubSubOptionItem[]
-  todoSuggestionTitle?: string[]
-  recommendedTodos?: RecommendedTodo[]
 }
 
 export interface MainOptionItem {
   key: MainOptionKey
   icon: React.ReactNode
   label: string
+  code: string
   subOptions: SubOptionItem[]
 }
 
@@ -124,11 +117,19 @@ const LightningBoltIcon = () => (
   </svg>
 )
 
+const directInputSubSubOption = (): SubSubOptionItem => ({
+  key: 'directInput',
+  icon: <ReplanSurveyIcon width={18} height={18} />,
+  label: '직접 입력',
+  code: '',
+})
+
 export const MAIN_OPTIONS: MainOptionItem[] = [
   {
     key: 'psychologicalState',
     icon: <BrainIcon />,
     label: '심리적 저항',
+    code: 'MENTAL_RESISTANCE',
     subOptions: [
       {
         key: 'hardToStart',
@@ -141,48 +142,52 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
           />
         ),
         label: '시작하기 막막하거나 부담스러웠어요',
+        code: 'MENTAL_HARD_TO_START',
         subSubOptions: [
           {
             key: 'dontKnowWhereToStart',
             icon: <ReplanSurveyIcon />,
             label: '무엇부터 시작할지 몰라서',
+            code: 'MENTAL_START_WHERE',
           },
           {
             key: 'tooMuchTimeOrEnergy',
             icon: <ReplanSurveyIcon />,
             label: '시간이나 에너지가 많이 들 것 같아서',
+            code: 'MENTAL_START_HEAVY',
           },
           {
             key: 'wantToBePerfect',
             icon: <ReplanSurveyIcon />,
             label: '완벽하게 해내고 싶어서',
+            code: 'MENTAL_PERFECTIONISM',
           },
+          directInputSubSubOption(),
         ],
-        recommendedTodos: [],
       },
       {
         key: 'lackMotivation',
         icon: <FireIcon />,
         label: '의욕/동기가 부족했어요',
-        recommendedTodos: [],
+        code: 'MENTAL_NO_MOTIVATION',
       },
       {
         key: 'procrastinated',
         icon: <ReplanSurveyIcon />,
         label: '당장 안 해도 돼서 미루다 쌓였어요',
-        recommendedTodos: [],
+        code: 'MENTAL_PROCRASTINATION',
       },
       {
         key: 'distracted',
         icon: <ReplanSurveyIcon />,
         label: '딴짓을 하다가 미뤘어요',
-        recommendedTodos: [],
+        code: 'MENTAL_DISTRACTION',
       },
       {
         key: 'directInput',
         icon: <ReplanSurveyIcon width={18} height={18} />,
         label: '직접 입력',
-        recommendedTodos: [],
+        code: '',
       },
     ],
   },
@@ -190,48 +195,79 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
     key: 'conditionNacho',
     icon: <PoorConditionIcon width={20} height={20} />,
     label: '컨디션 난조',
+    code: 'BAD_CONDITION',
     subOptions: [
       {
         key: 'energyDrained',
         icon: <BatteryIcon />,
         label: '체력 방전/에너지 모두 소모 상태에요',
-        recommendedTodos: [],
+        code: 'CONDITION_EXHAUSTED',
       },
       {
         key: 'sleepDeprived',
         icon: <BlockIcon width={16} height={16} />,
         label: '수면부족/피로 누적 상태에요',
-        recommendedTodos: [],
+        code: 'CONDITION_SLEEP',
+        subSubOptions: [
+          {
+            key: 'sleep3hUnder',
+            icon: <ReplanSurveyIcon />,
+            label: '3시간 이하',
+            code: 'CONDITION_SLEEP_3H_UNDER',
+          },
+          {
+            key: 'sleep4to5h',
+            icon: <ReplanSurveyIcon />,
+            label: '4~5시간',
+            code: 'CONDITION_SLEEP_4_5H',
+          },
+          {
+            key: 'sleep6to7h',
+            icon: <ReplanSurveyIcon />,
+            label: '6~7시간',
+            code: 'CONDITION_SLEEP_6_7H',
+          },
+          {
+            key: 'sleep8hOver',
+            icon: <ReplanSurveyIcon />,
+            label: '8시간 이상',
+            code: 'CONDITION_SLEEP_8H_OVER',
+          },
+          directInputSubSubOption(),
+        ],
       },
       {
         key: 'physicalPain',
         icon: <FireIcon />,
         label: '신체적 통증이 있어요',
-        recommendedTodos: [],
+        code: 'CONDITION_PAIN',
       },
       {
         key: 'burnout',
         icon: <ChevronDownIcon className="rotate-270" color="#A9AFB9" />,
         label: '번아웃이 왔어요',
+        code: 'CONDITION_BURNOUT',
         subSubOptions: [
           {
             key: 'noProgress',
             icon: <ReplanSurveyIcon />,
             label: '성과나 변화가 보이지 않아 무기력해요',
+            code: 'CONDITION_BURNOUT_NO_PROGRESS',
           },
           {
             key: 'lostDirection',
             icon: <ReplanSurveyIcon />,
             label: '목표의 방향성을 잃었어요',
+            code: 'CONDITION_BURNOUT_LOST_DIRECTION',
           },
+          directInputSubSubOption(),
         ],
-        recommendedTodos: [],
       },
       {
         key: 'directInput',
         icon: <ReplanSurveyIcon width={16} height={16} />,
         label: '직접 입력',
-        recommendedTodos: [],
+        code: '',
       },
     ],
   },
@@ -239,12 +275,13 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
     key: 'goalImprovement',
     icon: <RestLeftFillIcon width={20} height={20} />,
     label: '목표/계획 개선 필요',
+    code: 'GOAL_NEEDS_IMPROVEMENT',
     subOptions: [
       {
         key: 'failedPlan',
         icon: <MenuIcon />,
         label: '구체적 계획 수립을 실패했어요',
-        recommendedTodos: [],
+        code: 'GOAL_NO_PLAN',
       },
       {
         key: 'tooHigh',
@@ -257,37 +294,40 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
           />
         ),
         label: '목표가 과했어요',
+        code: 'GOAL_TOO_MUCH',
         subSubOptions: [
           {
             key: 'tooManyTodos',
             icon: <ReplanSurveyIcon />,
             label: '하루에 계획한 할 일 개수가 많았어요',
+            code: 'GOAL_TOO_MANY_TODOS',
           },
           {
             key: 'tooMuchWork',
             icon: <ReplanSurveyIcon />,
             label: '특정 할 일의 분량이 많았어요',
+            code: 'GOAL_TOO_MUCH_VOLUME',
           },
+          directInputSubSubOption(),
         ],
-        recommendedTodos: [],
       },
       {
         key: 'noPriority',
         icon: <SortPriorityIcon />,
         label: '우선 순위를 정하지 못했어요',
-        recommendedTodos: [],
+        code: 'GOAL_NO_PRIORITY',
       },
       {
         key: 'tookLonger',
         icon: <StreamTimeIcon />,
         label: '시간이 예측보다 더 소요됐어요',
-        recommendedTodos: [],
+        code: 'GOAL_UNDERESTIMATED',
       },
       {
         key: 'directInput',
         icon: <ReplanSurveyIcon width={16} height={16} />,
         label: '직접 입력',
-        recommendedTodos: [],
+        code: '',
       },
     ],
   },
@@ -295,48 +335,52 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
     key: 'unexpectedObstacle',
     icon: <BlockIcon />,
     label: '예상치 못한 방해 발생',
+    code: 'UNEXPECTED_INTERRUPTION',
     subOptions: [
       {
         key: 'sudden',
         icon: <AlertTriangleIcon />,
         label: '돌발 상황이 발생했어요',
-        recommendedTodos: [],
+        code: 'INTERRUPT_SUDDEN',
       },
       {
         key: 'environment',
         icon: <FocusScanIcon />,
         label: '집중할 수 있는 환경이 아니었어요',
+        code: 'INTERRUPT_ENVIRONMENT',
         subSubOptions: [
           {
             key: 'noisy',
             icon: <ReplanSurveyIcon />,
             label: '주변이 시끄럽거나 작업할 물리적 공간이 마땅치 않았어요',
+            code: 'INTERRUPT_ENV_NOISE',
           },
           {
             key: 'interruptions',
             icon: <ReplanSurveyIcon />,
             label: '타인의 요청이나 연락이 계속 들어왔어요',
+            code: 'INTERRUPT_CONTACT',
           },
+          directInputSubSubOption(),
         ],
-        recommendedTodos: [],
       },
       {
         key: 'urgent',
         icon: <LightningBoltIcon />,
         label: '더 급한 일이 생겼어요',
-        recommendedTodos: [],
+        code: 'INTERRUPT_URGENT',
       },
       {
         key: 'lateSchedule',
         icon: <CalendarClearSharpIcon width={16} height={16} />,
         label: '다른 일정이 늦게 끝났어요',
-        recommendedTodos: [],
+        code: 'INTERRUPT_LATE_END',
       },
       {
         key: 'directInput',
         icon: <ReplanSurveyIcon width={16} height={16} />,
         label: '직접 입력',
-        recommendedTodos: [],
+        code: '',
       },
     ],
   },
@@ -344,13 +388,31 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
     key: 'directInput',
     icon: <ReplanSurveyIcon width={20} height={20} />,
     label: '직접 입력',
-    subOptions: [
-      {
-        key: 'directInput',
-        icon: <ReplanSurveyIcon width={16} height={16} />,
-        label: '직접 입력',
-        recommendedTodos: [],
-      },
-    ],
+    code: '',
+    // 1단계 최상위 직접입력은 Step1에서 바로 recommend를 호출하므로 하위 단계가 없다
+    subOptions: [],
   },
 ]
+
+// 트리에서 고른 결과로 reasonCodes 만들기
+// - 정석 잎: [잎코드] / - 직접입력: 최상위=[텍스트], 하위=[부모코드, 텍스트]
+export function buildReasonCodes(
+  selectedOptionData: MainOptionItem,
+  selectedSubOptionData: SubOptionItem | undefined,
+  selectedSubSubOptionData: SubSubOptionItem | undefined,
+  directInputText: string,
+): string[] {
+  if (selectedOptionData.key === 'directInput') return [directInputText]
+
+  if (selectedSubSubOptionData?.key === 'directInput') {
+    return [selectedSubOptionData!.code, directInputText]
+  }
+
+  if (selectedSubOptionData?.key === 'directInput') {
+    return [selectedOptionData.code, directInputText]
+  }
+
+  if (selectedSubSubOptionData) return [selectedSubSubOptionData.code]
+
+  return [selectedSubOptionData!.code]
+}

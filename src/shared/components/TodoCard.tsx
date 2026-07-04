@@ -25,6 +25,7 @@ interface TodoCardProps {
   onClick?: () => void
   pinned?: boolean
   onPin?: (pinned: boolean) => void
+  onReplan?: () => void
 }
 
 function TodoCard({
@@ -35,6 +36,7 @@ function TodoCard({
   onClick,
   pinned = false,
   onPin,
+  onReplan,
 }: TodoCardProps) {
   const controls = useAnimation()
   const motionX = useMotionValue(0)
@@ -110,7 +112,10 @@ function TodoCard({
         </div>
 
         <div className="flex flex-col items-center gap-1.5 px-2">
-          <button className="w-12 h-12 rounded-full bg-blue-normal flex items-center justify-center">
+          <button
+            onClick={onReplan}
+            className="w-12 h-12 rounded-full bg-blue-normal flex items-center justify-center"
+          >
             <img src={replanIcon} alt="" />
           </button>
           <p className="text-[10px] text-bluegray-dark">리플랜하기</p>
