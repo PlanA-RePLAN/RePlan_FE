@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useImageUpload } from '../hooks/useImageUpload'
 import { getUnreadNotificationCount } from '@/shared/api/notification'
 import { getProfile } from '../api/user'
 import BellIcon from '@/icons/BellIcon'
@@ -7,6 +8,8 @@ import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 
 export default function MainHeader() {
   const navigate = useNavigate()
+  const [name, setName] = useState<string | null>('')
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null)
   const [hasUnread, setHasUnread] = useState(false)
 
   useEffect(() => {
@@ -24,8 +27,6 @@ export default function MainHeader() {
     fetchUnreadCount()
   }, [])
 
-  const [name, setName] = useState<string | null>('')
-
   const handleNotificationClick = () => {
     navigate('/notification')
   }
@@ -37,6 +38,7 @@ export default function MainHeader() {
           const res = await getProfile(accessToken)
           if (res.success && res.data) {
             setName(res.data.nickname)
+            setProfileImageUrl(res.data.profileImage)
           }
         } catch (error) {
           console.error(error)
@@ -48,7 +50,10 @@ export default function MainHeader() {
   return (
     <div className="w-full h-26.5 flex items-center justify-between px-5">
       <div className="flex items-center gap-3">
-        <DefaultProfileIcon width={28} height={28} />
+        {profileImageUrl
+          ? <img src={profileImageUrl} alt="프로필" className="w-7 h-7 rounded-full object-cover" />
+          : <DefaultProfileIcon width={28} height={28} />
+        }
         <p className="font-bold text-base">{name}</p>
       </div>
       <button onClick={handleNotificationClick}>
