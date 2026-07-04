@@ -1,5 +1,6 @@
 // utils
 import { useState, useEffect, ReactElement } from "react"
+import { useNavigate } from "react-router-dom"
 import { cn } from "@/shared/utils/cn"
 import { getNotifications, markNotificationAsRead } from "@/shared/api/notification"
 import { NotificationCategory, Notification as NotificationItem, NotificationTypeName } from "@/shared/types/notification"
@@ -41,6 +42,7 @@ function formatRelativeTime(createdAt: string): string {
 }
 
 export default function Notification() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<Tab>('투두')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
 
@@ -61,12 +63,15 @@ export default function Notification() {
     fetchNotifications()
   }, [activeTab])
 
-   const handleNotificationClick = async (id: number) => { 
+  const handleNotificationClick = async (item: NotificationItem) => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
-    await markNotificationAsRead(accessToken, id)
+    await markNotificationAsRead(accessToken, item.id)
     setNotifications((prev) =>
-      prev.map((item) => item.id === id ? { ...item, read: true } : item)
+      prev.map((n) => n.id === item.id ? { ...n, read: true } : n)
     )
+    if (item.type === 'TODO_DUE_SOON') navigate('/home')
+    else if (item.type === 'REPORT_READY') navigate('/statics')
+    else if (item.type === 'TODO_FAILED_REPLAN') navigate('/home')
   }
 
   return (
@@ -98,7 +103,7 @@ export default function Notification() {
                   content={item.body}
                   notificationTime={formatRelativeTime(item.createdAt)}
                   isRead={item.read}
-                  onClick={() => handleNotificationClick(item.id)}
+                  onClick={() => handleNotificationClick(item)}
                 />
               ))
             ) : (
