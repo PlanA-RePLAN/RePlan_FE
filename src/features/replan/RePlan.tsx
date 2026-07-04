@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react'
 import { getTodoDetail } from '@/shared/api/todo'
 import { recommendReplan, saveReplan } from '@/shared/api/replan'
 import type { TodoDetail } from '@/shared/types/todo'
-import type { RecommendData, ReplanAnswer } from '@/shared/types/replan'
+import type {
+  RecommendData,
+  ReplanAnswer,
+  ReplanOperation,
+} from '@/shared/types/replan'
 import {
   MAIN_OPTIONS,
   MainOptionKey,
@@ -186,14 +190,13 @@ export default function RePlan({
     submitRecommend(finalReasonCodes, false, next)
   }
 
-  const handleAccept = async () => {
-    if (!recommendData) return
+  const handleAccept = async (selectedOperations: ReplanOperation[]) => {
     setIsSubmitting(true)
     const accessToken = localStorage.getItem('accessToken') ?? ''
     await saveReplan(accessToken, {
       anchorTodoId,
       reasonCodes: finalReasonCodes,
-      acceptedOperations: recommendData.operations,
+      acceptedOperations: selectedOperations,
     })
     setIsSubmitting(false)
     onComplete()
