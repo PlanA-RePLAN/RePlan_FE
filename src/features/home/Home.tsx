@@ -1,5 +1,6 @@
 // utils
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '@/shared/utils/cn'
 import { AnimatePresence } from 'framer-motion'
 import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
@@ -138,6 +139,7 @@ function SortableItem({
 }
 
 export default function Home() {
+  const navigate = useNavigate()
   const [priorityEdit, setPriorityEdit] = useState(false)
   const [selectedTab, setSelectedTab] = useState<
     'all' | 'day' | 'week' | 'month'
@@ -283,6 +285,7 @@ export default function Home() {
                     key={todo.todoId}
                     status="swipeable"
                     onDelete={() => handleDeleteClick(todo.todoId)}
+                    onReplan={() => navigate(`/replan/${todo.todoId}`)}
                     pinned={todo.isPinned}
                     onPin={(isPinned) =>
                       todoHook.handleTogglePin(todo.todoId, isPinned)
@@ -370,6 +373,9 @@ export default function Home() {
                                   onDelete={() =>
                                     handleDeleteClick(todo.todoId)
                                   }
+                                  onReplan={() =>
+                                    navigate(`/replan/${todo.todoId}`)
+                                  }
                                   onClick={() => handleClickTodo(todo.todoId)}
                                   pinned={todo.isPinned}
                                   onPin={(isPinned) =>
@@ -433,6 +439,7 @@ export default function Home() {
                       key={todo.todoId}
                       status="swipeable"
                       onDelete={() => handleDeleteClick(todo.todoId)}
+                      onReplan={() => navigate(`/replan/${todo.todoId}`)}
                       onClick={() => handleClickTodo(todo.todoId)}
                       pinned={todo.isPinned}
                       onPin={(isPinned) =>
