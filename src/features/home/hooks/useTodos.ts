@@ -13,7 +13,7 @@ import {
 import { createRoutine } from '@/shared/api/routine'
 import type { Todo, TodoDetail } from '@/shared/types/todo'
 import type { ProposedTodo } from '@/features/onBoarding/type/types'
-import { REPEAT_TO_ROUTINE } from '@/features/onBoarding/type/types'
+import { REPEAT_TO_ROUTINE, resolveBackendTagId } from '@/features/onBoarding/type/types'
 import { arrayMove } from '@dnd-kit/sortable'
 import type { DragEndEvent } from '@dnd-kit/core'
 
@@ -172,7 +172,7 @@ export function useTodos({
           dueDate,
           routineTime,
           routineDays,
-          tagId: null,
+          tagId: resolveBackendTagId(proposed.selectedTagId),
           goalId: null,
         })
         if (res.success) await refetchTodos()
@@ -180,7 +180,7 @@ export function useTodos({
         const res = await createTodoApi(accessToken, {
           title: proposed.title,
           dueDate,
-          tagId: null,
+          tagId: resolveBackendTagId(proposed.selectedTagId),
           goalId: null,
         })
         if (res.success) await refetchTodos()
@@ -226,7 +226,7 @@ export function useTodos({
       await updateTodoApi(accessToken, selectedTodo.todoId, {
         title: updated.title,
         dueDate,
-        tagId: selectedTodo.tagId,
+        tagId: resolveBackendTagId(updated.selectedTagId),
         routineType,
         routineDays,
       })
