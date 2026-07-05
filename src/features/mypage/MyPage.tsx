@@ -22,6 +22,13 @@ export default function MyPage() {
         navigate('/mypage/notification-setting')
     }
 
+    const handleInquiryClick = () => {
+        const to = 'replanofplanateam@gmail.com'
+        const subject = '[RePlan] 문의하기'
+        const body = `앱 사용 중 발견하신 버그나 문의 및 요청사항을 아래에 작성해주세요 😊\n\n1. OS/기종 : ${navigator.userAgent}\n2. 문의 내용 : `
+        window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    }
+
 
     const SECTIONS = [
         { key: "service", label: "서비스"},
@@ -36,7 +43,7 @@ export default function MyPage() {
         { id:4, title: "개인정보 처리방침", icon:<MyPagePrivacyIcon/>, section: "info", hasNewAlert: false, onClick: () => window.open('https://app.notion.com/p/37712dc6738b80a0a8e7c5fb9324dff7', '_blank') },
         { id:5, title: "서비스 이용약관", icon:<MyPageTermsIcon/>, section: "info", hasNewAlert: false, onClick: () => window.open('https://app.notion.com/p/37712dc6738b80aa80f9e7cbb84ce0db', '_blank') },
         { id:6, title: "오픈 소스", icon:<MyPageOpenSourceIcon/>, section: "info", hasNewAlert: false, onClick: () => window.open('https://app.notion.com/p/37712dc6738b80e0a63ad6494eb9112b', '_blank') },
-        { id:7, title: "문의하기", icon:<MypageEmailIcon/>, section: "app", hasNewAlert: false, onclick: ()=>{} },
+        { id:7, title: "문의하기", icon:<MypageEmailIcon/>, section: "app", hasNewAlert: false, onClick: handleInquiryClick },
         { id:8, title: "앱 버전", icon:<MyPageAppVersionIcon/>, section: "app", hasNewAlert: false, rightContent: <span className="text-sm text-bluegray-normal">1.0.0</span> },
     ]
     
