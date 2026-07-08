@@ -56,6 +56,9 @@ export async function setupPush() {
 }
 
 export function listenForegroundPush() {
+    // 네이티브(iOS/안드로이드) 웹뷰에는 navigator.serviceWorker가 없어 웹 Firebase SDK가 시작 시 터진다.
+    // 네이티브 포그라운드 알림은 별도 네이티브 플러그인 경로로 처리하므로 여기선 웹 SDK를 건너뛴다.
+    if (Capacitor.isNativePlatform()) return
     onMessage(getMessaging(app), (payload) => {
         const title = payload.data?.title ?? 'RePlan'
         const body  = payload.data?.body  ?? ''
