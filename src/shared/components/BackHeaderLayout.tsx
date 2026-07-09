@@ -29,7 +29,7 @@ export default function BackHeaderLayout({
   return (
     <>
       <BackHeader title={title} onBack={handleBack} className={className} />
-      <main className="pt-15">{children}</main>
+      <main className="pt-[calc(env(safe-area-inset-top)+3.75rem)]">{children}</main>
     </>
   )
 }
