@@ -13,6 +13,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 const GOOGLE_IOS_CLIENT_ID = import.meta.env.VITE_GOOGLE_IOS_CLIENT_ID
 const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID
 const KAKAO_NATIVE_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI as string
+const NAVER_NATIVE_REDIRECT_URI = import.meta.env.VITE_NAVER_REDIRECT_URI as string
 const APPLE_CLIENT_ID = import.meta.env.VITE_APPLE_CLIENT_ID
 const APPLE_REDIRECT_URI = import.meta.env.VITE_APPLE_REDIRECT_URI
 
@@ -130,7 +131,7 @@ export function useOAuthLogin() {
   }, [])
 
   useEffect(() => {
-    if (!NAVER_CLIENT_ID) return
+    if (Capacitor.isNativePlatform() || !NAVER_CLIENT_ID) return
     if (window.naver) { initNaverBtn(); return }
     const interval = setInterval(() => {
       if (window.naver) { initNaverBtn(); clearInterval(interval) }
@@ -153,7 +154,7 @@ export function useOAuthLogin() {
   const loginWithKakaoNative = () => {
     return new Promise<void>((resolve, reject) => {
       const listenerPromise = App.addListener('appUrlOpen', async (data) => {
-        if (!data.url.startsWith('com.plana.replan://oauth')) return
+        if (!data.url.startsWith('com.plana.replan://oauth?')) return
         const listener = await listenerPromise
         listener.remove()
         await Browser.close()
@@ -244,8 +245,45 @@ export function useOAuthLogin() {
     }
   }
 
-  const loginWithNaver = () => {
-    document.querySelector<HTMLAnchorElement>('#naverIdLogin a')?.click()
+  const loginWithNaverNative = () => {
+    return new Promise<void>((resolve, reject) => {
+      const state = crypto.randomUUID()
+      const listenerPromise = App.addListener('appUrlOpen', async (data) => {
+        if (!data.url.startsWith('com.plana.replan://oauth/naver')) return
+        const listener = await listenerPromise
+        listener.remove()
+        await Browser.close()
+        const url = new URL(data.url)
+        const accessToken = url.searchParams.get('access_token')
+        const returnedState = url.searchParams.get('state')
+        if (returnedState !== state) { reject(new Error('State mismatch')); return }
+        if (!accessToken) { reject(new Error('No access token')); return }
+        try {
+          const res = await naverOAuthLogin(accessToken)
+          handleAuthResponse(res)
+          resolve()
+        } catch (err) {
+          reject(err)
+        }
+      })
+      Browser.open({
+        url: `https://nid.naver.com/oauth2.0/authorize?response_type=token&client_id=${NAVER_CLIENT_ID}&redirect_uri=${encodeURIComponent(NAVER_NATIVE_REDIRECT_URI)}&state=${state}`,
+        presentationStyle: 'popover',
+      })
+    })
+  }
+
+  const loginWithNaver = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      document.querySelector<HTMLAnchorElement>('#naverIdLogin a')?.click()
+      return
+    }
+    try {
+      await loginWithNaverNative()
+    } catch (err) {
+      console.error('[Naver] 로그인 에러:', err)
+      setError('네이버 로그인에 실패했습니다. 다시 시도해주세요.')
+    }
   }
 
   const loginWithApple = async () => {
