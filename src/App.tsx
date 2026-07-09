@@ -16,6 +16,7 @@ import ReplanPage from '@/features/replan'
 import Statics from './features/statics/Statics'
 import Notification from '@/features/notification/Notification'
 import KakaoCallback from '@/features/oauth/KakaoCallback'
+import NaverCallback from '@/features/oauth/NaverCallback'
 
 function App() {
   useEffect(() => {
@@ -29,6 +30,7 @@ function App() {
       <Routes>
         {/* Nav 미사용 페이지 */}
         <Route path="/oauth/kakao" element={<KakaoCallback />} />
+        <Route path="/oauth/naver" element={<NaverCallback />} />
         <Route path="/" element={<Index />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
         <Route path="/onboarding" element={<OnBoarding />} />
