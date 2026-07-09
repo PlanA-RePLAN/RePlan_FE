@@ -1,5 +1,5 @@
 import { cn } from '@/shared/utils/cn'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { checkNickname } from '@/shared/api/auth'
 
 interface DuplicateCheckButtonProps {
@@ -11,7 +11,10 @@ export default function DuplicateCheckButton({
   nickname, onCheck,
 }: DuplicateCheckButtonProps) {
   const [isClick, setIsClick] = useState(false)
-  
+
+  // 이름을 다시 입력하면 버튼을 활성 상태로 되돌림
+  useEffect(() => { setIsClick(false) }, [nickname])
+
   const handleClick = async () => {
     try{
       const res = await checkNickname(nickname)
@@ -19,7 +22,7 @@ export default function DuplicateCheckButton({
         onCheck(true)
         return
       }
-      setIsClick(true)
+      setIsClick(res.data.available)
       onCheck(!res.data.available)
     }catch{
       onCheck(true)
@@ -30,10 +33,10 @@ export default function DuplicateCheckButton({
     <button
       onClick={handleClick}
       className={cn(
-        'w-[66px] h-[29px] bg-bluegray-light-active rounded-lg text-xs absolute top-10.5 right-4',
+        'w-[66px] h-[29px] rounded-lg text-xs absolute top-10.5 right-4',
         isClick
-          ? 'text-bluegray-dark-hover'
-          : 'text-bluegray-normal hover:text-bluegray-dark-hover',
+          ? 'bg-bluegray-light-active text-bluegray-dark-hover'
+          : 'bg-bluegray-black text-white',
       )}
     >
       중복확인
