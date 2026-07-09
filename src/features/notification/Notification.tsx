@@ -2,8 +2,10 @@
 import { useState, useEffect, ReactElement } from "react"
 import { useNavigate } from "react-router-dom"
 import { cn } from "@/shared/utils/cn"
-import { getNotifications, markNotificationAsRead } from "@/shared/api/notification"
+import { getNotifications, getUnreadNotificationCount, markNotificationAsRead } from "@/shared/api/notification"
+import { useNotificationStore } from "@/store/notificationStore"
 import { NotificationCategory, Notification as NotificationItem, NotificationTypeName } from "@/shared/types/notification"
+
 
 // components
 import BackHeaderLayout from "@/shared/components/BackHeaderLayout"
@@ -45,6 +47,7 @@ export default function Notification() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<Tab>('투두')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const { setHasUnread } = useNotificationStore()
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -69,6 +72,12 @@ export default function Notification() {
     setNotifications((prev) =>
       prev.map((n) => n.id === item.id ? { ...n, read: true } : n)
     )
+
+    const res = await getUnreadNotificationCount(accessToken)
+    if (res.success && res.data){
+      setHasUnread(res.data.count > 0)
+    }
+
     if (item.type === 'TODO_DUE_SOON') navigate('/home')
     else if (item.type === 'REPORT_READY') navigate('/statics')
     else if (item.type === 'TODO_FAILED_REPLAN') navigate('/home')

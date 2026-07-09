@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getMessaging, getToken, onMessage } from 'firebase/messaging'
+import { useNotificationStore } from '@/store/notificationStore'
 import { registerToken } from '@/shared/api/notification'
 import { FirebaseMessaging } from '@capacitor-firebase/messaging'
 import { Capacitor } from '@capacitor/core'
@@ -65,5 +66,6 @@ export function listenForegroundPush() {
         if (Notification.permission === 'granted') {
             new Notification(title, { body, icon: '/assets/pwa-192x192.png' })
         }
+        useNotificationStore.getState().setHasUnread(true)
     })
 }
