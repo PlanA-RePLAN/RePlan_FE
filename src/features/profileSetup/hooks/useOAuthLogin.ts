@@ -7,6 +7,7 @@ import { Capacitor } from '@capacitor/core'
 import { Browser } from '@capacitor/browser'
 import { App } from '@capacitor/app'
 import { SocialLogin } from '@capgo/capacitor-social-login'
+import axios from 'axios'
 
 const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -16,6 +17,15 @@ const KAKAO_NATIVE_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI as str
 const NAVER_NATIVE_REDIRECT_URI = import.meta.env.VITE_NAVER_REDIRECT_URI as string
 const APPLE_CLIENT_ID = import.meta.env.VITE_APPLE_CLIENT_ID
 const APPLE_REDIRECT_URI = import.meta.env.VITE_APPLE_REDIRECT_URI
+
+// 서버가 내려준 에러 메시지가 있으면 우선 사용, 없으면(네트워크 오류 등) 기본 문구로 폴백
+function getOAuthErrorMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const apiError = (err.response?.data as ApiResponse<unknown> | undefined)?.error
+    if (apiError?.message) return apiError.message
+  }
+  return fallback
+}
 
 export function useOAuthLogin() {
   const navigate = useNavigate()
@@ -27,7 +37,7 @@ export function useOAuthLogin() {
 
   const handleAuthResponse = (res: ApiResponse<OAuthLoginData>) => {
     if (!res.success || !res.data) {
-      setError('로그인에 실패했습니다. 다시 시도해주세요.')
+      setError(res.error?.message ?? '로그인에 실패했습니다. 다시 시도해주세요.')
       return
     }
     const { isNewUser, accessToken, refreshToken, tempToken } = res.data
@@ -92,8 +102,8 @@ export function useOAuthLogin() {
         try {
           const res = await googleOAuthLogin(response.credential)
           handleAuthResponse(res)
-        } catch {
-          setError('구글 로그인에 실패했습니다. 다시 시도해주세요.')
+        } catch (err) {
+          setError(getOAuthErrorMessage(err, '구글 로그인에 실패했습니다. 다시 시도해주세요.'))
         }
       },
     })
@@ -148,7 +158,7 @@ export function useOAuthLogin() {
     window.history.replaceState(null, '', window.location.pathname)
     naverOAuthLogin(accessToken)
       .then(handleAuthResponse)
-      .catch(() => setError('네이버 로그인에 실패했습니다. 다시 시도해주세요.'))
+      .catch((err) => setError(getOAuthErrorMessage(err, '네이버 로그인에 실패했습니다. 다시 시도해주세요.')))
   }, [])
 
   const loginWithKakaoNative = () => {
@@ -218,7 +228,7 @@ export function useOAuthLogin() {
       handleAuthResponse(res)
     } catch (err) {
       console.error('[Kakao] 로그인 에러:', err)
-      setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.')
+      setError(getOAuthErrorMessage(err, '카카오 로그인에 실패했습니다. 다시 시도해주세요.'))
     } finally {
       kakaoLoading.current = false
     }
@@ -241,7 +251,7 @@ export function useOAuthLogin() {
       }
     } catch (err) {
       console.error('[Google] 로그인 에러:', err)
-      setError('구글 로그인에 실패했습니다. 다시 시도해주세요.')
+      setError(getOAuthErrorMessage(err, '구글 로그인에 실패했습니다. 다시 시도해주세요.'))
     }
   }
 
@@ -282,7 +292,7 @@ export function useOAuthLogin() {
       await loginWithNaverNative()
     } catch (err) {
       console.error('[Naver] 로그인 에러:', err)
-      setError('네이버 로그인에 실패했습니다. 다시 시도해주세요.')
+      setError(getOAuthErrorMessage(err, '네이버 로그인에 실패했습니다. 다시 시도해주세요.'))
     }
   }
 
@@ -303,7 +313,7 @@ export function useOAuthLogin() {
       }
     } catch (err) {
       console.error('[Apple] 로그인 에러:', err)
-      setError('애플 로그인에 실패했습니다. 다시 시도해주세요.')
+      setError(getOAuthErrorMessage(err, '애플 로그인에 실패했습니다. 다시 시도해주세요.'))
     }
   }
 
