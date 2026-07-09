@@ -7,7 +7,7 @@ export default function NaverCallback() {
     const accessToken = params.get('access_token')
     const state = params.get('state')
     if (accessToken && state) {
-      window.location.href = `com.plana.replan://oauth/naver?access_token=${accessToken}&state=${state}`
+      window.location.href = `com.plana.replan://oauth/naver?access_token=${encodeURIComponent(accessToken)}&state=${encodeURIComponent(state)}`
     }
   }, [])
 

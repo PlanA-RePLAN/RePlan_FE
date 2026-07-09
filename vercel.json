@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://plana-replan.site/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

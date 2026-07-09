@@ -154,7 +154,7 @@ export function useOAuthLogin() {
   const loginWithKakaoNative = () => {
     return new Promise<void>((resolve, reject) => {
       const listenerPromise = App.addListener('appUrlOpen', async (data) => {
-        if (!data.url.startsWith('com.plana.replan://oauth')) return
+        if (!data.url.startsWith('com.plana.replan://oauth?')) return
         const listener = await listenerPromise
         listener.remove()
         await Browser.close()
