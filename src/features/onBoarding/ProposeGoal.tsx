@@ -39,6 +39,16 @@ const WEEKDAY_NAME_TO_INDEX: Record<string, number> = {
   일: 6,
 }
 
+const WEEKDAY_INDEX_TO_NAME: Record<number, string> = {
+  0: '월',
+  1: '화',
+  2: '수',
+  3: '목',
+  4: '금',
+  5: '토',
+  6: '일',
+}
+
 function formatTime24to12(time: string | null): string {
   if (!time) return ''
   const [hStr, mStr] = time.split(':')
@@ -110,6 +120,7 @@ function mapAiTodo(todo: AiRecommendedTodo, index: number): ProposedTodo {
           ? 'D'
           : undefined
 
+  const routineDays = todo.routineDays ?? []
   return {
     id: index + 1,
     title: todo.title,
@@ -117,7 +128,14 @@ function mapAiTodo(todo: AiRecommendedTodo, index: number): ProposedTodo {
     dayTag,
     selectedTagId: todo.tagId != null ? String(todo.tagId) : '미선택',
     repeat,
-    routineDate: todo.routineDate ?? null,
+    // 백엔드가 준 routineDays(요일/일자 배열)를 위클리/먼슬리 입력값으로 풀어 담는다.
+    weeklyDay:
+      todo.routineType === 'WEEKLY'
+        ? routineDays
+            .map((i) => WEEKDAY_INDEX_TO_NAME[i])
+            .filter((n): n is string => !!n)
+        : undefined,
+    monthlyDay: todo.routineType === 'MONTHLY' ? routineDays : undefined,
     deadlineDate: todo.dueDate ? new Date(todo.dueDate) : null,
     deadlineTime: todo.dueTime ? formatTime24to12(todo.dueTime) : null,
     subTodos: [],
