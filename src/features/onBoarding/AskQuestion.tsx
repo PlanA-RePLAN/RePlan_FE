@@ -68,6 +68,10 @@ export default function AskQuestion({ moveNext }: { moveNext: () => void }) {
     )
   }
 
+  // 스위치는 켰지만 구체적인 값을 안 정했으면 다음으로 진행 불가
+  const deadlineIncomplete =
+    (useDeadLineDate && !deadlineDate) || (useDeadLineTime && !deadlineTime)
+
   const handleNext = async () => {
     setLoading(true)
     try {
@@ -141,7 +145,7 @@ export default function AskQuestion({ moveNext }: { moveNext: () => void }) {
       <div className="h-45" />
       <div className="fixed pb-13 pt-10 bottom-0 left-0 right-0 w-full px-5 bg-linear-to-b from-transparent from-0% to-white to-20%">
         <MainButton
-          option={loading ? 'disabled' : 'primary'}
+          option={loading || deadlineIncomplete ? 'disabled' : 'primary'}
           onClick={handleNext}
           title="다음으로"
           className="mt-10"

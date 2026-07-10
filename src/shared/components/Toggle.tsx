@@ -1,13 +1,15 @@
 interface ToggleProps {
   checked: boolean
   onChange: (checked: boolean) => void
+  disabled?: boolean
 }
 
-export default function Toggle({ checked, onChange }: ToggleProps) {
+export default function Toggle({ checked, onChange, disabled }: ToggleProps) {
   return (
     <div
       onClick={(e) => {
         e.stopPropagation()
+        if (disabled) return
         onChange(!checked)
       }}
       style={{
@@ -18,7 +20,8 @@ export default function Toggle({ checked, onChange }: ToggleProps) {
         alignItems: 'center',
         borderRadius: '100px',
         background: checked ? '#202021' : '#D1D5DB',
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.4 : 1,
         transition: 'background 0.2s ease',
         boxSizing: 'border-box',
       }}
