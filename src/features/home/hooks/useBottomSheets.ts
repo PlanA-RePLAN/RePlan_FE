@@ -6,7 +6,8 @@ export function useBottomSheets() {
   const [isDeleteBottomSheetOpen, setIsDeleteBottomSheetOpen] = useState(false)
   const [isNewTodoSheetOpen, setIsNewTodoSheetOpen] = useState(false)
   const [isEditTodoSheetOpen, setIsEditTodoSheetOpen] = useState(false)
-  
+  const [isEditScopeSheetOpen, setIsEditScopeSheetOpen] = useState(false)
+
   return {
     isTodoInfoSheetOpen,
     setIsTodoInfoSheetOpen,
@@ -18,5 +19,7 @@ export function useBottomSheets() {
     setIsNewTodoSheetOpen,
     isEditTodoSheetOpen,
     setIsEditTodoSheetOpen,
+    isEditScopeSheetOpen,
+    setIsEditScopeSheetOpen,
   }
 }
