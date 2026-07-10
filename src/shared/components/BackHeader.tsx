@@ -15,7 +15,7 @@ export default function BackHeader({
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 z-50 px-5 flex items-center w-screen py-4 border-b border-bluegray-light-hover bg-white',
+        'fixed top-0 left-0 z-50 px-5 flex items-center w-screen pb-4 pt-[calc(env(safe-area-inset-top)+1rem)] border-b border-bluegray-light-hover bg-white',
         className,
       )}
     >
