@@ -11,7 +11,10 @@ interface Step3Props {
   selectedSubOptionData: SubOptionItem
   selectedSubSubOption: string | null
   onSubSubOptionChange: (key: string) => void
+  directInputText: string
+  onDirectInputTextChange: (text: string) => void
   onNext: () => void
+  isSubmitting: boolean
 }
 
 export default function Step3({
@@ -19,7 +22,10 @@ export default function Step3({
   selectedSubOptionData,
   selectedSubSubOption,
   onSubSubOptionChange,
+  directInputText,
+  onDirectInputTextChange,
   onNext,
+  isSubmitting,
 }: Step3Props) {
   const titleLines = selectedSubOptionData.step3Title ?? ['조금 더 알려주세요.']
 
@@ -54,6 +60,8 @@ export default function Step3({
             key={subSubOption.key}
             isSelected={selectedSubSubOption === 'directInput'}
             onChange={() => onSubSubOptionChange('directInput')}
+            text={directInputText}
+            onTextChange={onDirectInputTextChange}
           />
         ) : (
           <ReplanOption
@@ -68,9 +76,9 @@ export default function Step3({
 
       <div className="fixed pb-10 pt-10 bottom-0 left-0 right-0 w-full px-5 bg-linear-to-b from-transparent from-0% to-white to-20%">
         <MainButton
-          option="primary"
+          option={isSubmitting ? 'disabled' : 'primary'}
           onClick={onNext}
-          title="다음으로"
+          title={isSubmitting ? '불러오는 중...' : '다음으로'}
           className="mt-10"
         />
       </div>

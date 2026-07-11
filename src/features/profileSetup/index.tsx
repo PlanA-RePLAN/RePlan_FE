@@ -1,3 +1,6 @@
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 const logoSvg = '/assets/logo.svg'
 import Button from '@/features/profileSetup/components/Button'
 import GoogleIcon from '@/icons/GoogleIcon'
@@ -11,12 +14,20 @@ const LOGIN_OPTION = [
 ] as const
 
 export default function LoginPage() {
-  const { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver } = useOAuthLogin()
+  const navigate = useNavigate()
+  const { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver, loginWithApple } = useOAuthLogin()
+
+  useEffect(() => {
+    if (localStorage.getItem('accessToken')) {
+      navigate('/home', { replace: true })
+    }
+  }, [])
 
   const handleLogin = (option: string) => {
     if (option === 'kakao') loginWithKakao()
     if (option === 'google') loginWithGoogle()
     if (option === 'naver') loginWithNaver()
+    if (option === 'apple') loginWithApple()
   }
 
   return (
@@ -34,7 +45,9 @@ export default function LoginPage() {
       <div ref={googleBtnRef} className="hidden" />
       <div id="naverIdLogin" className="hidden" />
       <div className="w-full px-5 flex flex-col gap-2 absolute bottom-[6%]">
-        {LOGIN_OPTION.map((item) => (
+        {LOGIN_OPTION.filter((item) =>
+          !(item.option === 'apple' && Capacitor.getPlatform() === 'android')
+        ).map((item) => (
           <Button
             key={item.title}
             onClick={() => handleLogin(item.option)}

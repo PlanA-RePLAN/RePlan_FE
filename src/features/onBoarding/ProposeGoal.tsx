@@ -48,6 +48,13 @@ function formatTime24to12(time: string | null): string {
   return `${String(h12).padStart(2, '0')}:${mStr} ${period}`
 }
 
+// dueTime만 있고 dueDate가 없으면 백엔드가 TODO_DUE_TIME_WITHOUT_DATE로 거부하므로 임시 날짜를 채운다
+const FALLBACK_DUE_DATE = '2099-12-31'
+function resolveDueDate(dueDate: string | null, dueTime: string | null) {
+  if (dueDate) return dueDate
+  return dueTime ? FALLBACK_DUE_DATE : null
+}
+
 // "HH12:mm AM/PM" 또는 "HH24:mm AM/PM" → "HH:mm" (24h)
 function timeToHHmm(time: string | null): string | null {
   if (!time) return null
@@ -203,29 +210,41 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
       const selectedTodos = todos.filter((t) => selectedIds.includes(t.id))
       const isRecurring = (t: ProposedTodo) => t.repeat !== '없음'
 
+      const goalDueDate = deadlineDate
+        ? format(deadlineDate, 'yyyy-MM-dd')
+        : null
+      const goalDueTime = deadlineTime ? timeToHHmm(deadlineTime) : null
+
       const res = await createGoalWithTodos(accessToken, {
         title: goalValue,
-        dueDate: deadlineDate ? format(deadlineDate, 'yyyy-MM-dd') : null,
-        dueTime: deadlineTime ? timeToHHmm(deadlineTime) : null,
-        todos: selectedTodos.map((t) => ({
-          type: isRecurring(t) ? 'RECURRING' : 'ONE_TIME',
-          title: t.title,
-          dueDate: t.deadlineDate ? format(t.deadlineDate, 'yyyy-MM-dd') : null,
-          dueTime: isRecurring(t)
+        dueDate: resolveDueDate(goalDueDate, goalDueTime),
+        dueTime: goalDueTime,
+        todos: selectedTodos.map((t) => {
+          const todoDueDate = t.deadlineDate
+            ? format(t.deadlineDate, 'yyyy-MM-dd')
+            : null
+          const todoDueTime = isRecurring(t)
             ? timeToHHmm(t.repeatTime ?? t.deadlineTime)
-            : timeToHHmm(t.deadlineTime),
-          routineType: isRecurring(t) ? REPEAT_TO_ROUTINE[t.repeat] : null,
-          routineDays: isRecurring(t)
-            ? t.repeat === '위클리'
-              ? (t.weeklyDay ?? []).map((d) => DAY_TO_INDEX[d] ?? 0)
-              : t.repeat === '먼슬리'
-                ? (t.monthlyDay ?? [1])
-                : null
-            : null,
-          tagId: resolveBackendTagId(t.selectedTagId),
-          subTodos: !isRecurring(t) ? t.subTodos.map((s) => s.title) : null,
-          subRoutines: isRecurring(t) ? t.subTodos.map((s) => s.title) : null,
-        })),
+            : timeToHHmm(t.deadlineTime)
+
+          return {
+            type: isRecurring(t) ? 'RECURRING' : 'ONE_TIME',
+            title: t.title,
+            dueDate: resolveDueDate(todoDueDate, todoDueTime),
+            dueTime: todoDueTime,
+            routineType: isRecurring(t) ? REPEAT_TO_ROUTINE[t.repeat] : null,
+            routineDays: isRecurring(t)
+              ? t.repeat === '위클리'
+                ? (t.weeklyDay ?? []).map((d) => DAY_TO_INDEX[d] ?? 0)
+                : t.repeat === '먼슬리'
+                  ? (t.monthlyDay ?? [1])
+                  : null
+              : null,
+            tagId: resolveBackendTagId(t.selectedTagId),
+            subTodos: !isRecurring(t) ? t.subTodos.map((s) => s.title) : null,
+            subRoutines: isRecurring(t) ? t.subTodos.map((s) => s.title) : null,
+          }
+        }),
       })
       if (res.success) {
         moveNext()

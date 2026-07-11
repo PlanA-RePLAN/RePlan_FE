@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import { StepType } from './replanData'
 import RePlan from './RePlan'
 
 export default function ReplanPage() {
   const navigate = useNavigate()
+  const { todoId } = useParams<{ todoId: string }>()
   const [stepHistory, setStepHistory] = useState<StepType[]>([1])
 
   const currentStep = stepHistory[stepHistory.length - 1]
@@ -24,7 +25,12 @@ export default function ReplanPage() {
 
   return (
     <BackHeaderLayout title="RePlan" onBack={handleBack}>
-      <RePlan step={currentStep} onNextStep={handleNextStep} />
+      <RePlan
+        anchorTodoId={Number(todoId)}
+        step={currentStep}
+        onNextStep={handleNextStep}
+        onComplete={() => navigate(-1)}
+      />
     </BackHeaderLayout>
   )
 }

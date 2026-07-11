@@ -1,6 +1,6 @@
 // utils
 import { useState, useEffect, useRef } from 'react'
-import { addDays, startOfWeek } from 'date-fns'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '@/shared/utils/cn'
 import { AnimatePresence } from 'framer-motion'
 import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
@@ -10,6 +10,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { startOfWeek, addDays } from 'date-fns'
 
 // type
 import type { TodoDetail } from '@/shared/types/todo'
@@ -139,6 +140,7 @@ function SortableItem({
 }
 
 export default function Home() {
+  const navigate = useNavigate()
   const [priorityEdit, setPriorityEdit] = useState(false)
   const [selectedTab, setSelectedTab] = useState<
     'all' | 'day' | 'week' | 'month'
@@ -315,6 +317,7 @@ export default function Home() {
                     key={todo.todoId}
                     status="swipeable"
                     onDelete={() => handleDeleteClick(todo.todoId)}
+                    onReplan={() => navigate(`/replan/${todo.todoId}`)}
                     pinned={todo.isPinned}
                     onPin={(isPinned) =>
                       todoHook.handleTogglePin(todo.todoId, isPinned)
@@ -402,6 +405,9 @@ export default function Home() {
                                   onDelete={() =>
                                     handleDeleteClick(todo.todoId)
                                   }
+                                  onReplan={() =>
+                                    navigate(`/replan/${todo.todoId}`)
+                                  }
                                   onClick={() => handleClickTodo(todo.todoId)}
                                   pinned={todo.isPinned}
                                   onPin={(isPinned) =>
@@ -465,6 +471,7 @@ export default function Home() {
                       key={todo.todoId}
                       status="swipeable"
                       onDelete={() => handleDeleteClick(todo.todoId)}
+                      onReplan={() => navigate(`/replan/${todo.todoId}`)}
                       onClick={() => handleClickTodo(todo.todoId)}
                       pinned={todo.isPinned}
                       onPin={(isPinned) =>

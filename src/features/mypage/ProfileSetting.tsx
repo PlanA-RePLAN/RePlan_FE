@@ -185,7 +185,7 @@ export default function ProfileSetting() {
             onClick={confirmType === 'logout' ? handleLogout : handleDeleteAccount}
             className="flex-1 py-3 rounded-xl bg-bluegray-light text-danger font-semibold"
           >
-            삭제
+            {confirmType === 'logout' ? '로그아웃' : '삭제'}
           </button>
         </div>
       </BottomSheet>
