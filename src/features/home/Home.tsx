@@ -524,8 +524,8 @@ export default function Home() {
                       className={cn(
                         'w-5 h-5 transition-transform duration-300 cursor-pointer',
                         todoHook.isCompletedOpen
-                          ? 'rotate-[180deg]'
-                          : 'rotate-90',
+                          ? 'rotate-[270deg]'
+                          : 'rotate-180',
                       )}
                     />
                   </div>
