@@ -29,8 +29,6 @@ export default function DatePicker({
   onClose,
   showHeader,
   weeks,
-  selectedColor,
-  selectedTextColor,
   dueDates = [],
 }: DatePickerProps) {
   const [selected, setSelected] = useState<Date | undefined>(value)
@@ -188,12 +186,12 @@ export default function DatePicker({
           saturday: (date) => date.getDay() === 6,
           sunday: (date) => date.getDay() === 0,
           hasDue: (date) => dueDates.some((d) => isSameDay(d, date)),
-          rangeLeft: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeStart) || date.getDay() === 1),
-          rangeRight: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeEnd) || date.getDay() === 0),
+          rangeLeft: (date) => isMonthInRange(date) && (!!monthRangeStart && isSameDay(date, monthRangeStart) || date.getDay() === 1),
+          rangeRight: (date) => isMonthInRange(date) && (!!monthRangeEnd && isSameDay(date, monthRangeEnd) || date.getDay() === 0),
           rangeMid: (date) => {
             if (!isMonthInRange(date)) return false
-            const isLeft = isSameDay(date, monthRangeStart) || date.getDay() === 1
-            const isRight = isSameDay(date, monthRangeEnd) || date.getDay() === 0
+            const isLeft = (!!monthRangeStart && isSameDay(date, monthRangeStart)) || date.getDay() === 1
+            const isRight = (!!monthRangeEnd && isSameDay(date, monthRangeEnd)) || date.getDay() === 0
             return !isLeft && !isRight
           },
         }}

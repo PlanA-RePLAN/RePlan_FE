@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useImageUpload } from '../hooks/useImageUpload'
 import { getUnreadNotificationCount } from '@/shared/api/notification'
 import { getProfile } from '../api/user'
 import BellIcon from '@/icons/BellIcon'
