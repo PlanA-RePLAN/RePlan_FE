@@ -7,17 +7,11 @@ import NotificationItem from "./components/NotificationItem"
 export default function NotificationSetting() {
   const[setting, setSetting] = useState<NotificationSetting | null>(null)
 
-  const handleTodoChange = async (value: boolean) => {
-    setSetting((prev) => prev ? { ...prev, todoDue: value, todoFailed: value } : prev)
-    const accessToken =localStorage.getItem('accessToken') ?? ''
-      await updateNotificationsSetting(accessToken, { todoDue: value,
-    todoFailed: value })
-    }
-
-  const handleReportChange = async (value: boolean) => {
-    setSetting((prev) => prev ? { ...prev, report: value } : prev)
-    const accessToken =localStorage.getItem('accessToken') ?? ''
-    await updateNotificationsSetting(accessToken, { report: value })
+  // 바뀐 항목 하나만 PATCH로 보낸다. 나머지 항목은 서버가 기존 값을 유지한다.
+  const handleChange = (key: keyof NotificationSetting) => async (value: boolean) => {
+    setSetting((prev) => prev ? { ...prev, [key]: value } : prev)
+    const accessToken = localStorage.getItem('accessToken') ?? ''
+    await updateNotificationsSetting(accessToken, { [key]: value })
   }
 
   useEffect(() => {
@@ -37,9 +31,10 @@ export default function NotificationSetting() {
   }, [])
 
   const NOTIFICATION_ITEMS = [
-    { id: 1, title: "투두 알림", content: "주요 투두 마감, 실패 투두 알림", checked: (setting?.todoDue ?? false) && (setting?.todoFailed ?? false), onChange: handleTodoChange },
-    { id: 2, title: "통계 알림", content: "월간 리포트 및 분석 통계 도착 알림", checked: setting?.report ?? false, onChange: handleReportChange},
-    { id: 3, title: "기타 알림", content: "그 밖의 사용자에게 필요한 소식 알림", checked: false, onChange: () => {}},
+    { id: 1, title: "투두 알림", content: "주요 투두 마감, 실패 투두 알림", checked: setting?.todo ?? false, onChange: handleChange('todo') },
+    { id: 2, title: "통계 알림", content: "월간 리포트 및 분석 통계 도착 알림", checked: setting?.stats ?? false, onChange: handleChange('stats')},
+    { id: 3, title: "공지 알림", content: "서비스 소식 및 공지사항 알림", checked: setting?.notice ?? false, onChange: handleChange('notice')},
+    { id: 4, title: "광고 알림", content: "이벤트·혜택 등 마케팅 정보 수신 동의", checked: setting?.marketing ?? false, onChange: handleChange('marketing')},
   ]
 
   return (

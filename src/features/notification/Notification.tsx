@@ -13,13 +13,14 @@ import StatsNotificationIcon from "@/icons/StatsNotificationIcon"
 import StatisticsIcon from "@/icons/StatisticsIcon"
 
 
-const TABS = ['투두', '통계', '기타'] as const
+const TABS = ['투두', '통계', '공지', '광고'] as const
 type Tab = typeof TABS[number]
 
 const TAB_CATEGORY_MAP: Record<Tab, NotificationCategory> = {
   '투두': 'TODO',
   '통계': 'STATS',
-  '기타': 'ETC',
+  '공지': 'NOTICE',
+  '광고': 'MARKETING',
 }
 
 const NOTIFICATION_ICON_MAP: Record<NotificationTypeName, ReactElement> = {
