@@ -385,7 +385,7 @@ export default function Home() {
                   </p>
                 )}
               </div>
-              <div className="h-dvh overflow-y-auto">
+              <div>
                 {sort === 'priority' ? (
                   <DndContext
                     sensors={sensors}
