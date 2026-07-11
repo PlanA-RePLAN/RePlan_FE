@@ -286,7 +286,7 @@ export default function Home() {
   )
 
   return (
-    <div className="relative h-dvh flex flex-col px-5">
+    <div className="relative h-[calc(100dvh-6.625rem-6.75rem)] flex flex-col px-5">
       <div className="flex gap-1">
         <p className="font-bold">{`${calendar.selectedYear}년 ${calendar.selectedMonth}월`}</p>
         <ChevronDownStrokeIcon
@@ -311,7 +311,7 @@ export default function Home() {
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-20 scrollbar-hide">
         <div className={selectedTab === 'all' ? 'pointer-events-none' : ''}>
           <DatePicker
             onClose={() => {}}
@@ -414,7 +414,7 @@ export default function Home() {
                   </p>
                 )}
               </div>
-              <div className="h-dvh overflow-y-auto">
+              <div>
                 {sort === 'priority' ? (
                   <DndContext
                     sensors={sensors}
