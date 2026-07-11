@@ -358,7 +358,7 @@ export default function Home() {
               </div>
             )}
 
-            <div className="bg-bluegray-light-hover w-full h-px my-8"></div>
+            {todoHook.pinnedTodos.length >0 && <div className="bg-bluegray-light-hover w-full h-px my-8"></div>}
 
             <div className="flex flex-col gap-3">
               <div className="flex justify-between">
