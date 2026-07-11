@@ -109,6 +109,7 @@ export default function EndScheduleInput({
             if (!useDate) onUseDateChange(true)
             setDateSheetOpen(false)
           }}
+          disablePast={true}
           onClose={() => setDateSheetOpen(false)}
         />
       </BottomSheet>
