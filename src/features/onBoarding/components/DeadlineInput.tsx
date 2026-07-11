@@ -46,7 +46,7 @@ export default function DeadlineInput({
             <div className="w-5.5 h-5.5 rounded-full bg-bluegray-light-active flex items-center justify-center">
               <CalendarClearSharpIcon fill="white" />
             </div>
-            <div className="text-sm font-medium">마감 날짜</div>
+            <div className="text-sm font-medium">종료 날짜</div>
           </div>
           <div className="flex gap-2 items-center">
             {date && (
@@ -70,7 +70,7 @@ export default function DeadlineInput({
             <div className="w-5.5 h-5.5 rounded-full bg-bluegray-light-active flex items-center justify-center">
               <CalendarWithClockIcon fill="white" />
             </div>
-            <div className="text-sm font-medium">마감 시간</div>
+            <div className="text-sm font-medium">종료 시간</div>
           </div>
           <div className="flex gap-2 items-center">
             {time && (
