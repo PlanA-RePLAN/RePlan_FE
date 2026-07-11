@@ -166,7 +166,7 @@ export default function DatePicker({
           month_caption: 'hidden',
           month_grid: 'w-full border-collapse',
           weekdays: 'flex w-full',
-          weekday: 'flex-1 text-center text-sm text-bluegray-normal py-2',
+          weekday: 'flex-1 text-center text-sm text-bluegray-normal py-2 font-normal',
           weeks: 'flex flex-col gap-1 w-full',
           week: 'flex w-full',
           day: 'flex-1 flex items-center justify-center',
