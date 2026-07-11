@@ -48,6 +48,15 @@ export interface CreateTodoResponse {
   completed: boolean
 }
 
+export interface CreateSubTodoResponse {
+  todoId: number
+  title: string
+  dueDate: string | null
+  isCompleted: boolean
+  tagId: number | null
+  parentId: number
+}
+
 export interface UpdateTodoRequest {
   title: string
   dueDate: string | null
