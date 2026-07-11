@@ -16,10 +16,11 @@ import StatsNotificationIcon from "@/icons/StatsNotificationIcon"
 import StatisticsIcon from "@/icons/StatisticsIcon"
 
 
-const TABS = ['투두', '통계', '기타'] as const
+const TABS = ['전체','투두', '통계', '기타'] as const
 type Tab = typeof TABS[number]
 
 const TAB_CATEGORY_MAP: Record<Tab, NotificationCategory> = {
+  '전체': 'ALL',
   '투두': 'TODO',
   '통계': 'STATS',
   '기타': 'ETC',
@@ -45,7 +46,7 @@ function formatRelativeTime(createdAt: string): string {
 
 export default function Notification() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<Tab>('투두')
+  const [activeTab, setActiveTab] = useState<Tab>('전체')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const { setHasUnread } = useNotificationStore()
 
@@ -54,7 +55,7 @@ export default function Notification() {
       try {
         const accessToken = localStorage.getItem('accessToken') ?? ''
         const res = await getNotifications(accessToken, {
-          category: TAB_CATEGORY_MAP[activeTab],
+          category: activeTab === '전체' ? undefined : TAB_CATEGORY_MAP[activeTab],
         })
         if (res.success && res.data) {
           setNotifications(res.data.items)
@@ -80,7 +81,7 @@ export default function Notification() {
 
     if (item.type === 'TODO_DUE_SOON') navigate('/home')
     else if (item.type === 'REPORT_READY') navigate('/statics')
-    else if (item.type === 'TODO_FAILED_REPLAN') navigate('/home')
+    else if (item.type === 'TODO_FAILED_REPLAN') navigate('/home')  
   }
 
   return (

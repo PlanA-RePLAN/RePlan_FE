@@ -1,4 +1,4 @@
-export type NotificationCategory = 'TODO' | 'STATS' | 'ETC'
+export type NotificationCategory = 'ALL' | 'TODO' | 'STATS' | 'ETC'
 
 export type NotificationTargetType = 'TODO' | 'REPORT' | 'REPLAN' | null
 
