@@ -115,7 +115,7 @@ export default function ReportTab({
   month,
   onMonthChange,
 }: ReportTabProps) {
-  const achievementRate = data?.achievementRate ?? 0
+  const achievementRate = Math.floor(data?.achievementRate ?? 0)
   const completedTodos = data?.completedTodos ?? 0
   const totalTodos = data?.totalTodos ?? 0
   const uncompletedTodos = totalTodos - completedTodos
