@@ -14,6 +14,8 @@ import { startOfWeek, addDays } from 'date-fns'
 
 // type
 import type { TodoDetail } from '@/shared/types/todo'
+import type { Item, ItemDetail, RoutineItemScope } from '@/shared/types/item'
+import { itemKey } from '@/shared/types/item'
 import type { CustomTag, ProposedTodo } from '@/features/onBoarding/type/types'
 import {
   ROUTINE_TO_REPEAT,
@@ -23,7 +25,7 @@ import {
 // hooks
 import { useCalendar } from './hooks/useCalendar'
 import { useBottomSheets } from './hooks/useBottomSheets'
-import { useTodos } from './hooks/useTodos'
+import { useItems } from './hooks/useItems'
 
 //assests
 const symbolSvg = '/assets/symbol.svg'
@@ -71,6 +73,13 @@ function formatTime(dueDate: string | null): string | undefined {
   })
 }
 
+// ISO 일시 → 'HH:mm' (상세시트 dueTime/repeatTime 형식)
+function toHHmm(dt: string | null): string | null {
+  if (!dt) return null
+  const d = new Date(dt)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
 function getDayTag(routineType: string | null): 'D' | 'W' | 'M' | undefined {
   if (routineType === 'DAILY') return 'D'
   if (routineType === 'WEEKLY') return 'W'
@@ -78,31 +87,66 @@ function getDayTag(routineType: string | null): 'D' | 'W' | 'M' | undefined {
   return undefined
 }
 
-function todoDetailToProposed(todo: TodoDetail): ProposedTodo {
-  const deadlineDate = todo.dueDate ? new Date(todo.dueDate) : null
-  const deadlineTime = formatTime(todo.dueDate) ?? null
+// 루틴 상세는 반복정보/마감일을 안 주므로 목록 item에서 보충.
+// 루틴이면 마감 일정 = 루틴 종료일(repeatEndDate), 투두면 = 마감일.
+function itemDetailToTodoDetail(detail: ItemDetail, item: Item): TodoDetail {
+  const dueSource =
+    item.kind === 'ROUTINE'
+      ? item.repeatEndDate
+      : (detail.dueDate ?? item.dueDate)
   return {
-    id: todo.todoId,
-    title: todo.title,
-    time: deadlineTime ?? '',
+    todoId: detail.todoId ?? item.todoId ?? 0,
+    title: detail.title,
+    dueDate: dueSource,
+    dueTime: toHHmm(dueSource),
+    isCompleted: detail.isCompleted,
+    tagId: detail.tagId,
+    tagTitle: detail.tagTitle,
+    tagColor: detail.tagColor,
+    routineType: detail.routineType ?? item.routineType,
+    routineDays: detail.routineDays ?? item.routineDays,
+    subTodos: detail.subItems.map((s) => ({
+      todoId: s.todoId,
+      title: s.title,
+      isCompleted: s.isCompleted,
+    })),
+  }
+}
+
+function itemDetailToProposed(detail: ItemDetail, item: Item): ProposedTodo {
+  const routineType = detail.routineType ?? item.routineType
+  const routineDays = detail.routineDays ?? item.routineDays
+  const isRoutine = item.kind === 'ROUTINE'
+
+  // 반복시간 = 회차 마감일시(dueDate)의 시각. (루틴 상세엔 dueDate가 없어 목록 item에서 가져온다.)
+  const repeatTime = isRoutine ? (formatTime(item.dueDate) ?? null) : null
+  // 마감(종료일): 루틴=반복 종료일, 투두=마감일
+  const endStr = isRoutine
+    ? item.repeatEndDate
+    : (detail.dueDate ?? item.dueDate)
+  const deadlineDate = endStr ? new Date(endStr) : null
+  const deadlineTime = formatTime(endStr) ?? null
+
+  return {
+    id: detail.todoId ?? item.todoId ?? 0,
+    title: detail.title,
+    time: (isRoutine ? repeatTime : deadlineTime) ?? '',
     dayTag: 'D',
-    selectedTagId: todo.tagTitle ?? '미선택',
-    repeat: todo.routineType
-      ? (ROUTINE_TO_REPEAT[todo.routineType] ?? '없음')
-      : '없음',
+    selectedTagId: detail.tagId != null ? String(detail.tagId) : '미선택',
+    repeat: routineType ? (ROUTINE_TO_REPEAT[routineType] ?? '없음') : '없음',
+    repeatTime: repeatTime ?? undefined,
+    repeatTimeEnabled: repeatTime != null,
     weeklyDay:
-      todo.routineType === 'WEEKLY' && todo.routineDays
-        ? todo.routineDays
+      routineType === 'WEEKLY' && routineDays
+        ? routineDays
             .map((i) => WEEKDAY_INDEX_TO_NAME[i])
             .filter((n): n is string => !!n)
         : undefined,
     monthlyDay:
-      todo.routineType === 'MONTHLY' && todo.routineDays
-        ? todo.routineDays
-        : undefined,
+      routineType === 'MONTHLY' && routineDays ? routineDays : undefined,
     deadlineDate,
     deadlineTime,
-    subTodos: todo.subTodos.map((s) => ({ id: s.todoId, title: s.title })),
+    subTodos: detail.subItems.map((s) => ({ id: s.todoId, title: s.title })),
   }
 }
 
@@ -110,7 +154,7 @@ function SortableItem({
   id,
   children,
 }: {
-  id: number
+  id: string
   children: (
     dragListeners: Record<string, unknown> | undefined,
   ) => React.ReactNode
@@ -148,6 +192,10 @@ export default function Home() {
   const [sort, setSort] = useState<'priority' | 'dueDate' | 'latest'>('dueDate')
   const showEdit = sort === 'priority'
   const [allTags, setAllTags] = useState<CustomTag[]>([])
+  // 루틴 수정 시 선택한 범위 (THIS/ALL). 투두는 undefined
+  const [editScope, setEditScope] = useState<RoutineItemScope | undefined>(
+    undefined,
+  )
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -156,7 +204,7 @@ export default function Home() {
 
   const calendar = useCalendar()
   const sheets = useBottomSheets()
-  const todoHook = useTodos({
+  const itemHook = useItems({
     selectedTab,
     sort,
     selectedDate: calendar.selectedDate,
@@ -184,34 +232,52 @@ export default function Home() {
     setSelectedTab(value as 'all' | 'day' | 'week' | 'month')
   }
 
-  const handleClickTodo = async (todoId: number) => {
-    await todoHook.fetchTodo(todoId)
+  const handleClickItem = async (item: Item) => {
+    await itemHook.fetchDetail(item)
     sheets.setIsTodoInfoSheetOpen(true)
   }
 
-  const handleCreateTodo = async (proposed: ProposedTodo) => {
+  const handleCreateItem = async (proposed: ProposedTodo) => {
     try {
-      await todoHook.handleCreateTodo(proposed)
+      await itemHook.handleCreate(proposed)
     } finally {
       sheets.setIsNewTodoSheetOpen(false)
     }
   }
 
-  const handleUpdateTodo = async (updated: ProposedTodo) => {
-    await todoHook.handleUpdateTodo(updated)
+  // 정보시트에서 '수정' → 루틴이면 범위 선택 시트, 투두면 바로 수정 시트
+  const handleEditClick = () => {
+    sheets.setIsTodoInfoSheetOpen(false)
+    if (itemHook.selectedItem?.kind === 'ROUTINE') {
+      sheets.setIsEditScopeSheetOpen(true)
+    } else {
+      setEditScope(undefined)
+      sheets.setIsEditTodoSheetOpen(true)
+    }
+  }
+
+  const handlePickEditScope = (scope: RoutineItemScope) => {
+    setEditScope(scope)
+    sheets.setIsEditScopeSheetOpen(false)
+    sheets.setIsEditTodoSheetOpen(true)
+  }
+
+  const handleUpdateItem = async (updated: ProposedTodo) => {
+    if (!itemHook.selectedItem) return
+    await itemHook.handleUpdate(itemHook.selectedItem, editScope, updated)
     sheets.setIsEditTodoSheetOpen(false)
     sheets.setIsTodoInfoSheetOpen(false)
   }
 
-  const handleDeleteClick = (todoId: number) => {
-    todoHook.setDeletingTodoId(todoId)
+  const handleDeleteClick = (item: Item) => {
+    itemHook.setDeletingItem(item)
     sheets.setIsDeleteBottomSheetOpen(true)
   }
 
-  const handleConfirmDelete = async () => {
-    if (todoHook.deletingTodoId === null) return
-    await todoHook.deleteById(todoHook.deletingTodoId)
-    todoHook.setDeletingTodoId(null)
+  const runDelete = async (scope?: RoutineItemScope) => {
+    if (!itemHook.deletingItem) return
+    await itemHook.handleDelete(itemHook.deletingItem, scope)
+    itemHook.setDeletingItem(null)
     sheets.setIsDeleteBottomSheetOpen(false)
   }
 
@@ -274,8 +340,8 @@ export default function Home() {
 
       <div className="flex-1 overflow-y-auto">
         <div
-          onTouchStart={handleCalendarTouchStart}
-          onTouchEnd={handleCalendarTouchEnd}
+          onTouchStartCapture={handleCalendarTouchStart}
+          onTouchEndCapture={handleCalendarTouchEnd}
         >
           <div className={selectedTab === 'all' ? 'pointer-events-none' : ''}>
             <DatePicker
@@ -288,12 +354,12 @@ export default function Home() {
               weeks={
                 selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined
               }
-              dueDates={todoHook.calendarDueDates}
+              dueDates={itemHook.calendarDueDates}
             />
           </div>
         </div>
 
-        {todoHook.filteredTodos.length === 0 ? (
+        {itemHook.filteredItems.length === 0 ? (
           <div className="flex flex-col w-full justify-center items-center mt-16">
             <DefaultProfileIcon width={72} height={72} />
             <h3 className="font-bold mt-6 mb-2">오늘 할 일이 없어요</h3>
@@ -304,7 +370,7 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {todoHook.pinnedTodos.length > 0 && (
+            {itemHook.pinnedItems.length > 0 && (
               <div>
                 <div className="flex items-center gap-1 mt-8">
                   <img src={symbolSvg} alt="" />
@@ -312,45 +378,40 @@ export default function Home() {
                     주요 투두
                   </p>
                 </div>
-                {todoHook.pinnedTodos.map((todo) => (
+                {itemHook.pinnedItems.map((item) => (
                   <TodoCard
-                    key={todo.todoId}
+                    key={itemKey(item)}
                     status="swipeable"
-                    onDelete={() => handleDeleteClick(todo.todoId)}
-                    onReplan={() => navigate(`/replan/${todo.todoId}`)}
-                    pinned={todo.isPinned}
+                    onDelete={() => handleDeleteClick(item)}
+                    onReplan={() =>
+                      item.todoId && navigate(`/replan/${item.todoId}`)
+                    }
+                    onClick={() => handleClickItem(item)}
+                    pinned={item.isPinned}
                     onPin={(isPinned) =>
-                      todoHook.handleTogglePin(todo.todoId, isPinned)
+                      itemHook.handleTogglePin(item, isPinned)
                     }
                   >
                     <TodoCard.Icon
-                      onClick={() =>
-                        todoHook.handleToggleComplete(
-                          todo.todoId,
-                          todo.isCompleted,
-                        )
-                      }
-                      checked={todo.isCompleted}
+                      onClick={() => itemHook.handleToggleComplete(item)}
+                      checked={item.isCompleted}
                     />
                     <TodoCard.Content>
-                      <TodoCard.Title
-                        dayTag={getDayTag(todo.routineType)}
-                        onClick={() => handleClickTodo(todo.todoId)}
-                      >
-                        {todo.title}
+                      <TodoCard.Title dayTag={getDayTag(item.routineType)}>
+                        {item.title}
                       </TodoCard.Title>
-                      {todo.dueDate && (
+                      {item.dueDate && (
                         <TodoCard.Time>
-                          {formatTime(todo.dueDate)}
+                          {formatTime(item.dueDate)}
                         </TodoCard.Time>
                       )}
                     </TodoCard.Content>
                     <TodoCard.Category
-                      category={todo.tagTitle ?? ''}
+                      category={item.tagTitle ?? ''}
                       usePin
-                      pinned={todo.isPinned}
+                      pinned={item.isPinned}
                       setPinned={(isPinned) =>
-                        todoHook.handleTogglePin(todo.todoId, isPinned)
+                        itemHook.handleTogglePin(item, isPinned)
                       }
                     />
                   </TodoCard>
@@ -358,7 +419,7 @@ export default function Home() {
               </div>
             )}
 
-            {todoHook.pinnedTodos.length >0 && <div className="bg-bluegray-light-hover w-full h-px my-8"></div>}
+            {itemHook.pinnedItems.length > 0 && <div className="bg-bluegray-light-hover w-full h-px my-8"></div>}
 
             <div className="flex flex-col gap-3">
               <div className="flex justify-between">
@@ -389,64 +450,56 @@ export default function Home() {
                 {sort === 'priority' ? (
                   <DndContext
                     sensors={sensors}
-                    onDragEnd={todoHook.handleDragEnd}
+                    onDragEnd={itemHook.handleDragEnd}
                   >
                     <SortableContext
-                      items={todoHook.regularActiveTodos.map((t) => t.todoId)}
+                      items={itemHook.regularActiveItems.map((it) =>
+                        itemKey(it),
+                      )}
                       strategy={verticalListSortingStrategy}
                     >
-                      {todoHook.regularActiveTodos.map((todo) => (
-                        <SortableItem key={todo.todoId} id={todo.todoId}>
+                      {itemHook.regularActiveItems.map((item) => (
+                        <SortableItem key={itemKey(item)} id={itemKey(item)}>
                           {(dragListeners) => (
                             <div className="flex w-full items-center gap-3">
                               <div className="flex-1 min-w-0">
                                 <TodoCard
                                   status="swipeable"
-                                  onDelete={() =>
-                                    handleDeleteClick(todo.todoId)
-                                  }
+                                  onDelete={() => handleDeleteClick(item)}
                                   onReplan={() =>
-                                    navigate(`/replan/${todo.todoId}`)
+                                    item.todoId &&
+                                    navigate(`/replan/${item.todoId}`)
                                   }
-                                  onClick={() => handleClickTodo(todo.todoId)}
-                                  pinned={todo.isPinned}
+                                  onClick={() => handleClickItem(item)}
+                                  pinned={item.isPinned}
                                   onPin={(isPinned) =>
-                                    todoHook.handleTogglePin(
-                                      todo.todoId,
-                                      isPinned,
-                                    )
+                                    itemHook.handleTogglePin(item, isPinned)
                                   }
                                 >
                                   <TodoCard.Icon
                                     onClick={() =>
-                                      todoHook.handleToggleComplete(
-                                        todo.todoId,
-                                        todo.isCompleted,
-                                      )
+                                      itemHook.handleToggleComplete(item)
                                     }
-                                    checked={todo.isCompleted}
+                                    checked={item.isCompleted}
                                   />
                                   <TodoCard.Content>
                                     <TodoCard.Title
-                                      dayTag={getDayTag(todo.routineType)}
+                                      dayTag={getDayTag(item.routineType)}
                                     >
-                                      {todo.title}
+                                      {item.title}
                                     </TodoCard.Title>
-                                    {todo.dueDate && (
+                                    {item.dueDate && (
                                       <TodoCard.Time>
-                                        {formatTime(todo.dueDate)}
+                                        {formatTime(item.dueDate)}
                                       </TodoCard.Time>
                                     )}
                                   </TodoCard.Content>
                                   <TodoCard.Category
-                                    category={todo.tagTitle ?? ''}
+                                    category={item.tagTitle ?? ''}
                                     usePin
-                                    pinned={todo.isPinned}
+                                    pinned={item.isPinned}
                                     setPinned={(isPinned) =>
-                                      todoHook.handleTogglePin(
-                                        todo.todoId,
-                                        isPinned,
-                                      )
+                                      itemHook.handleTogglePin(item, isPinned)
                                     }
                                   />
                                 </TodoCard>
@@ -466,43 +519,40 @@ export default function Home() {
                     </SortableContext>
                   </DndContext>
                 ) : (
-                  todoHook.regularActiveTodos.map((todo) => (
+                  itemHook.regularActiveItems.map((item) => (
                     <TodoCard
-                      key={todo.todoId}
+                      key={itemKey(item)}
                       status="swipeable"
-                      onDelete={() => handleDeleteClick(todo.todoId)}
-                      onReplan={() => navigate(`/replan/${todo.todoId}`)}
-                      onClick={() => handleClickTodo(todo.todoId)}
-                      pinned={todo.isPinned}
+                      onDelete={() => handleDeleteClick(item)}
+                      onReplan={() =>
+                        item.todoId && navigate(`/replan/${item.todoId}`)
+                      }
+                      onClick={() => handleClickItem(item)}
+                      pinned={item.isPinned}
                       onPin={(isPinned) =>
-                        todoHook.handleTogglePin(todo.todoId, isPinned)
+                        itemHook.handleTogglePin(item, isPinned)
                       }
                     >
                       <TodoCard.Icon
-                        onClick={() =>
-                          todoHook.handleToggleComplete(
-                            todo.todoId,
-                            todo.isCompleted,
-                          )
-                        }
-                        checked={todo.isCompleted}
+                        onClick={() => itemHook.handleToggleComplete(item)}
+                        checked={item.isCompleted}
                       />
                       <TodoCard.Content>
-                        <TodoCard.Title dayTag={getDayTag(todo.routineType)}>
-                          {todo.title}
+                        <TodoCard.Title dayTag={getDayTag(item.routineType)}>
+                          {item.title}
                         </TodoCard.Title>
-                        {todo.dueDate && (
+                        {item.dueDate && (
                           <TodoCard.Time>
-                            {formatTime(todo.dueDate)}
+                            {formatTime(item.dueDate)}
                           </TodoCard.Time>
                         )}
                       </TodoCard.Content>
                       <TodoCard.Category
-                        category={todo.tagTitle ?? ''}
+                        category={item.tagTitle ?? ''}
                         usePin
-                        pinned={todo.isPinned}
+                        pinned={item.isPinned}
                         setPinned={(isPinned) =>
-                          todoHook.handleTogglePin(todo.todoId, isPinned)
+                          itemHook.handleTogglePin(item, isPinned)
                         }
                       />
                     </TodoCard>
@@ -511,7 +561,7 @@ export default function Home() {
 
                 <>
                   <div
-                    onClick={() => todoHook.setIsCompletedOpen((prev) => !prev)}
+                    onClick={() => itemHook.setIsCompletedOpen((prev) => !prev)}
                     className="flex items-center mt-8 mb-2 justify-between"
                   >
                     <div className="flex items-center gap-1">
@@ -523,49 +573,44 @@ export default function Home() {
                     <ChevronLeftIcon
                       className={cn(
                         'w-5 h-5 transition-transform duration-300 cursor-pointer',
-                        todoHook.isCompletedOpen
-                          ? 'rotate-[270deg]'
-                          : 'rotate-180',
+                        itemHook.isCompletedOpen
+                          ? 'rotate-[180deg]'
+                          : 'rotate-90',
                       )}
                     />
                   </div>
-                  {todoHook.isCompletedOpen &&
-                    todoHook.completedTodos.map((todo) => (
+                  {itemHook.isCompletedOpen &&
+                    itemHook.completedItems.map((item) => (
                       <TodoCard
-                        key={todo.todoId}
+                        key={itemKey(item)}
                         status="grey"
-                        onDelete={() => handleDeleteClick(todo.todoId)}
-                        onClick={() => handleClickTodo(todo.todoId)}
-                        pinned={todo.isPinned}
+                        onDelete={() => handleDeleteClick(item)}
+                        onClick={() => handleClickItem(item)}
+                        pinned={item.isPinned}
                         onPin={(isPinned) =>
-                          todoHook.handleTogglePin(todo.todoId, isPinned)
+                          itemHook.handleTogglePin(item, isPinned)
                         }
                       >
                         <TodoCard.Icon
-                          onClick={() =>
-                            todoHook.handleToggleComplete(
-                              todo.todoId,
-                              todo.isCompleted,
-                            )
-                          }
-                          checked={todo.isCompleted}
+                          onClick={() => itemHook.handleToggleComplete(item)}
+                          checked={item.isCompleted}
                         />
                         <TodoCard.Content>
-                          <TodoCard.Title dayTag={getDayTag(todo.routineType)}>
-                            {todo.title}
+                          <TodoCard.Title dayTag={getDayTag(item.routineType)}>
+                            {item.title}
                           </TodoCard.Title>
-                          {todo.dueDate && (
+                          {item.dueDate && (
                             <TodoCard.Time>
-                              {formatTime(todo.dueDate)}
+                              {formatTime(item.dueDate)}
                             </TodoCard.Time>
                           )}
                         </TodoCard.Content>
                         <TodoCard.Category
-                          category={todo.tagTitle ?? ''}
+                          category={item.tagTitle ?? ''}
                           usePin
-                          pinned={todo.isPinned}
+                          pinned={item.isPinned}
                           setPinned={(isPinned) =>
-                            todoHook.handleTogglePin(todo.todoId, isPinned)
+                            itemHook.handleTogglePin(item, isPinned)
                           }
                         />
                       </TodoCard>
@@ -587,27 +632,32 @@ export default function Home() {
       <TodoEditSheet
         isOpen={sheets.isNewTodoSheetOpen}
         onClose={() => sheets.setIsNewTodoSheetOpen(false)}
-        onConfirm={handleCreateTodo}
+        onConfirm={handleCreateItem}
         todo={emptyTodo}
         allTags={allTags}
         onTagAdd={() => {}}
         title="투두 추가"
       />
 
-      {todoHook.selectedTodo && (
+      {itemHook.selectedItem && itemHook.selectedDetail && (
         <>
           <TodoInfoSheet
             isOpen={sheets.isTodoInfoSheetOpen}
             onClose={() => sheets.setIsTodoInfoSheetOpen(false)}
-            onEdit={() => {
-              sheets.setIsTodoInfoSheetOpen(false)
-              sheets.setIsEditTodoSheetOpen(true)
-            }}
-            todo={todoHook.selectedTodo}
+            onEdit={handleEditClick}
+            todo={itemDetailToTodoDetail(
+              itemHook.selectedDetail,
+              itemHook.selectedItem,
+            )}
+            repeatTime={
+              itemHook.selectedItem.kind === 'ROUTINE'
+                ? toHHmm(itemHook.selectedItem.dueDate)
+                : null
+            }
             allTags={allTags}
             onSubTodoAdd={() => {}}
             onClick={() => {
-              todoHook.deleteById(todoHook.selectedTodo!.todoId)
+              handleDeleteClick(itemHook.selectedItem!)
               sheets.setIsTodoInfoSheetOpen(false)
             }}
           />
@@ -617,35 +667,93 @@ export default function Home() {
               sheets.setIsEditTodoSheetOpen(false)
               sheets.setIsTodoInfoSheetOpen(true)
             }}
-            onConfirm={handleUpdateTodo}
-            todo={todoDetailToProposed(todoHook.selectedTodo)}
+            onConfirm={handleUpdateItem}
+            todo={itemDetailToProposed(
+              itemHook.selectedDetail,
+              itemHook.selectedItem,
+            )}
             allTags={allTags}
             onTagAdd={() => {}}
             title="투두 수정"
+            onlyTitleAndTag={editScope === 'THIS'}
           />
         </>
       )}
+
+      {/* 루틴 수정 범위 선택 */}
+      <BottomSheet
+        isOpen={sheets.isEditScopeSheetOpen}
+        onClose={() => sheets.setIsEditScopeSheetOpen(false)}
+      >
+        <div className="pt-4 pb-9 px-5 flex flex-col items-center w-full">
+          <h3 className="text-xl font-semibold">해당 투두는 반복 투두에요</h3>
+          <p className="text-bluegray-darker mt-3 mb-6">
+            이번 투두만 수정할까요?
+          </p>
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={() => handlePickEditScope('THIS')}
+              className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
+            >
+              이번만
+            </button>
+            <button
+              onClick={() => handlePickEditScope('ALL')}
+              className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
+            >
+              모두 수정
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
 
       <BottomSheet
         isOpen={sheets.isDeleteBottomSheetOpen}
         onClose={() => sheets.setIsDeleteBottomSheetOpen(false)}
       >
         <div className="pt-4 pb-9 px-5 flex flex-col items-center w-full">
-          <h3 className="text-xl font-semibold">투두를 삭제하시겠습니까?</h3>
-          <div className="flex gap-3 mt-5 w-full">
-            <button
-              onClick={() => sheets.setIsDeleteBottomSheetOpen(false)}
-              className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleConfirmDelete}
-              className="flex-1 py-3 rounded-xl bg-bluegray-light text-danger font-semibold"
-            >
-              삭제
-            </button>
-          </div>
+          {itemHook.deletingItem?.kind === 'ROUTINE' ? (
+            <>
+              <h3 className="text-xl font-semibold">해당 투두는 반복 투두에요</h3>
+              <p className="text-bluegray-darker mt-3 mb-6">
+                이번 투두만 삭제할까요?
+              </p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => runDelete('THIS')}
+                  className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
+                >
+                  이번만
+                </button>
+                <button
+                  onClick={() => runDelete('ALL')}
+                  className="flex-1 py-3 rounded-xl bg-bluegray-light text-danger font-semibold"
+                >
+                  모두 삭제
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-semibold">
+                투두를 삭제하시겠습니까?
+              </h3>
+              <div className="flex gap-3 mt-5 w-full">
+                <button
+                  onClick={() => sheets.setIsDeleteBottomSheetOpen(false)}
+                  className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={() => runDelete()}
+                  className="flex-1 py-3 rounded-xl bg-bluegray-light text-danger font-semibold"
+                >
+                  삭제
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </BottomSheet>
 
@@ -669,8 +777,8 @@ export default function Home() {
       </BottomSheet>
 
       <AnimatePresence>
-        {todoHook.showToast && (
-          <Toast type="success" onClose={() => todoHook.setShowToast(false)} />
+        {itemHook.showToast && (
+          <Toast type="success" onClose={() => itemHook.setShowToast(false)} />
         )}
       </AnimatePresence>
     </div>

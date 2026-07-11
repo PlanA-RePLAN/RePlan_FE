@@ -86,7 +86,8 @@ export interface AiRecommendedTodo {
   dueDate: string | null
   dueTime: string | null
   routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
-  routineDate: number | null
+  // WEEKLY: 요일 인덱스(월=0…일=6), MONTHLY: 일자(1~31), DAILY: null
+  routineDays: number[] | null
   tagId: number | null
   tagName: string | null
 }

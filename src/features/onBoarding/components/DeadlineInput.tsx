@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
+import { cn } from '@/shared/utils/cn'
 import BottomSheet from '@/shared/components/BottomSheet'
 import Toggle from '@/shared/components/Toggle'
 import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
@@ -33,6 +34,26 @@ export default function DeadlineInput({
   const [dateSheetOpen, setDateSheetOpen] = useState(false)
   const [timeSheetOpen, setTimeSheetOpen] = useState(false)
 
+  // 마감 시간은 마감 날짜에 종속된다 (날짜 없이 시간만은 백엔드가 거부)
+  const timeDisabled = !useDate
+
+  const handleUseDateChange = (next: boolean) => {
+    onUseDateChange(next)
+    if (next) {
+      // 스위치를 켜면 바로 값을 정하도록 바텀시트를 연다
+      if (onDateChange) setDateSheetOpen(true)
+    } else if (useTime) {
+      // 날짜를 끄면 시간도 함께 끈다
+      onUseTimeChange(false)
+    }
+  }
+
+  const handleUseTimeChange = (next: boolean) => {
+    if (timeDisabled) return
+    onUseTimeChange(next)
+    if (next && onTimeChange) setTimeSheetOpen(true)
+  }
+
   return (
     <>
       <div className="flex flex-col">
@@ -55,7 +76,7 @@ export default function DeadlineInput({
               </div>
             )}
             {!notUseToggle && (
-              <Toggle checked={useDate} onChange={onUseDateChange} />
+              <Toggle checked={useDate} onChange={handleUseDateChange} />
             )}
           </div>
         </button>
@@ -66,7 +87,12 @@ export default function DeadlineInput({
           }
           className="flex justify-between items-center py-4 w-full border-b border-bluegray-light-hover"
         >
-          <div className="flex gap-2 items-center">
+          <div
+            className={cn(
+              'flex gap-2 items-center',
+              !notUseToggle && timeDisabled && 'opacity-40',
+            )}
+          >
             <div className="w-5.5 h-5.5 rounded-full bg-bluegray-light-active flex items-center justify-center">
               <CalendarWithClockIcon fill="white" />
             </div>
@@ -79,7 +105,11 @@ export default function DeadlineInput({
               </div>
             )}
             {!notUseToggle && (
-              <Toggle checked={useTime} onChange={onUseTimeChange} />
+              <Toggle
+                checked={useTime}
+                onChange={handleUseTimeChange}
+                disabled={timeDisabled}
+              />
             )}
           </div>
         </button>
