@@ -10,7 +10,6 @@ export default function MainHeader() {
   const navigate = useNavigate()
   const [name, setName] = useState<string | null>('')
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null)
-  const [hasUnread, setHasUnread] = useState(false)
   const { hasUnread, setHasUnread } = useNotificationStore()
 
   useEffect(() => {
