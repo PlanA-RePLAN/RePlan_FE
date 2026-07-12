@@ -323,28 +323,30 @@ export default function Home() {
 
   return (
     <div className="relative min-h-dvh flex flex-col px-5 pb-[167px]">
-      <div className="flex gap-1 cursor-pointer">
-        <p className="font-bold">{`${calendar.selectedYear}년 ${calendar.selectedMonth}월`}</p>
-        <ChevronDownStrokeIcon
-          onClick={() => sheets.setIsMonthBottomSheetOpen(true)}
-        />
-      </div>
+      <div className="sticky top-26.5 z-40 bg-white">
+        <div className="flex gap-1 cursor-pointer">
+          <p className="font-bold">{`${calendar.selectedYear}년 ${calendar.selectedMonth}월`}</p>
+          <ChevronDownStrokeIcon
+            onClick={() => sheets.setIsMonthBottomSheetOpen(true)}
+          />
+        </div>
 
-      <div className="flex mt-5 mb-5 gap-1">
-        {TABS.map((tab) => (
-          <p
-            key={tab.value}
-            onClick={() => handleSelect(tab.value)}
-            className={cn(
-              'px-3.5 py-2 rounded-[19px] text-[12px] cursor-pointer',
-              selectedTab === tab.value
-                ? 'bg-bluegray-black text-white'
-                : 'bg-bluegray-light text-bluegray-dark',
-            )}
-          >
-            {tab.label}
-          </p>
-        ))}
+        <div className="flex mt-5 mb-5 gap-1">
+          {TABS.map((tab) => (
+            <p
+              key={tab.value}
+              onClick={() => handleSelect(tab.value)}
+              className={cn(
+                'px-3.5 py-2 rounded-[19px] text-[12px] cursor-pointer',
+                selectedTab === tab.value
+                  ? 'bg-bluegray-black text-white'
+                  : 'bg-bluegray-light text-bluegray-dark',
+              )}
+            >
+              {tab.label}
+            </p>
+          ))}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
