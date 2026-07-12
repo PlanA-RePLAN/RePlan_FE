@@ -124,10 +124,9 @@ export default function DatePicker({
   }
 
   const toDateOnly = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
-  const monthRangeStart = selected ? toDateOnly(selected) : null
-  const monthRangeEnd = monthRangeStart ? toDateOnly(addDays(addMonths(monthRangeStart, 1), -1)) : null
+  const monthRangeStart = toDateOnly(selected ?? new Date())
+  const monthRangeEnd = toDateOnly(addDays(addMonths(monthRangeStart, 1), -1))
   const isMonthInRange = (date: Date) => {
-    if (!monthRangeStart || !monthRangeEnd) return false
     const d = toDateOnly(date)
     return d >= monthRangeStart && d <= monthRangeEnd
   }
@@ -186,12 +185,12 @@ export default function DatePicker({
           saturday: (date) => date.getDay() === 6,
           sunday: (date) => date.getDay() === 0,
           hasDue: (date) => dueDates.some((d) => isSameDay(d, date)),
-          rangeLeft: (date) => isMonthInRange(date) && (!!monthRangeStart && isSameDay(date, monthRangeStart) || date.getDay() === 1),
-          rangeRight: (date) => isMonthInRange(date) && (!!monthRangeEnd && isSameDay(date, monthRangeEnd) || date.getDay() === 0),
+          rangeLeft: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeStart) || date.getDay() === 1),
+          rangeRight: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeEnd) || date.getDay() === 0),
           rangeMid: (date) => {
             if (!isMonthInRange(date)) return false
-            const isLeft = (!!monthRangeStart && isSameDay(date, monthRangeStart)) || date.getDay() === 1
-            const isRight = (!!monthRangeEnd && isSameDay(date, monthRangeEnd)) || date.getDay() === 0
+            const isLeft = isSameDay(date, monthRangeStart) || date.getDay() === 1
+            const isRight = isSameDay(date, monthRangeEnd) || date.getDay() === 0
             return !isLeft && !isRight
           },
         }}
