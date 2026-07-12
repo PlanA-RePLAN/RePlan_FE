@@ -289,6 +289,10 @@ export default function Home() {
     startOfWeek(new Date(), { weekStartsOn: 1 })
   )
 
+  const [dayViewStart, setDayViewStart] = useState(() =>
+    startOfWeek(new Date(), { weekStartsOn: 1 })
+  )
+
   const calendarTouchStartX = useRef<number | null>(null)
 
   const handleCalendarTouchStart = (e: React.TouchEvent) => {
@@ -303,6 +307,11 @@ export default function Home() {
     if (selectedTab === 'week') {
       const newStart = addDays(weekViewStart, delta < 0 ? 14 : -14)
       setWeekViewStart(newStart)
+      calendar.setSelectedYear(newStart.getFullYear())
+      calendar.setSelectedMonth(newStart.getMonth() + 1)
+    } else if (selectedTab === 'day') {
+      const newStart = addDays(dayViewStart, delta < 0 ? 7 : -7)
+      setDayViewStart(newStart)
       calendar.setSelectedYear(newStart.getFullYear())
       calendar.setSelectedMonth(newStart.getMonth() + 1)
     } else {
@@ -350,7 +359,7 @@ export default function Home() {
               onDeselect={() => calendar.setSelectedDate(null)}
               showHeader={false}
               value={calendar.selectedDate ?? undefined}
-              defaultMonth={selectedTab === 'week' ? weekViewStart : new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
+              defaultMonth={selectedTab === 'week' ? weekViewStart : selectedTab === 'day' ? dayViewStart : new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
               weeks={selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined}
               dueDates={itemHook.calendarDueDates}
             />
@@ -768,6 +777,8 @@ export default function Home() {
             calendar.setSelectedMonth(month)
             if (selectedTab === 'week') {
               setWeekViewStart(startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }))
+            } else if (selectedTab === 'day') {
+              setDayViewStart(startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }))
             }
             sheets.setIsMonthBottomSheetOpen(false)
           }}

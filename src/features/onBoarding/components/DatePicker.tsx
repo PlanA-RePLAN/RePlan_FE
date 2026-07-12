@@ -101,11 +101,11 @@ export default function DatePicker({
                       }}
                       className={cn(
                         'relative w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium transition-colors',
-                        isTodayDate && 'border border-bluegray-light-active',
-                        !isTodayDate && isSelected && 'bg-[#EEF5FD]',
-                        !isSelected && isSat && 'text-blue-500',
-                        !isSelected && isSun && 'text-red-500',
-                        !isSelected && !isTodayDate && !isSat && !isSun && 'text-bluegray-darker',
+                        isTodayDate && !isSelected && 'border border-bluegray-light-active',
+                        isSelected && 'bg-[#EEF5FD]',
+                        isSat && 'text-blue-500',
+                        isSun && 'text-red-500',
+                        !isSat && !isSun && 'text-bluegray-darker',
                       )}
                     >
                       {hasDue && (
