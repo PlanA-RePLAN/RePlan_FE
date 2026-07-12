@@ -1,5 +1,5 @@
 // utils
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/shared/utils/cn'
 import { AnimatePresence } from 'framer-motion'
@@ -10,6 +10,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { startOfWeek, addDays } from 'date-fns'
 
 // type
 import type { TodoDetail } from '@/shared/types/todo'
@@ -229,7 +230,6 @@ export default function Home() {
 
   const handleSelect = (value: string) => {
     setSelectedTab(value as 'all' | 'day' | 'week' | 'month')
-    calendar.setSelectedDate(null)
   }
 
   const handleClickItem = async (item: Item) => {
@@ -292,47 +292,88 @@ export default function Home() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   )
 
-  return (
-    <div className="relative h-dvh flex flex-col px-5">
-      <div className="flex gap-1">
-        <p className="font-bold">{`${calendar.selectedYear}년 ${calendar.selectedMonth}월`}</p>
-        <ChevronDownStrokeIcon
-          onClick={() => sheets.setIsMonthBottomSheetOpen(true)}
-        />
-      </div>
+  const [weekViewStart, setWeekViewStart] = useState(() =>
+    startOfWeek(new Date(), { weekStartsOn: 1 })
+  )
 
-      <div className="flex mt-5 mb-5 gap-1">
-        {TABS.map((tab) => (
-          <p
-            key={tab.value}
-            onClick={() => handleSelect(tab.value)}
-            className={cn(
-              'px-3.5 py-2 rounded-[19px] text-[12px] cursor-pointer',
-              selectedTab === tab.value
-                ? 'bg-bluegray-black text-white'
-                : 'bg-bluegray-light text-bluegray-dark',
-            )}
-          >
-            {tab.label}
-          </p>
-        ))}
+  const [dayViewStart, setDayViewStart] = useState(() =>
+    startOfWeek(new Date(), { weekStartsOn: 1 })
+  )
+
+  const calendarTouchStartX = useRef<number | null>(null)
+
+  const handleCalendarTouchStart = (e: React.TouchEvent) => {
+    calendarTouchStartX.current = e.touches[0].clientX
+  }
+
+  const handleCalendarTouchEnd = (e: React.TouchEvent) => {
+    if (calendarTouchStartX.current === null) return
+    const delta = e.changedTouches[0].clientX - calendarTouchStartX.current
+    calendarTouchStartX.current = null
+    if (Math.abs(delta) < 50) return
+    if (selectedTab === 'week') {
+      const newStart = addDays(weekViewStart, delta < 0 ? 14 : -14)
+      setWeekViewStart(newStart)
+      calendar.setSelectedYear(newStart.getFullYear())
+      calendar.setSelectedMonth(newStart.getMonth() + 1)
+    } else if (selectedTab === 'day') {
+      const newStart = addDays(dayViewStart, delta < 0 ? 7 : -7)
+      setDayViewStart(newStart)
+      calendar.setSelectedYear(newStart.getFullYear())
+      calendar.setSelectedMonth(newStart.getMonth() + 1)
+    } else {
+      const next = new Date(calendar.selectedYear, calendar.selectedMonth - 1 + (delta < 0 ? 1 : -1))
+      calendar.setSelectedYear(next.getFullYear())
+      calendar.setSelectedMonth(next.getMonth() + 1)
+    }
+  }
+
+  return (
+    <div className="relative min-h-dvh flex flex-col px-5 pb-[167px]">
+      <div className="sticky top-26.5 z-40 bg-white">
+        <div className="flex gap-1 cursor-pointer">
+          <p className="font-bold">{`${calendar.selectedYear}년 ${calendar.selectedMonth}월`}</p>
+          <ChevronDownStrokeIcon
+            onClick={() => sheets.setIsMonthBottomSheetOpen(true)}
+          />
+        </div>
+
+        <div className="flex mt-5 mb-5 gap-1">
+          {TABS.map((tab) => (
+            <p
+              key={tab.value}
+              onClick={() => handleSelect(tab.value)}
+              className={cn(
+                'px-3.5 py-2 rounded-[19px] text-[12px] cursor-pointer',
+                selectedTab === tab.value
+                  ? 'bg-bluegray-black text-white'
+                  : 'bg-bluegray-light text-bluegray-dark',
+              )}
+            >
+              {tab.label}
+            </p>
+          ))}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className={selectedTab === 'all' ? 'pointer-events-none' : ''}>
-          <DatePicker
-            onClose={() => {}}
-            onConfirm={(date) => calendar.setSelectedDate(date)}
-            onDeselect={() => calendar.setSelectedDate(null)}
-            showHeader={false}
-            weeks={
-              selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined
-            }
-            selectedColor="#EEF5FD"
-            selectedTextColor="none"
-            dueDates={itemHook.calendarDueDates}
-          />
-        </div>
+        {selectedTab !== 'all' && (
+          <div
+            onTouchStartCapture={handleCalendarTouchStart}
+            onTouchEndCapture={handleCalendarTouchEnd}
+          >
+            <DatePicker
+              onClose={() => {}}
+              onConfirm={(date) => calendar.setSelectedDate(date)}
+              onDeselect={() => calendar.setSelectedDate(null)}
+              showHeader={false}
+              value={calendar.selectedDate ?? undefined}
+              defaultMonth={selectedTab === 'week' ? weekViewStart : selectedTab === 'day' ? dayViewStart : new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
+              weeks={selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined}
+              dueDates={itemHook.calendarDueDates}
+            />
+          </div>
+        )}
 
         {itemHook.filteredItems.length === 0 ? (
           <div className="flex flex-col w-full justify-center items-center mt-16">
@@ -394,11 +435,12 @@ export default function Home() {
               </div>
             )}
 
-            <div className="bg-bluegray-light-hover w-full h-px my-8"></div>
+            {itemHook.pinnedItems.length > 0 && <div className="bg-bluegray-light-hover w-full h-px my-8"></div>}
 
             <div className="flex flex-col gap-3">
               <div className="flex justify-between">
                 <Dropdown
+                  width="w-[116px]"
                   items={['마감기한순', '최신등록순', '직접설정순']}
                   onChange={(item) => {
                     if (item === '마감기한순') {
@@ -421,7 +463,7 @@ export default function Home() {
                   </p>
                 )}
               </div>
-              <div className="h-dvh overflow-y-auto">
+              <div>
                 {sort === 'priority' ? (
                   <DndContext
                     sensors={sensors}
@@ -549,8 +591,8 @@ export default function Home() {
                       className={cn(
                         'w-5 h-5 transition-transform duration-300 cursor-pointer',
                         itemHook.isCompletedOpen
-                          ? 'rotate-[180deg]'
-                          : 'rotate-90',
+                          ? 'rotate-[270deg]'
+                          : 'rotate-180',
                       )}
                     />
                   </div>
@@ -745,6 +787,11 @@ export default function Home() {
           onConfirm={(year, month) => {
             calendar.setSelectedYear(year)
             calendar.setSelectedMonth(month)
+            if (selectedTab === 'week') {
+              setWeekViewStart(startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }))
+            } else if (selectedTab === 'day') {
+              setDayViewStart(startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }))
+            }
             sheets.setIsMonthBottomSheetOpen(false)
           }}
         />

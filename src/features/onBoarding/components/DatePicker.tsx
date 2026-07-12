@@ -1,21 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DayPicker } from 'react-day-picker'
 import { ko } from 'date-fns/locale'
-import {
-  format,
-  startOfWeek,
-  addDays,
-  isSameDay,
-  isToday,
-  startOfDay,
-  isBefore,
-} from 'date-fns'
+import { format, startOfWeek, addDays, addMonths, isSameDay, isToday, startOfDay } from 'date-fns'
 import BottomSheetHeader from '@/shared/components/BottomSheetHeader'
 import { cn } from '@/shared/utils/cn'
 import 'react-day-picker/dist/style.css'
 
 interface DatePickerProps {
   value?: Date
+  defaultMonth?: Date
   onConfirm: (date: Date) => void
   onDeselect?: () => void
   onClose: () => void
@@ -32,6 +25,7 @@ const WEEKDAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
 
 export default function DatePicker({
   value,
+  defaultMonth,
   onConfirm,
   onDeselect,
   onClose,
@@ -43,91 +37,154 @@ export default function DatePicker({
   disablePast = false,
 }: DatePickerProps) {
   const [selected, setSelected] = useState<Date | undefined>(value)
-  const [month, setMonth] = useState<Date>(value ?? new Date())
+  const [month, setMonth] = useState<Date>(defaultMonth ?? value ?? new Date())
   const today = startOfDay(new Date())
 
+  useEffect(() => {
+    if (defaultMonth) setMonth(defaultMonth)
+  }, [defaultMonth])
+
+  useEffect(() => {
+    setSelected(value)
+  }, [value])
+
   if (weeks) {
-    const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
-    const days = Array.from({ length: weeks * 7 }, (_, i) =>
-      addDays(weekStart, i),
-    )
+    const referenceDate = defaultMonth ?? value ?? new Date()
+    const weekStart = startOfWeek(referenceDate, { weekStartsOn: 1 })
+    const days = Array.from({ length: weeks * 7 }, (_, i) => addDays(weekStart, i))
+
+    const toDateOnly = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    const rangeStart = toDateOnly(selected ?? new Date())
+    const rangeEnd = toDateOnly(addDays(rangeStart, 6))
+    const isInRange = (d: Date) => { const dd = toDateOnly(d); return dd >= rangeStart && dd <= rangeEnd }
 
     return (
       <div className="px-4 pt-2 pb-4">
-        <div className="flex w-full">
-          {WEEKDAY_LABELS.map((label) => (
-            <div
-              key={label}
-              className="flex-1 text-center text-sm text-bluegray-normal py-2"
-            >
-              {label}
-            </div>
-          ))}
-        </div>
-        {Array.from({ length: weeks }, (_, weekIndex) => (
-          <div key={weekIndex} className="flex w-full">
-            {days.slice(weekIndex * 7, weekIndex * 7 + 7).map((day) => {
-              const isSelected = selected && isSameDay(day, selected)
-              const isTodayDate = isToday(day)
-              const isPast = disablePast && isBefore(day, today)
-              const isSat = day.getDay() === 6
-              const isSun = day.getDay() === 0
-              const hasDue = dueDates.some((d) => isSameDay(d, day))
-              return (
-                <div
-                  key={day.toISOString()}
-                  className="flex-1 flex items-center justify-center"
-                >
-                  <button
-                    disabled={isPast}
-                    onClick={() => {
-                      if (selected && isSameDay(day, selected)) {
-                        setSelected(undefined)
-                        onDeselect?.()
-                      } else {
-                        setSelected(day)
-                        onConfirm(day)
-                      }
-                    }}
-                    className={cn(
-                      'relative w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium transition-colors',
-                      isSelected &&
-                        !selectedColor &&
-                        'bg-bluegray-black text-white',
-                      !isSelected &&
-                        isTodayDate &&
-                        'border border-bluegray-light-active',
-                      !isSelected && !isPast && isSat && 'text-blue-500',
-                      !isSelected && !isPast && isSun && 'text-red-500',
-                      !isSelected &&
-                        !isPast &&
-                        !isTodayDate &&
-                        !isSat &&
-                        !isSun &&
-                        'text-bluegray-darker',
-                      isPast && 'text-bluegray-light-active cursor-not-allowed',
-                    )}
-                    style={
-                      isSelected && selectedColor
-                        ? {
-                            backgroundColor: selectedColor,
-                            color: selectedTextColor ?? 'white',
-                          }
-                        : undefined
-                    }
-                  >
-                    {hasDue && (
-                      <span className="absolute top-1.5 left-[calc(50%+7px)] -translate-x-1/2 w-[3px] h-[3px] rounded-full bg-[#A9AFB9]" />
-                    )}
-                    {format(day, 'd')}
-                  </button>
-                </div>
-              )
-            })}
+        {weeks > 1 && (
+          <div className="flex w-full">
+            {WEEKDAY_LABELS.map((label) => (
+              <div key={label} className="flex-1 text-center text-sm text-bluegray-normal py-2">
+                {label}
+              </div>
+            ))}
           </div>
-        ))}
+        )}
+        {Array.from({ length: weeks }, (_, weekIndex) => {
+          const rowDays = days.slice(weekIndex * 7, weekIndex * 7 + 7)
+          const showRange = weeks > 1
+          const inRangeInRow = showRange ? rowDays.filter(isInRange) : []
+          const firstInRow = inRangeInRow[0]
+          const lastInRow = inRangeInRow[inRangeInRow.length - 1]
+
+          return (
+            <div key={weekIndex} className="flex w-full">
+              {rowDays.map((day) => {
+                const dayInRange = showRange && isInRange(day)
+                const isRangeFirst = dayInRange && firstInRow && isSameDay(day, firstInRow)
+                const isRangeLast = dayInRange && lastInRow && isSameDay(day, lastInRow)
+                const isSelected = selected && isSameDay(day, selected)
+                const isTodayDate = isToday(day)
+                const isSat = day.getDay() === 6
+                const isSun = day.getDay() === 0
+                const hasDue = dueDates.some((d) => isSameDay(d, day))
+
+                if (weeks === 1) {
+                  return (
+                    <div key={day.toISOString()} className="flex-1 flex justify-center">
+                      <div
+                        className={cn(
+                          'flex flex-col items-center px-1 pt-1.5 pb-1 rounded-[20px] cursor-pointer',
+                          isSelected && 'bg-[#EEF5FD]',
+                          isTodayDate && !isSelected && 'border border-bluegray-light-active',
+                        )}
+                        onClick={() => {
+                          if (selected && isSameDay(day, selected)) {
+                            setSelected(undefined)
+                            onDeselect?.()
+                          } else {
+                            setSelected(day)
+                            onConfirm(day)
+                          }
+                        }}
+                      >
+                        <span className={cn(
+                          'text-xs',
+                          isSat && 'text-blue-500',
+                          isSun && 'text-red-500',
+                          !isSat && !isSun && isTodayDate && 'text-bluegray-darker',
+                          !isSat && !isSun && !isTodayDate && 'text-bluegray-normal',
+                        )}>
+                          {WEEKDAY_LABELS[(day.getDay() + 6) % 7]}
+                        </span>
+                        <div className="relative w-8 h-8 mt-1 flex items-center justify-center rounded-full text-sm font-medium">
+                          {hasDue && (
+                            <span className="absolute top-0.5 right-0 w-[3px] h-[3px] rounded-full bg-[#A9AFB9]" />
+                          )}
+                          <span className={cn(
+                            isSat && 'text-blue-500',
+                            isSun && 'text-red-500',
+                            !isSat && !isSun && isTodayDate && 'text-black',
+                            !isSat && !isSun && !isTodayDate && 'text-bluegray-normal',
+                          )}>
+                            {format(day, 'd')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
+
+                return (
+                  <div
+                    key={day.toISOString()}
+                    className={cn(
+                      'flex-1 flex items-center justify-center',
+                      dayInRange && 'bg-[#EEF5FD]',
+                      isRangeFirst && 'rounded-l-full',
+                      isRangeLast && 'rounded-r-full',
+                    )}
+                  >
+                    <button
+                      onClick={() => {
+                        if (selected && isSameDay(day, selected)) {
+                          setSelected(undefined)
+                          onDeselect?.()
+                        } else {
+                          setSelected(day)
+                          onConfirm(day)
+                        }
+                      }}
+                      className={cn(
+                        'relative w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium transition-colors',
+                        isTodayDate && !isSelected && 'bg-[#EEF5FD]',
+                        isSelected && 'bg-[#EEF5FD]',
+                        isSat && 'text-blue-500',
+                        isSun && 'text-red-500',
+                        !isSat && !isSun && isTodayDate && 'text-bluegray-darker',
+                        !isSat && !isSun && !isTodayDate && 'text-bluegray-normal',
+                      )}
+                    >
+                      {hasDue && (
+                        <span className="absolute top-1.5 left-[calc(50%+7px)] -translate-x-1/2 w-0.75 h-0.75 rounded-full bg-[#A9AFB9]" />
+                      )}
+                      {format(day, 'd')}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
       </div>
     )
+  }
+
+  const toDateOnly = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const monthRangeStart = toDateOnly(selected ?? new Date())
+  const monthRangeEnd = toDateOnly(addDays(addMonths(monthRangeStart, 1), -1))
+  const isMonthInRange = (date: Date) => {
+    const d = toDateOnly(date)
+    return d >= monthRangeStart && d <= monthRangeEnd
   }
 
   return (
@@ -167,17 +224,14 @@ export default function DatePicker({
           month_caption: 'hidden',
           month_grid: 'w-full border-collapse',
           weekdays: 'flex w-full',
-          weekday: 'flex-1 text-center text-sm text-bluegray-normal py-2',
+          weekday: 'flex-1 text-center text-sm text-bluegray-normal py-2 font-normal',
           weeks: 'flex flex-col gap-1 w-full',
           week: 'flex w-full',
           day: 'flex-1 flex items-center justify-center',
           day_button:
             'w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium text-bluegray-darker transition-colors',
-          selected: selectedColor
-            ? ''
-            : '[&>button]:bg-bluegray-black [&>button]:text-white [&>button]:rounded-full',
-          today:
-            '[&>button]:border [&>button]:border-bluegray-light-active [&>button]:rounded-full',
+          selected: '[&>button]:bg-[#EEF5FD] [&>button]:rounded-full',
+          today: '[&>button]:rounded-full',
           outside: '[&>button]:text-bluegray-light-active',
           disabled:
             '[&>button]:text-bluegray-light-active [&>button]:cursor-not-allowed',
@@ -185,17 +239,28 @@ export default function DatePicker({
         modifiersClassNames={{
           saturday: '[&>button]:text-blue-500',
           sunday: '[&>button]:text-red-500',
+          rangeLeft: 'bg-[#EEF5FD] rounded-l-full',
+          rangeRight: 'bg-[#EEF5FD] rounded-r-full',
+          rangeMid: 'bg-[#EEF5FD]',
         }}
         modifiers={{
           saturday: (date) => date.getDay() === 6,
           sunday: (date) => date.getDay() === 0,
           hasDue: (date) => dueDates.some((d) => isSameDay(d, date)),
+          rangeLeft: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeStart) || date.getDay() === 1),
+          rangeRight: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeEnd) || date.getDay() === 0),
+          rangeMid: (date) => {
+            if (!isMonthInRange(date)) return false
+            const isLeft = isSameDay(date, monthRangeStart) || date.getDay() === 1
+            const isRight = isSameDay(date, monthRangeEnd) || date.getDay() === 0
+            return !isLeft && !isRight
+          },
         }}
         components={{
           DayButton: ({ day, modifiers, ...props }) => (
             <button
               {...props}
-              className={cn(props.className, 'relative')}
+              className={cn(props.className, 'relative', modifiers.today && !modifiers.selected && 'bg-[#EEF5FD]')}
               style={
                 modifiers.selected && selectedColor
                   ? {

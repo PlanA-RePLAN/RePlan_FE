@@ -57,7 +57,8 @@ function TodoCard({
     <div
       onClick={isSwipeable ? handleCardClick : onClick}
       className={cn(
-        'relative flex items-start gap-3 w-full rounded-2xl border border-bluegray-light bg-white p-4 transition-all duration-100 ease-in-out',
+        'relative flex items-center gap-3 w-full h-[78px] rounded-2xl border border-bluegray-light bg-white px-4 transition-all duration-100 ease-in-out',
+        { 'mt-3': !isSwipeable },
         className,
         {
           'bg-[#F5F9FE] border-blue-light-active': isFocusedStyle,
