@@ -322,7 +322,7 @@ export default function Home() {
   }
 
   return (
-    <div className="relative h-dvh flex flex-col px-5">
+    <div className="relative min-h-dvh flex flex-col px-5 pb-[167px]">
       <div className="flex gap-1 cursor-pointer">
         <p className="font-bold">{`${calendar.selectedYear}년 ${calendar.selectedMonth}월`}</p>
         <ChevronDownStrokeIcon
