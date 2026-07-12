@@ -1,8 +1,6 @@
 // util
 import { useState, useRef, useEffect } from 'react'
-import { cn } from '@/shared/utils/cn'
 import { deleteGoal } from '@/shared/api/goal'
-const checkSvg = '/assets/check.svg'
 
 // type
 import { type Goal } from '@/shared/types'
@@ -11,6 +9,7 @@ import { type Goal } from '@/shared/types'
 import CalendarIcon from '@/icons/CalendarIcon'
 import MoreIcon from '@/icons/MoreIcon'
 import BottomSheet from '@/shared/components/BottomSheet'
+import Checkbox from '@/shared/components/Checkbox'
 
 interface GoalSectionProps extends Goal {
   onClick: (id: number) => void
@@ -22,6 +21,7 @@ export default function GoalSection({
   dueDate,
   onClick,
 }: GoalSectionProps) {
+  const [checked, setChecked] = useState(false)
   const [click, setClick] = useState(false)
   const handleClick = () => {
     setClick(!click)
@@ -30,6 +30,7 @@ export default function GoalSection({
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
   const handleDelete = () => {
     setIsBottomSheetOpen(true)
+    setChecked(false)
   }
 
   const handleConfirmDelete = async () => {
@@ -45,10 +46,6 @@ export default function GoalSection({
     }
   }
 
-  const [check, setCheck] = useState(false)
-  const handleCheck = () => {
-    setCheck(!check)
-  }
 
   const formatDueDate = (dueDate: string) => {
     const date = new Date(dueDate)
@@ -102,29 +99,13 @@ export default function GoalSection({
         </div>
         <BottomSheet
           isOpen={isBottomSheetOpen}
-          onClose={() => setIsBottomSheetOpen(false)}
+          onClose={() => { setIsBottomSheetOpen(false); setChecked(false)}}
         >
           <div className="pt-4 pb-9.25 px-5 flex flex-col items-center w-full">
             <h3 className="text-xl font-semibold">목표를 삭제하시겠습니까?</h3>
             <div className="flex gap-2 items-center mt-5">
-              <div className="relative w-4.5 h-4.5">
-                <input
-                  onClick={() => handleCheck()}
-                  className={cn(
-                    'appearance-none w-full h-full rounded-[5px]',
-                    check
-                      ? 'bg-bluegray-black'
-                      : 'border border-bluegray-black',
-                  )}
-                  type="checkbox"
-                />
-                {check && (
-                  <img
-                    className="absolute inset-0 m-auto pointer-events-none"
-                    src={checkSvg}
-                    alt=""
-                  />
-                )}
+              <div onClick={()=>setChecked(!checked)}>
+                <Checkbox checked={checked} color='black'/>
               </div>
               <p>목표를 추가할 때 만든 투두도 함께 삭제할게요</p>
             </div>
