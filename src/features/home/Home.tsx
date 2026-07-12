@@ -431,6 +431,7 @@ export default function Home() {
             <div className="flex flex-col gap-3">
               <div className="flex justify-between">
                 <Dropdown
+                  width="w-[116px]"
                   items={['마감기한순', '최신등록순', '직접설정순']}
                   onChange={(item) => {
                     if (item === '마감기한순') {
