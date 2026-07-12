@@ -48,7 +48,7 @@ export default function MainHeader() {
     }, [])
 
   return (
-    <div className="w-full h-26.5 flex items-center justify-between px-5 pt-6">
+    <div className="sticky top-0 z-50 bg-white w-full h-26.5 flex items-center justify-between px-5 pt-6">
       <div className="flex items-center gap-3">
         {profileImageUrl
           ? <img src={profileImageUrl} alt="프로필" className="w-7 h-7 rounded-full object-cover" />
