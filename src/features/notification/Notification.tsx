@@ -16,14 +16,16 @@ import StatsNotificationIcon from "@/icons/StatsNotificationIcon"
 import StatisticsIcon from "@/icons/StatisticsIcon"
 
 
-const TABS = ['전체','투두', '통계', '기타'] as const
+const TABS = ['전체', '투두', '통계', '공지', '혜택/이벤트'] as const
 type Tab = typeof TABS[number]
 
-const TAB_CATEGORY_MAP: Record<Tab, NotificationCategory> = {
-  '전체': 'ALL',
+// '전체'는 category 없이 조회 (서버가 전체 반환)
+const TAB_CATEGORY_MAP: Record<Tab, NotificationCategory | undefined> = {
+  '전체': undefined,
   '투두': 'TODO',
   '통계': 'STATS',
-  '기타': 'ETC',
+  '공지': 'NOTICE',
+  '혜택/이벤트': 'MARKETING',
 }
 
 const NOTIFICATION_ICON_MAP: Record<NotificationTypeName, ReactElement> = {
@@ -55,7 +57,7 @@ export default function Notification() {
       try {
         const accessToken = localStorage.getItem('accessToken') ?? ''
         const res = await getNotifications(accessToken, {
-          category: activeTab === '전체' ? undefined : TAB_CATEGORY_MAP[activeTab],
+          category: TAB_CATEGORY_MAP[activeTab],
         })
         if (res.success && res.data) {
           setNotifications(res.data.items)

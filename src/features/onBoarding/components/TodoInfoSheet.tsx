@@ -9,12 +9,16 @@ import type { TodoDetail } from '@/shared/types/todo'
 import TodoTag from '@/shared/components/TodoTag'
 import { getTodoTag } from '@/shared/types/todo'
 import DeadlineInput from './DeadlineInput'
+import InfoRow from './InfoRow'
 import CheckIcon from '@/icons/CheckIcon'
 import SubTodoSheet from './SubTodoSheet'
 import BottomSheet from '@/shared/components/BottomSheet'
 import CloseButtonIcon from '@/icons/CloseButtonIcon'
 import RoundEditIcon from '@/icons/RoundEditIcon'
 import AddItemIcon from '@/icons/AddItemIcon'
+import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
+import CalendarWithClockIcon from '@/icons/CalendarWithClockIcon'
+import { format } from 'date-fns'
 
 interface TodoInfoSheetProps {
   isOpen: boolean
@@ -24,6 +28,28 @@ interface TodoInfoSheetProps {
   allTags: CustomTag[]
   onSubTodoAdd: (title: string) => void
   onClick?: () => void
+  // 루틴 회차의 반복 시간('HH:mm'). 넘어올 때만 "반복 시간" 줄을 그린다.
+  repeatTime?: string | null
+}
+
+// 'HH:mm' → 'hh:MM AM/PM'
+function to12Hour(hhmm: string): string {
+  const [hStr, mStr] = hhmm.split(':')
+  const h = parseInt(hStr)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  return `${String(h12).padStart(2, '0')}:${mStr} ${period}`
+}
+
+// 요일 인덱스(0=월 … 6=일) → 라벨
+const WEEKDAY_LABEL: Record<number, string> = {
+  0: '월',
+  1: '화',
+  2: '수',
+  3: '목',
+  4: '금',
+  5: '토',
+  6: '일',
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -42,10 +68,9 @@ export default function TodoInfoSheet({
   allTags,
   onSubTodoAdd,
   onClick,
+  repeatTime,
 }: TodoInfoSheetProps) {
-  console.log('TodoInfoSheet render', todo)
   const [openUnderTodoSheet, setOpenUnderTodoSheet] = useState(false)
-  const [openDeleteConfirmSheet, setOpenDeleteConfirmSheet] = useState(false)
 
   const renderTag = () => {
     const tagTitle = todo.tagTitle ?? ''
@@ -91,15 +116,22 @@ export default function TodoInfoSheet({
     : '없음'
 
   const deadlineDate = todo.dueDate ? new Date(todo.dueDate) : null
-  const deadlineTime = todo.dueTime
-    ? (() => {
-        const [hStr, mStr] = todo.dueTime!.split(':')
-        const h = parseInt(hStr)
-        const period = h >= 12 ? 'PM' : 'AM'
-        const h12 = h % 12 === 0 ? 12 : h % 12
-        return `${String(h12).padStart(2, '0')}:${mStr} ${period}`
-      })()
+  const deadlineTime = todo.dueTime ? to12Hour(todo.dueTime) : null
+  const repeatTimeLabel = repeatTime ? to12Hour(repeatTime) : null
+
+  const isRoutine = todo.routineType !== null
+  const endDateLabel = deadlineDate
+    ? format(deadlineDate, 'yyyy년 MM월 dd일')
     : null
+  const repeatDaysLabel =
+    todo.routineType === 'WEEKLY' && todo.routineDays?.length
+      ? todo.routineDays
+          .map((i) => WEEKDAY_LABEL[i])
+          .filter(Boolean)
+          .join(', ')
+      : todo.routineType === 'MONTHLY' && todo.routineDays?.length
+        ? `${todo.routineDays.join(', ')}일`
+        : null
 
   return (
     <>
@@ -144,17 +176,55 @@ export default function TodoInfoSheet({
             </div>
           </div>
 
-          {/* 마감 일정 */}
-          <SectionLabel>마감 일정</SectionLabel>
-          <DeadlineInput
-            date={deadlineDate}
-            time={deadlineTime}
-            useDate={deadlineDate !== null}
-            useTime={deadlineTime !== null}
-            notUseToggle={true}
-            onUseDateChange={() => {}}
-            onUseTimeChange={() => {}}
-          />
+          {isRoutine ? (
+            <>
+              {/* 반복 설정 (루틴 전체) */}
+              <SectionLabel>반복 설정</SectionLabel>
+              <div className="flex flex-col border-t border-bluegray-light-hover mb-6">
+                {repeatDaysLabel && (
+                  <InfoRow
+                    icon={<CalendarClearSharpIcon fill="white" />}
+                    label="반복 날짜"
+                    value={repeatDaysLabel}
+                  />
+                )}
+                <InfoRow
+                  icon={<CalendarWithClockIcon fill="white" />}
+                  label="반복 시간"
+                  value={repeatTimeLabel}
+                />
+              </div>
+
+              {/* 종료 일정 (루틴 전체) */}
+              <SectionLabel>종료 일정</SectionLabel>
+              <div className="flex flex-col border-t border-bluegray-light-hover">
+                <InfoRow
+                  icon={<CalendarClearSharpIcon fill="white" />}
+                  label="종료 날짜"
+                  value={endDateLabel}
+                />
+                <InfoRow
+                  icon={<CalendarWithClockIcon fill="white" />}
+                  label="종료 시간"
+                  value={deadlineTime}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* 마감 일정 (일회성 투두) */}
+              <SectionLabel>마감 일정</SectionLabel>
+              <DeadlineInput
+                date={deadlineDate}
+                time={deadlineTime}
+                useDate={deadlineDate !== null}
+                useTime={deadlineTime !== null}
+                notUseToggle={true}
+                onUseDateChange={() => {}}
+                onUseTimeChange={() => {}}
+              />
+            </>
+          )}
 
           {/* 하위 투두 */}
           <div className="flex items-center justify-between mt-6">
@@ -194,39 +264,13 @@ export default function TodoInfoSheet({
         {onClick && (
           <div className="px-5 mt-10">
             <button
-              onClick={() => setOpenDeleteConfirmSheet(true)}
+              onClick={onClick}
               className="w-full h-13 bg-bluegray-light flex justify-center items-center rounded-xl text-danger font-semibold text-[14px]"
             >
               투두 삭제
             </button>
           </div>
         )}
-      </BottomSheet>
-
-      <BottomSheet
-        isOpen={openDeleteConfirmSheet}
-        onClose={() => setOpenDeleteConfirmSheet(false)}
-      >
-        <div className="pt-4 pb-9 px-5 flex flex-col items-center w-full">
-          <h3 className="text-xl font-semibold">투두를 삭제하시겠습니까?</h3>
-          <div className="flex gap-3 mt-5 w-full">
-            <button
-              onClick={() => setOpenDeleteConfirmSheet(false)}
-              className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
-            >
-              취소
-            </button>
-            <button
-              onClick={() => {
-                setOpenDeleteConfirmSheet(false)
-                onClick?.()
-              }}
-              className="flex-1 py-3 rounded-xl bg-bluegray-light text-danger font-semibold"
-            >
-              삭제
-            </button>
-          </div>
-        </div>
       </BottomSheet>
     </>
   )
