@@ -93,8 +93,9 @@ export default function DatePicker({
                     <div key={day.toISOString()} className="flex-1 flex justify-center">
                       <div
                         className={cn(
-                          'flex flex-col items-center w-10 pt-1.5 pb-1 rounded-[20px] cursor-pointer',
+                          'flex flex-col items-center px-1.5 pt-1.5 pb-1 rounded-[20px] cursor-pointer',
                           isSelected && 'bg-[#EEF5FD]',
+                          isTodayDate && !isSelected && 'border border-bluegray-light-active',
                         )}
                         onClick={() => {
                           if (selected && isSameDay(day, selected)) {
@@ -115,10 +116,7 @@ export default function DatePicker({
                         )}>
                           {WEEKDAY_LABELS[(day.getDay() + 6) % 7]}
                         </span>
-                        <div className={cn(
-                          'relative w-8 h-8 mt-1 flex items-center justify-center rounded-full text-sm font-medium',
-                          isTodayDate && !isSelected && 'border border-bluegray-light-active',
-                        )}>
+                        <div className="relative w-8 h-8 mt-1 flex items-center justify-center rounded-full text-sm font-medium">
                           {hasDue && (
                             <span className="absolute top-0.5 right-0 w-[3px] h-[3px] rounded-full bg-[#A9AFB9]" />
                           )}
