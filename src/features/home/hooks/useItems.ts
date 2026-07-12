@@ -8,7 +8,10 @@ import {
   updateItemContent,
   deleteItem,
 } from '@/shared/api/items'
-import { createTodo as createTodoApi } from '@/shared/api/todo'
+import {
+  createTodo as createTodoApi,
+  createSubTodo as createSubTodoApi,
+} from '@/shared/api/todo'
 import { createRoutine } from '@/shared/api/routine'
 import type { Item, ItemDetail, RoutineItemScope } from '@/shared/types/item'
 import { toTarget, itemKey } from '@/shared/types/item'
@@ -167,6 +170,33 @@ export function useItems({
       if (res.success && res.data) {
         setSelectedItem(item)
         setSelectedDetail(res.data)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleAddSubTodo = async (parentId: number, title: string) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      const res = await createSubTodoApi(accessToken, parentId, title)
+      if (res.success && res.data) {
+        const created = res.data
+        setSelectedDetail((prev) =>
+          prev
+            ? {
+                ...prev,
+                subItems: [
+                  ...prev.subItems,
+                  {
+                    todoId: created.todoId,
+                    title: created.title,
+                    isCompleted: created.isCompleted,
+                  },
+                ],
+              }
+            : prev,
+        )
       }
     } catch (error) {
       console.error(error)
@@ -385,6 +415,7 @@ export function useItems({
     setIsCompletedOpen,
     fetchDetail,
     handleCreate,
+    handleAddSubTodo,
     handleUpdate,
     handleDelete,
     handleToggleComplete,

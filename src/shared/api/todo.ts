@@ -1,60 +1,60 @@
-import { Todo, TodoDetail, CreateTodoRequest, CreateTodoResponse, UpdateTodoRequest } from '../types/todo'
+import {
+  Todo,
+  TodoDetail,
+  CreateTodoRequest,
+  CreateTodoResponse,
+  CreateSubTodoResponse,
+  UpdateTodoRequest,
+} from '../types/todo'
 import { ApiResponse } from '../types/auth'
 import client from './client'
 
 export async function getTodos(
-    accessToken: string,
-    filter: 'all' | 'day' | 'week' | 'month',
-    sort: 'priority' | 'dueDate',
-    date?: string,
+  accessToken: string,
+  filter: 'all' | 'day' | 'week' | 'month',
+  sort: 'priority' | 'dueDate',
+  date?: string,
 ): Promise<ApiResponse<Todo[]>> {
-    const res = await client.get<ApiResponse<Todo[]>>(
-        '/api/todos',
-        {
-            params: { filter, sort, ...(date && { date }) },
-            headers: { Authorization: `Bearer ${accessToken}` },
-        }
-    )
-    return res.data
+  const res = await client.get<ApiResponse<Todo[]>>('/api/todos', {
+    params: { filter, sort, ...(date && { date }) },
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return res.data
 }
 
 export async function getTodoDetail(
-    accessToken: string,
-    todoId: number,
+  accessToken: string,
+  todoId: number,
 ): Promise<ApiResponse<TodoDetail>> {
-    const res = await client.get<ApiResponse<TodoDetail>>(
-        `/api/todos/${todoId}`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-    )
-    return res.data
+  const res = await client.get<ApiResponse<TodoDetail>>(
+    `/api/todos/${todoId}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  return res.data
 }
 
 export async function deleteTodo(
-    accessToken: string,
-    todoId: number
-): Promise<ApiResponse<null>>{
-    const res = await client.delete<ApiResponse<null>>(
-        `/api/todos/${todoId}`,
-        {
-            headers: { Authorization: `Bearer ${accessToken}` },
-        }
-    )
-    return res.data
+  accessToken: string,
+  todoId: number,
+): Promise<ApiResponse<null>> {
+  const res = await client.delete<ApiResponse<null>>(`/api/todos/${todoId}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return res.data
 }
 
-
 export async function updateTodoOrder(
-    accessToken: string,
-    todoId: number,
-    prevTodoId: number | null,
-    nextTodoId: number | null,
+  accessToken: string,
+  todoId: number,
+  prevTodoId: number | null,
+  nextTodoId: number | null,
 ): Promise<ApiResponse<null>> {
-    const res = await client.patch<ApiResponse<null>>(
-        `/api/todos/${todoId}/order`,
-        { prevTodoId, nextTodoId },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-    )
-    return res.data
+  const res = await client.patch<ApiResponse<null>>(
+    `/api/todos/${todoId}/order`,
+    { prevTodoId, nextTodoId },
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  return res.data
 }
 
 export async function createTodo(
@@ -69,17 +69,30 @@ export async function createTodo(
   return res.data
 }
 
+export async function createSubTodo(
+  accessToken: string,
+  parentId: number,
+  title: string,
+): Promise<ApiResponse<CreateSubTodoResponse>> {
+  const res = await client.post<ApiResponse<CreateSubTodoResponse>>(
+    `/api/todos/${parentId}/sub-todos`,
+    { title },
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  return res.data
+}
+
 export async function toggleTodoComplete(
-    accessToken: string,
-    todoId: number,
-    isCompleted: boolean,
+  accessToken: string,
+  todoId: number,
+  isCompleted: boolean,
 ): Promise<ApiResponse<null>> {
-    const res = await client.patch<ApiResponse<null>>(
-        `/api/todos/${todoId}/complete`,
-        { isCompleted },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-    )
-    return res.data
+  const res = await client.patch<ApiResponse<null>>(
+    `/api/todos/${todoId}/complete`,
+    { isCompleted },
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  return res.data
 }
 
 export async function updateTodo(
@@ -96,25 +109,23 @@ export async function updateTodo(
 }
 
 export async function getPinnedTodos(
-    accessToken: string,
+  accessToken: string,
 ): Promise<ApiResponse<Todo[]>> {
-    const res = await client.get<ApiResponse<Todo[]>>(
-        '/api/todos/pinned',
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-    )
-    return res.data
+  const res = await client.get<ApiResponse<Todo[]>>('/api/todos/pinned', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return res.data
 }
 
 export async function pinTodo(
-    accessToken: string,
-    todoId: number,
-    isPinned: boolean,
+  accessToken: string,
+  todoId: number,
+  isPinned: boolean,
 ): Promise<ApiResponse<null>> {
-    const res = await client.patch<ApiResponse<null>>(
-        `/api/todos/${todoId}/pin`,
-        { isPinned },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-    )
-    return res.data
+  const res = await client.patch<ApiResponse<null>>(
+    `/api/todos/${todoId}/pin`,
+    { isPinned },
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  return res.data
 }
-
