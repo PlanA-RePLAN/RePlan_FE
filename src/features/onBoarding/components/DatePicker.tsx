@@ -93,7 +93,7 @@ export default function DatePicker({
                     <div key={day.toISOString()} className="flex-1 flex justify-center">
                       <div
                         className={cn(
-                          'flex flex-col items-center px-1.5 pt-1.5 pb-1 rounded-[20px] cursor-pointer',
+                          'flex flex-col items-center px-1 pt-1.5 pb-1 rounded-[20px] cursor-pointer',
                           isSelected && 'bg-[#EEF5FD]',
                           isTodayDate && !isSelected && 'border border-bluegray-light-active',
                         )}
