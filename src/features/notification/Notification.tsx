@@ -1,8 +1,11 @@
 // utils
 import { useState, useEffect, ReactElement } from "react"
+import { useNavigate } from "react-router-dom"
 import { cn } from "@/shared/utils/cn"
-import { getNotifications, markNotificationAsRead } from "@/shared/api/notification"
+import { getNotifications, getUnreadNotificationCount, markNotificationAsRead } from "@/shared/api/notification"
+import { useNotificationStore } from "@/store/notificationStore"
 import { NotificationCategory, Notification as NotificationItem, NotificationTypeName } from "@/shared/types/notification"
+
 
 // components
 import BackHeaderLayout from "@/shared/components/BackHeaderLayout"
@@ -13,13 +16,16 @@ import StatsNotificationIcon from "@/icons/StatsNotificationIcon"
 import StatisticsIcon from "@/icons/StatisticsIcon"
 
 
-const TABS = ['투두', '통계', '기타'] as const
+const TABS = ['전체', '투두', '통계', '공지', '혜택/이벤트'] as const
 type Tab = typeof TABS[number]
 
-const TAB_CATEGORY_MAP: Record<Tab, NotificationCategory> = {
+// '전체'는 category 없이 조회 (서버가 전체 반환)
+const TAB_CATEGORY_MAP: Record<Tab, NotificationCategory | undefined> = {
+  '전체': undefined,
   '투두': 'TODO',
   '통계': 'STATS',
-  '기타': 'ETC',
+  '공지': 'NOTICE',
+  '혜택/이벤트': 'MARKETING',
 }
 
 const NOTIFICATION_ICON_MAP: Record<NotificationTypeName, ReactElement> = {
@@ -41,8 +47,10 @@ function formatRelativeTime(createdAt: string): string {
 }
 
 export default function Notification() {
-  const [activeTab, setActiveTab] = useState<Tab>('투두')
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState<Tab>('전체')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const { setHasUnread } = useNotificationStore()
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -61,12 +69,21 @@ export default function Notification() {
     fetchNotifications()
   }, [activeTab])
 
-   const handleNotificationClick = async (id: number) => { 
+  const handleNotificationClick = async (item: NotificationItem) => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
-    await markNotificationAsRead(accessToken, id)
+    await markNotificationAsRead(accessToken, item.id)
     setNotifications((prev) =>
-      prev.map((item) => item.id === id ? { ...item, read: true } : item)
+      prev.map((n) => n.id === item.id ? { ...n, read: true } : n)
     )
+
+    const res = await getUnreadNotificationCount(accessToken)
+    if (res.success && res.data){
+      setHasUnread(res.data.count > 0)
+    }
+
+    if (item.type === 'TODO_DUE_SOON') navigate('/home')
+    else if (item.type === 'REPORT_READY') navigate('/statics')
+    else if (item.type === 'TODO_FAILED_REPLAN') navigate('/home')  
   }
 
   return (
@@ -98,7 +115,7 @@ export default function Notification() {
                   content={item.body}
                   notificationTime={formatRelativeTime(item.createdAt)}
                   isRead={item.read}
-                  onClick={() => handleNotificationClick(item.id)}
+                  onClick={() => handleNotificationClick(item)}
                 />
               ))
             ) : (

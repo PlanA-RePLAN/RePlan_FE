@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useNotificationStore } from '@/store/notificationStore'
 import { getUnreadNotificationCount } from '@/shared/api/notification'
 import { getProfile } from '../api/user'
 import BellIcon from '@/icons/BellIcon'
@@ -10,6 +11,7 @@ export default function MainHeader() {
   const [name, setName] = useState<string | null>('')
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null)
   const [hasUnread, setHasUnread] = useState(false)
+  const { hasUnread, setHasUnread } = useNotificationStore()
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
