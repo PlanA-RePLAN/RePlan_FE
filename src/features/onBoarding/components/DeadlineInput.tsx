@@ -126,6 +126,7 @@ export default function DeadlineInput({
               onDateChange(d)
               setDateSheetOpen(false)
             }}
+            disablePast={true}
             onClose={() => setDateSheetOpen(false)}
           />
         </BottomSheet>

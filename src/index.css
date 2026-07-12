@@ -46,3 +46,13 @@
   --color-tag6-back: #fff1f1;
   --color-tag6-text: #ffa9a9;
 }
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

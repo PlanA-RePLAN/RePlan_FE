@@ -7,9 +7,9 @@ export default function OnboardingComplete() {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center px-5 min-h-[calc(100vh-120px)]">
+      <div className="flex flex-col items-center justify-center px-5 min-h-[calc(100vh-230px)]">
         <CircleCheckButtonIcon width={72} height={72} color="#579DEC" />
-        <div className="text-2xl font-bold mt-8 mb-3 text-center">
+        <div className="text-2xl font-bold text-center">
           투두리스트 추가가 완료되었어요!
         </div>
         <div className="text-sm font-medium text-bluegray-normal text-center">

@@ -269,6 +269,13 @@ export default function Home() {
     sheets.setIsTodoInfoSheetOpen(false)
   }
 
+  const handleSubTodoAdd = (title: string) => {
+    const parentId =
+      itemHook.selectedDetail?.todoId ?? itemHook.selectedItem?.todoId
+    if (parentId == null) return
+    itemHook.handleAddSubTodo(parentId, title)
+  }
+
   const handleDeleteClick = (item: Item) => {
     itemHook.setDeletingItem(item)
     sheets.setIsDeleteBottomSheetOpen(true)
@@ -665,7 +672,7 @@ export default function Home() {
                 : null
             }
             allTags={allTags}
-            onSubTodoAdd={() => {}}
+            onSubTodoAdd={handleSubTodoAdd}
             onClick={() => {
               handleDeleteClick(itemHook.selectedItem!)
               sheets.setIsTodoInfoSheetOpen(false)
@@ -724,7 +731,9 @@ export default function Home() {
         <div className="pt-4 pb-9 px-5 flex flex-col items-center w-full">
           {itemHook.deletingItem?.kind === 'ROUTINE' ? (
             <>
-              <h3 className="text-xl font-semibold">해당 투두는 반복 투두에요</h3>
+              <h3 className="text-xl font-semibold">
+                해당 투두는 반복 투두에요
+              </h3>
               <p className="text-bluegray-darker mt-3 mb-6">
                 이번 투두만 삭제할까요?
               </p>

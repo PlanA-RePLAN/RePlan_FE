@@ -1,20 +1,40 @@
 export interface FailureCause {
-  cause: string
-  percentage: number
+  reason: string
+  count: number
+  rate: number
+}
+
+export interface DayAchievement {
+  day: string
+  rate: number
+}
+
+export interface TagAchievement {
+  title: string
+  color: string | null
+  rate: number
+}
+
+export interface PatternCombination {
+  reason: string
+  tag: string
+  day: string | null
   count: number
 }
 
 export interface AnalysisData {
-  failureCauses: FailureCause[]
-  highAchievementTag: string | null
-  lowAchievementTag: string | null
-  highAchievementDay: string | null
-  lowAchievementDay: string | null
+  topFailureReason: string | null
+  failureDistribution: FailureCause[]
+  bestAchievementTag: TagAchievement | null
+  worstAchievementTag: TagAchievement | null
+  bestAchievementDay: DayAchievement | null
+  worstAchievementDay: DayAchievement | null
+  patternCombinations: PatternCombination[]
 }
 
 export interface AiInsightItem {
-  title: string
-  body: string
+  summary: string
+  detail: string
 }
 
 export interface SuggestedTodo {
@@ -25,9 +45,9 @@ export interface SuggestedTodo {
 }
 
 export interface AiInsight {
-  tipMessage: string | null
   insights: AiInsightItem[]
-  suggestedTodos: SuggestedTodo[]
+  writingTip: string | null
+  suggestedTodos?: SuggestedTodo[]
 }
 
 export interface MonthlyReport {

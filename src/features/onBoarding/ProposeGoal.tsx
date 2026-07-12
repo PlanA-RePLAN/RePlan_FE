@@ -8,7 +8,10 @@ import TodoCard from '@/shared/components/TodoCard'
 import CheckBoxIcon from '@/icons/CheckBoxIcon'
 import TodoInfoSheet from './components/TodoInfoSheet'
 import TodoEditSheet from './components/TodoEditSheet'
-import { useState, useMemo, useEffect } from 'react'
+import AiLoadingOverlay from './components/AiLoadingOverlay'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import ChevronLeftIcon from '@/icons/ChevronLeftIcon'
+import ChevronRightIcon from '@/icons/ChevronRightIcon'
 import { format } from 'date-fns'
 import { cn } from '@/shared/utils/cn'
 import {
@@ -23,7 +26,13 @@ import {
 import { useOnboardingStore } from '@/store/onboardingStore'
 import type { AiRecommendedTodo } from '@/shared/types/goal'
 import type { TodoDetail } from '@/shared/types/todo'
-import { createGoalWithTodos } from '@/shared/api/goal'
+import {
+  createGoalWithTodos,
+  getAiTodoRecommendations,
+} from '@/shared/api/goal'
+
+const MAX_REFRESH_COUNT = 3
+const BATCH_ID_STEP = 1000
 
 interface ProposeGoalProps {
   moveNext: () => void
@@ -107,7 +116,11 @@ function toTodoDetail(t: ProposedTodo, allTags: CustomTag[]): TodoDetail {
   }
 }
 
-function mapAiTodo(todo: AiRecommendedTodo, index: number): ProposedTodo {
+function mapAiTodo(
+  todo: AiRecommendedTodo,
+  index: number,
+  idOffset = 0,
+): ProposedTodo {
   const repeat = todo.routineType
     ? (ROUTINE_TO_REPEAT[todo.routineType] ?? '없음')
     : '없음'
@@ -122,7 +135,7 @@ function mapAiTodo(todo: AiRecommendedTodo, index: number): ProposedTodo {
 
   const routineDays = todo.routineDays ?? []
   return {
-    id: index + 1,
+    id: idOffset + index + 1,
     title: todo.title,
     time: formatTime24to12(todo.dueTime),
     dayTag,
@@ -147,13 +160,21 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
   const goalValue = useOnboardingStore((s) => s.goalValue)
   const deadlineDate = useOnboardingStore((s) => s.deadlineDate)
   const deadlineTime = useOnboardingStore((s) => s.deadlineTime)
+  const refineData = useOnboardingStore((s) => s.refineData)
+  const setAiRecommendation = useOnboardingStore((s) => s.setAiRecommendation)
 
   const initialTodos = useMemo(
-    () => (aiRecommendation?.todos ?? []).map(mapAiTodo),
+    () => (aiRecommendation?.todos ?? []).map((t, i) => mapAiTodo(t, i)),
     [aiRecommendation],
   )
 
-  const [todos, setTodos] = useState<ProposedTodo[]>(initialTodos)
+  const [todoBatches, setTodoBatches] = useState<ProposedTodo[][]>([
+    initialTodos,
+  ])
+  const [currentPage, setCurrentPage] = useState(0)
+  const todos = todoBatches[currentPage] ?? []
+  const totalPages = todoBatches.length
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [allTags, setAllTags] = useState<CustomTag[]>([])
 
   useEffect(() => {
@@ -169,6 +190,40 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
   const [infoOpen, setInfoOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [refreshCount, setRefreshCount] = useState(0)
+  const [refreshLoading, setRefreshLoading] = useState(false)
+  const refreshRemaining = MAX_REFRESH_COUNT - refreshCount
+
+  const handleRefresh = async () => {
+    if (refreshRemaining <= 0 || refreshLoading) return
+    setRefreshLoading(true)
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      const nextRefreshCount = refreshCount + 1
+      const res = await getAiTodoRecommendations(accessToken, {
+        goal: goalValue,
+        deadlineDate: deadlineDate ? format(deadlineDate, 'yyyy-MM-dd') : null,
+        deadlineTime: deadlineTime ? timeToHHmm(deadlineTime) : null,
+        solutions: (refineData?.solutions ?? []).map((s) => ({
+          question: s.question,
+          items: s.items,
+        })),
+        refreshCount: nextRefreshCount,
+      })
+      if (res.success && res.data) {
+        setAiRecommendation(res.data)
+        const newPageIndex = todoBatches.length
+        const newBatch = res.data.todos.map((t, i) =>
+          mapAiTodo(t, i, newPageIndex * BATCH_ID_STEP),
+        )
+        setTodoBatches((prev) => [...prev, newBatch])
+        setCurrentPage(newPageIndex)
+        setRefreshCount(nextRefreshCount)
+      }
+    } finally {
+      setRefreshLoading(false)
+    }
+  }
 
   const handleSelect = (id: number, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -188,7 +243,13 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
   }
 
   const handleEditConfirm = (updated: ProposedTodo) => {
-    setTodos((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+    setTodoBatches((prev) =>
+      prev.map((batch, idx) =>
+        idx === currentPage
+          ? batch.map((t) => (t.id === updated.id ? updated : t))
+          : batch,
+      ),
+    )
     setSelectedTodo(updated)
     setEditOpen(false)
     setInfoOpen(true)
@@ -201,12 +262,61 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
       ...selectedTodo,
       subTodos: [...selectedTodo.subTodos, newSubTodo],
     }
-    setTodos((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+    setTodoBatches((prev) =>
+      prev.map((batch, idx) =>
+        idx === currentPage
+          ? batch.map((t) => (t.id === updated.id ? updated : t))
+          : batch,
+      ),
+    )
     setSelectedTodo(updated)
   }
 
   const handleTagAdd = (tag: CustomTag) => {
     setAllTags((prev) => [...prev, tag])
+  }
+
+  const currentPageIds = todos.map((t) => t.id)
+  const isAllSelected =
+    currentPageIds.length > 0 &&
+    currentPageIds.every((id) => selectedIds.includes(id))
+
+  const handleSelectAll = () => {
+    setSelectedIds((prev) =>
+      isAllSelected
+        ? prev.filter((id) => !currentPageIds.includes(id))
+        : Array.from(new Set([...prev, ...currentPageIds])),
+    )
+  }
+
+  const goToPage = (page: number) => {
+    if (page < 0 || page >= totalPages) return
+    setCurrentPage(page)
+  }
+
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    const target = container.children[currentPage] as HTMLElement | undefined
+    target?.scrollIntoView({
+      behavior: 'smooth',
+      inline: 'start',
+      block: 'nearest',
+    })
+  }, [currentPage])
+
+  const scrollEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleTodoListScroll = () => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    if (scrollEndTimeoutRef.current) clearTimeout(scrollEndTimeoutRef.current)
+    scrollEndTimeoutRef.current = setTimeout(() => {
+      const pageWidth = container.clientWidth
+      if (pageWidth === 0) return
+      const page = Math.round(container.scrollLeft / pageWidth)
+      setCurrentPage((prev) => (prev === page ? prev : page))
+    }, 100)
   }
 
   // 요일 → 인덱스: 월=0, 화=1, 수=2, 목=3, 금=4, 토=5, 일=6
@@ -225,7 +335,9 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
     setLoading(true)
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
-      const selectedTodos = todos.filter((t) => selectedIds.includes(t.id))
+      const selectedTodos = todoBatches
+        .flat()
+        .filter((t) => selectedIds.includes(t.id))
       const isRecurring = (t: ProposedTodo) => t.repeat !== '없음'
 
       const goalDueDate = deadlineDate
@@ -273,7 +385,7 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
   }
 
   return (
-    <div className="flex flex-col max-h-full overflow-scroll">
+    <div className="flex flex-col max-h-full overflow-y-auto overflow-x-hidden">
       <div className="flex flex-col gap-3">
         <Title>
           <div>목표에 맞는</div>
@@ -293,54 +405,119 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
 
       <ListItem className="mt-6 mb-8 border-none">{goalValue}</ListItem>
 
-      <div className="mb-30">
+      <div className="mb-30 min-w-0">
         <div className="flex items-center gap-2 w-full">
           <MenuIcon />
           <div className="font-bold text-[16px] text-bluegray-black">
             추천 투두
           </div>
-          <button className="ml-auto flex items-center justify-center rounded-full p-1 bg-bluegray-light-hover">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshRemaining <= 0 || refreshLoading}
+            className="ml-auto flex gap-1 items-center justify-center rounded-full p-1 bg-bluegray-light-hover disabled:opacity-50"
+          >
             <RestLeftFillIcon />
+            <div className="text-bluegray-normal font-semibold text-[14px] pr-1 pl-0.5">
+              {refreshRemaining}
+            </div>
           </button>
         </div>
 
-        {todos.map((todo, index) => {
-          const selectedTag = allTags.find((t) => t.id === todo.selectedTagId)
-          return (
-            <div
-              className="flex gap-4.25 items-center max-w-full overflow-hidden"
-              key={index}
+        <div className="flex items-center justify-between mt-4 mb-3">
+          <button onClick={handleSelectAll} className="flex items-center gap-4">
+            <span
+              className={cn(
+                'w-5.5 h-5.5 shrink-0 border-bluegray-light-active border rounded-[5px] flex items-center justify-center',
+                isAllSelected && 'border-none',
+              )}
             >
+              {isAllSelected && <CheckBoxIcon color="#579DEC" />}
+            </span>
+            <span className="text-sm font-medium text-bluegray-dark-hover">
+              전체 선택
+            </span>
+          </button>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-0.5 text-bluegray-normal text-sm font-semibold">
               <button
-                onClick={(e) => handleSelect(todo.id, e)}
-                className={cn(
-                  'w-5.5 h-5.5 shrink-0 border-bluegray-light-active border rounded-[5px] flex items-center justify-center',
-                  selectedIds.includes(todo.id) && 'border-none',
-                )}
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 0}
+                className="disabled:opacity-40"
               >
-                {selectedIds.includes(todo.id) && (
-                  <CheckBoxIcon color="#579DEC" />
-                )}
+                <ChevronLeftIcon color="#A9AFB9" width={20} height={20} />
               </button>
-              <div className="flex-1" onClick={() => handleTodoClick(todo)}>
-                <TodoCard
-                  status={selectedIds.includes(todo.id) ? 'focused' : 'default'}
-                >
-                  <TodoCard.Content>
-                    <TodoCard.Title dayTag={todo.dayTag}>
-                      {todo.title}
-                    </TodoCard.Title>
-                    <TodoCard.Time>{todo.time}</TodoCard.Time>
-                  </TodoCard.Content>
-                  <TodoCard.Category
-                    category={selectedTag?.label ?? ''}
-                    color={selectedTag?.textColor}
-                  />
-                </TodoCard>
-              </div>
+              <span className="w-8 text-center">
+                {currentPage + 1} / {totalPages}
+              </span>
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages - 1}
+                className="disabled:opacity-40"
+              >
+                <ChevronRightIcon />
+              </button>
             </div>
-          )
-        })}
+          )}
+        </div>
+
+        <div
+          ref={scrollContainerRef}
+          onScroll={handleTodoListScroll}
+          className="flex min-w-0 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
+        >
+          {todoBatches.map((batch, pageIndex) => (
+            <div
+              key={pageIndex}
+              className="flex flex-col gap-4 w-full shrink-0 snap-start"
+            >
+              {batch.map((todo) => {
+                const selectedTag = allTags.find(
+                  (t) => t.id === todo.selectedTagId,
+                )
+                return (
+                  <div
+                    className="flex gap-4.25 items-center max-w-full overflow-hidden"
+                    key={todo.id}
+                  >
+                    <button
+                      onClick={(e) => handleSelect(todo.id, e)}
+                      className={cn(
+                        'w-5.5 h-5.5 shrink-0 border-bluegray-light-active border rounded-[5px] flex items-center justify-center',
+                        selectedIds.includes(todo.id) && 'border-none',
+                      )}
+                    >
+                      {selectedIds.includes(todo.id) && (
+                        <CheckBoxIcon color="#579DEC" />
+                      )}
+                    </button>
+                    <div
+                      className="flex-1"
+                      onClick={() => handleTodoClick(todo)}
+                    >
+                      <TodoCard
+                        status={
+                          selectedIds.includes(todo.id) ? 'focused' : 'default'
+                        }
+                      >
+                        <TodoCard.Content>
+                          <TodoCard.Title dayTag={todo.dayTag}>
+                            {todo.title}
+                          </TodoCard.Title>
+                          <TodoCard.Time>{todo.time}</TodoCard.Time>
+                        </TodoCard.Content>
+                        <TodoCard.Category
+                          category={selectedTag?.label ?? ''}
+                          color={selectedTag?.textColor}
+                        />
+                      </TodoCard>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="fixed left-0 bottom-0 w-full">
@@ -380,6 +557,10 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
             onTagDelete={handleTagDelete}
           />
         </>
+      )}
+
+      {refreshLoading && (
+        <AiLoadingOverlay message="추천 투두를 다시 준비하고 있어요!" />
       )}
     </div>
   )
