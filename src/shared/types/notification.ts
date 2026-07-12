@@ -1,4 +1,4 @@
-export type NotificationCategory = 'TODO' | 'STATS' | 'ETC'
+export type NotificationCategory = 'TODO' | 'STATS' | 'NOTICE' | 'MARKETING'
 
 export type NotificationTargetType = 'TODO' | 'REPORT' | 'REPLAN' | null
 
@@ -23,7 +23,9 @@ export interface NotificationList {
 }
 
 export interface NotificationSetting {
-    todoDue: boolean
-    todoFailed: boolean
-    report: boolean
+    todo: boolean
+    stats: boolean
+    notice: boolean
+    // 마케팅(광고성) 정보 수신 동의. 서버가 켜고 끌 때마다 동의/철회 시각을 기록한다.
+    marketing: boolean
 }
