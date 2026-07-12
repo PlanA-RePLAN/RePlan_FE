@@ -54,13 +54,15 @@ export default function DatePicker({
 
     return (
       <div className="px-4 pt-2 pb-4">
-        <div className="flex w-full">
-          {WEEKDAY_LABELS.map((label) => (
-            <div key={label} className="flex-1 text-center text-sm text-bluegray-normal py-2">
-              {label}
-            </div>
-          ))}
-        </div>
+        {weeks > 1 && (
+          <div className="flex w-full">
+            {WEEKDAY_LABELS.map((label) => (
+              <div key={label} className="flex-1 text-center text-sm text-bluegray-normal py-2">
+                {label}
+              </div>
+            ))}
+          </div>
+        )}
         {Array.from({ length: weeks }, (_, weekIndex) => {
           const rowDays = days.slice(weekIndex * 7, weekIndex * 7 + 7)
           const showRange = weeks > 1
@@ -79,6 +81,55 @@ export default function DatePicker({
                 const isSat = day.getDay() === 6
                 const isSun = day.getDay() === 0
                 const hasDue = dueDates.some((d) => isSameDay(d, day))
+
+                if (weeks === 1) {
+                  return (
+                    <div key={day.toISOString()} className="flex-1 flex justify-center">
+                      <div
+                        className={cn(
+                          'flex flex-col items-center w-10 pt-1.5 pb-1 rounded-[20px] cursor-pointer',
+                          isSelected && 'bg-[#EEF5FD]',
+                        )}
+                        onClick={() => {
+                          if (selected && isSameDay(day, selected)) {
+                            setSelected(undefined)
+                            onDeselect?.()
+                          } else {
+                            setSelected(day)
+                            onConfirm(day)
+                          }
+                        }}
+                      >
+                        <span className={cn(
+                          'text-xs',
+                          isSat && 'text-blue-500',
+                          isSun && 'text-red-500',
+                          !isSat && !isSun && isTodayDate && 'text-bluegray-darker',
+                          !isSat && !isSun && !isTodayDate && 'text-bluegray-normal',
+                        )}>
+                          {WEEKDAY_LABELS[(day.getDay() + 6) % 7]}
+                        </span>
+                        <div className={cn(
+                          'relative w-8 h-8 mt-1 flex items-center justify-center rounded-full text-sm font-medium',
+                          isTodayDate && !isSelected && 'border border-bluegray-light-active',
+                        )}>
+                          {hasDue && (
+                            <span className="absolute top-0.5 right-0 w-[3px] h-[3px] rounded-full bg-[#A9AFB9]" />
+                          )}
+                          <span className={cn(
+                            isSat && 'text-blue-500',
+                            isSun && 'text-red-500',
+                            !isSat && !isSun && isTodayDate && 'text-black',
+                            !isSat && !isSun && !isTodayDate && 'text-bluegray-normal',
+                          )}>
+                            {format(day, 'd')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
+
                 return (
                   <div
                     key={day.toISOString()}
@@ -101,11 +152,12 @@ export default function DatePicker({
                       }}
                       className={cn(
                         'relative w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium transition-colors',
-                        isTodayDate && !isSelected && 'border border-bluegray-light-active',
+                        isTodayDate && !isSelected && 'bg-[#EEF5FD]',
                         isSelected && 'bg-[#EEF5FD]',
                         isSat && 'text-blue-500',
                         isSun && 'text-red-500',
-                        !isSat && !isSun && 'text-bluegray-darker',
+                        !isSat && !isSun && isTodayDate && 'text-bluegray-darker',
+                        !isSat && !isSun && !isTodayDate && 'text-bluegray-normal',
                       )}
                     >
                       {hasDue && (
@@ -170,8 +222,7 @@ export default function DatePicker({
           day_button:
             'w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium text-bluegray-darker transition-colors',
           selected: '[&>button]:bg-[#EEF5FD] [&>button]:rounded-full',
-          today:
-            '[&>button]:border [&>button]:border-bluegray-light-active [&>button]:rounded-full',
+          today: '[&>button]:rounded-full',
           outside: '[&>button]:text-bluegray-light-active',
         }}
         modifiersClassNames={{
@@ -198,7 +249,7 @@ export default function DatePicker({
           DayButton: ({ day, modifiers, ...props }) => (
             <button
               {...props}
-              className={cn(props.className, 'relative')}
+              className={cn(props.className, 'relative', modifiers.today && !modifiers.selected && 'bg-[#EEF5FD]')}
             >
               {modifiers.hasDue && (
                 <span className="absolute top-1.5 left-[calc(50%+7px)] -translate-x-1/2 w-[3px] h-[3px] rounded-full bg-[#A9AFB9]" />
