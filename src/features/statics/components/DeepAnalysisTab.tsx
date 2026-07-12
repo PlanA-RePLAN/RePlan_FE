@@ -7,7 +7,7 @@ import InsightLightIcon from '@/icons/InsightLightIcon'
 import TodoTag from '@/shared/components/TodoTag'
 import BottomSheet from '@/shared/components/BottomSheet'
 import MonthPeaker from '@/features/goal/components/MonthPeaker'
-import { MonthlyReport } from '@/shared/types/statics'
+import { MonthlyReport, TagAchievement } from '@/shared/types/statics'
 import SectionHeader from './SectionHeader'
 import StatisticsEmptyState from './StatisticsEmptyState'
 import ChartViewToggleIcon from '@/icons/ChartViewToggleIcon'
@@ -110,8 +110,8 @@ function PatternTable({
   highDay,
   lowDay,
 }: {
-  highTag: string | null
-  lowTag: string | null
+  highTag: TagAchievement | null
+  lowTag: TagAchievement | null
   highDay: string | null
   lowDay: string | null
 }) {
@@ -141,7 +141,7 @@ function PatternTable({
         </div>
         <div className="border-l border-bluegray-light-active flex-1 flex items-center justify-center py-2.5">
           {highTag ? (
-            <TodoTag category={highTag} />
+            <TodoTag category={highTag.title} color={highTag.color} />
           ) : (
             <span className="text-sm text-bluegray-normal">-</span>
           )}
@@ -162,7 +162,7 @@ function PatternTable({
         </div>
         <div className="border-l border-bluegray-light-active flex-1 flex items-center justify-center py-2.5">
           {lowTag ? (
-            <TodoTag category={lowTag} />
+            <TodoTag category={lowTag.title} color={lowTag.color} />
           ) : (
             <span className="text-sm text-bluegray-normal">-</span>
           )}
@@ -178,7 +178,13 @@ function PatternTable({
 }
 
 // ── AI Insight Card ───────────────────────────────────
-function AIInsightCard({ title, body }: { title: string; body: string }) {
+function AIInsightCard({
+  summary,
+  detail,
+}: {
+  summary: string
+  detail: string
+}) {
   return (
     <div className="bg-bluegray-light rounded-xl p-4">
       <div className="flex gap-3 items-start">
@@ -187,10 +193,10 @@ function AIInsightCard({ title, body }: { title: string; body: string }) {
         </div>
         <div className="flex flex-col gap-4 flex-1 min-w-0">
           <p className="text-sm font-bold text-bluegray-black leading-normal tracking-[-0.01em]">
-            {title}
+            {summary}
           </p>
           <p className="text-sm font-medium text-bluegray-dark-active leading-normal tracking-[-0.015em]">
-            {body}
+            {detail}
           </p>
         </div>
       </div>
@@ -211,8 +217,8 @@ export default function DeepAnalysisTab({
 
   const analysis = data?.analysisData
   const aiInsight = data?.aiInsight
-  const failureCauses = analysis?.failureCauses ?? []
-  const topCause = failureCauses[0]?.cause ?? null
+  const failureCauses = analysis?.failureDistribution ?? []
+  const topCause = analysis?.topFailureReason ?? null
 
   const causesWithColor = failureCauses.map((c, i) => ({
     ...c,
@@ -288,9 +294,9 @@ export default function DeepAnalysisTab({
                   <div className="flex flex-col gap-3">
                     {causesWithColor.map((item, i) => (
                       <BarRow
-                        key={item.cause}
-                        label={item.cause}
-                        pct={item.percentage}
+                        key={item.reason}
+                        label={item.reason}
+                        pct={item.rate}
                         color={item.color}
                         isFirst={i === 0}
                       />
@@ -300,9 +306,9 @@ export default function DeepAnalysisTab({
                   <div className="flex flex-col gap-2">
                     {causesWithColor.map((item, i) => (
                       <RankItem
-                        key={item.cause}
+                        key={item.reason}
                         rank={i + 1}
-                        label={item.cause}
+                        label={item.reason}
                         color={item.color}
                         count={`${item.count}회`}
                       />
@@ -321,10 +327,10 @@ export default function DeepAnalysisTab({
                     태그+요일
                   </span>
                   <PatternTable
-                    highTag={analysis?.highAchievementTag ?? null}
-                    lowTag={analysis?.lowAchievementTag ?? null}
-                    highDay={analysis?.highAchievementDay ?? null}
-                    lowDay={analysis?.lowAchievementDay ?? null}
+                    highTag={analysis?.bestAchievementTag ?? null}
+                    lowTag={analysis?.worstAchievementTag ?? null}
+                    highDay={analysis?.bestAchievementDay?.day ?? null}
+                    lowDay={analysis?.worstAchievementDay?.day ?? null}
                   />
                 </div>
               </div>
@@ -338,8 +344,8 @@ export default function DeepAnalysisTab({
                   {aiInsight.insights.map((item, i) => (
                     <AIInsightCard
                       key={i}
-                      title={item.title}
-                      body={item.body}
+                      summary={item.summary}
+                      detail={item.detail}
                     />
                   ))}
                 </div>

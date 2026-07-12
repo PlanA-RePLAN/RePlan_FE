@@ -116,7 +116,7 @@ function TipCard({ message }: { message: string }) {
 export default function TipNoteTab({ data, isLoading }: TipNoteTabProps) {
   const aiInsight = data?.aiInsight
   const todos: SuggestedTodo[] = aiInsight?.suggestedTodos ?? []
-  const tipMessage = aiInsight?.tipMessage ?? null
+  const tipMessage = aiInsight?.writingTip ?? null
 
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set())
 

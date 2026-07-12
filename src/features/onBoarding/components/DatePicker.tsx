@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import { ko } from 'date-fns/locale'
-import { format, startOfWeek, addDays, isSameDay, isToday } from 'date-fns'
+import {
+  format,
+  startOfWeek,
+  addDays,
+  isSameDay,
+  isToday,
+  startOfDay,
+  isBefore,
+} from 'date-fns'
 import BottomSheetHeader from '@/shared/components/BottomSheetHeader'
 import { cn } from '@/shared/utils/cn'
 import 'react-day-picker/dist/style.css'
@@ -16,6 +24,8 @@ interface DatePickerProps {
   selectedColor?: string
   selectedTextColor?: string
   dueDates?: Date[]
+  // true면 오늘 이전 날짜는 선택할 수 없다. (마감일 등 미래 날짜만 허용해야 하는 곳에서 사용)
+  disablePast?: boolean
 }
 
 const WEEKDAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
@@ -30,13 +40,17 @@ export default function DatePicker({
   selectedColor,
   selectedTextColor,
   dueDates = [],
+  disablePast = false,
 }: DatePickerProps) {
   const [selected, setSelected] = useState<Date | undefined>(value)
   const [month, setMonth] = useState<Date>(value ?? new Date())
+  const today = startOfDay(new Date())
 
   if (weeks) {
     const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
-    const days = Array.from({ length: weeks * 7 }, (_, i) => addDays(weekStart, i))
+    const days = Array.from({ length: weeks * 7 }, (_, i) =>
+      addDays(weekStart, i),
+    )
 
     return (
       <div className="px-4 pt-2 pb-4">
@@ -55,6 +69,7 @@ export default function DatePicker({
             {days.slice(weekIndex * 7, weekIndex * 7 + 7).map((day) => {
               const isSelected = selected && isSameDay(day, selected)
               const isTodayDate = isToday(day)
+              const isPast = disablePast && isBefore(day, today)
               const isSat = day.getDay() === 6
               const isSun = day.getDay() === 0
               const hasDue = dueDates.some((d) => isSameDay(d, day))
@@ -64,6 +79,7 @@ export default function DatePicker({
                   className="flex-1 flex items-center justify-center"
                 >
                   <button
+                    disabled={isPast}
                     onClick={() => {
                       if (selected && isSameDay(day, selected)) {
                         setSelected(undefined)
@@ -75,13 +91,30 @@ export default function DatePicker({
                     }}
                     className={cn(
                       'relative w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium transition-colors',
-                      isSelected && !selectedColor && 'bg-bluegray-black text-white',
-                      !isSelected && isTodayDate && 'border border-bluegray-light-active',
-                      !isSelected && isSat && 'text-blue-500',
-                      !isSelected && isSun && 'text-red-500',
-                      !isSelected && !isTodayDate && !isSat && !isSun && 'text-bluegray-darker',
+                      isSelected &&
+                        !selectedColor &&
+                        'bg-bluegray-black text-white',
+                      !isSelected &&
+                        isTodayDate &&
+                        'border border-bluegray-light-active',
+                      !isSelected && !isPast && isSat && 'text-blue-500',
+                      !isSelected && !isPast && isSun && 'text-red-500',
+                      !isSelected &&
+                        !isPast &&
+                        !isTodayDate &&
+                        !isSat &&
+                        !isSun &&
+                        'text-bluegray-darker',
+                      isPast && 'text-bluegray-light-active cursor-not-allowed',
                     )}
-                    style={isSelected && selectedColor ? { backgroundColor: selectedColor, color: selectedTextColor ?? 'white' } : undefined}
+                    style={
+                      isSelected && selectedColor
+                        ? {
+                            backgroundColor: selectedColor,
+                            color: selectedTextColor ?? 'white',
+                          }
+                        : undefined
+                    }
                   >
                     {hasDue && (
                       <span className="absolute top-1.5 left-[calc(50%+7px)] -translate-x-1/2 w-[3px] h-[3px] rounded-full bg-[#A9AFB9]" />
@@ -99,16 +132,20 @@ export default function DatePicker({
 
   return (
     <div className="px-4 pt-2 pb-4">
-      {showHeader !== false &&
+      {showHeader !== false && (
         <BottomSheetHeader
           title={format(month, 'yyyy년 M월')}
           onClose={onClose}
           onConfirm={() => selected && onConfirm(selected)}
           confirmDisabled={!selected}
-          onPrev={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1))}
-          onNext={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1))}
+          onPrev={() =>
+            setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1))
+          }
+          onNext={() =>
+            setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1))
+          }
         />
-      }
+      )}
       <DayPicker
         mode="single"
         selected={selected}
@@ -122,6 +159,7 @@ export default function DatePicker({
         locale={ko}
         hideNavigation
         weekStartsOn={1}
+        disabled={disablePast ? { before: today } : undefined}
         classNames={{
           root: 'w-full',
           months: 'w-full',
@@ -141,6 +179,8 @@ export default function DatePicker({
           today:
             '[&>button]:border [&>button]:border-bluegray-light-active [&>button]:rounded-full',
           outside: '[&>button]:text-bluegray-light-active',
+          disabled:
+            '[&>button]:text-bluegray-light-active [&>button]:cursor-not-allowed',
         }}
         modifiersClassNames={{
           saturday: '[&>button]:text-blue-500',
@@ -156,7 +196,15 @@ export default function DatePicker({
             <button
               {...props}
               className={cn(props.className, 'relative')}
-              style={modifiers.selected && selectedColor ? { backgroundColor: selectedColor, color: selectedTextColor ?? 'white', borderRadius: '100%' } : undefined}
+              style={
+                modifiers.selected && selectedColor
+                  ? {
+                      backgroundColor: selectedColor,
+                      color: selectedTextColor ?? 'white',
+                      borderRadius: '100%',
+                    }
+                  : undefined
+              }
             >
               {modifiers.hasDue && (
                 <span className="absolute top-1.5 left-[calc(50%+7px)] -translate-x-1/2 w-[3px] h-[3px] rounded-full bg-[#A9AFB9]" />

@@ -115,7 +115,7 @@ export default function ReportTab({
   month,
   onMonthChange,
 }: ReportTabProps) {
-  const achievementRate = data?.achievementRate ?? 0
+  const achievementRate = Math.floor(data?.achievementRate ?? 0)
   const completedTodos = data?.completedTodos ?? 0
   const totalTodos = data?.totalTodos ?? 0
   const uncompletedTodos = totalTodos - completedTodos
@@ -215,16 +215,22 @@ export default function ReportTab({
                 <InfoRow
                   label="달성 높은 태그"
                   value={
-                    analysis?.highAchievementTag ? (
-                      <TodoTag category={analysis.highAchievementTag} />
+                    analysis?.bestAchievementTag ? (
+                      <TodoTag
+                        category={analysis.bestAchievementTag.title}
+                        color={analysis.bestAchievementTag.color}
+                      />
                     ) : undefined
                   }
                 />
                 <InfoRow
                   label="미달성 높은 태그"
                   value={
-                    analysis?.lowAchievementTag ? (
-                      <TodoTag category={analysis.lowAchievementTag} />
+                    analysis?.worstAchievementTag ? (
+                      <TodoTag
+                        category={analysis.worstAchievementTag.title}
+                        color={analysis.worstAchievementTag.color}
+                      />
                     ) : undefined
                   }
                   isLast
@@ -239,9 +245,9 @@ export default function ReportTab({
                 <InfoRow
                   label="달성 높은 요일"
                   value={
-                    analysis?.highAchievementDay ? (
+                    analysis?.bestAchievementDay ? (
                       <span className="text-sm font-bold text-bluegray-dark-active">
-                        {analysis.highAchievementDay}
+                        {analysis.bestAchievementDay.day}
                       </span>
                     ) : undefined
                   }
@@ -249,9 +255,9 @@ export default function ReportTab({
                 <InfoRow
                   label="미달성 높은 요일"
                   value={
-                    analysis?.lowAchievementDay ? (
+                    analysis?.worstAchievementDay ? (
                       <span className="text-sm font-bold text-bluegray-dark-active">
-                        {analysis.lowAchievementDay}
+                        {analysis.worstAchievementDay.day}
                       </span>
                     ) : undefined
                   }
