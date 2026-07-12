@@ -34,7 +34,7 @@ export default function NotificationSetting() {
     { id: 1, title: "투두 알림", content: "주요 투두 마감, 실패 투두 알림", checked: setting?.todo ?? false, onChange: handleChange('todo') },
     { id: 2, title: "통계 알림", content: "월간 리포트 및 분석 통계 도착 알림", checked: setting?.stats ?? false, onChange: handleChange('stats')},
     { id: 3, title: "공지 알림", content: "서비스 소식 및 공지사항 알림", checked: setting?.notice ?? false, onChange: handleChange('notice')},
-    { id: 4, title: "광고 알림", content: "이벤트·혜택 등 마케팅 정보 수신 동의", checked: setting?.marketing ?? false, onChange: handleChange('marketing')},
+    { id: 4, title: "혜택/이벤트", content: "마케팅 푸시 동의", checked: setting?.marketing ?? false, onChange: handleChange('marketing')},
   ]
 
   return (
