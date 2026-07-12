@@ -13,10 +13,12 @@ import StatsNotificationIcon from "@/icons/StatsNotificationIcon"
 import StatisticsIcon from "@/icons/StatisticsIcon"
 
 
-const TABS = ['투두', '통계', '공지', '혜택/이벤트'] as const
+const TABS = ['전체', '투두', '통계', '공지', '혜택/이벤트'] as const
 type Tab = typeof TABS[number]
 
-const TAB_CATEGORY_MAP: Record<Tab, NotificationCategory> = {
+// '전체'는 category 없이 조회 (서버가 전체 반환)
+const TAB_CATEGORY_MAP: Record<Tab, NotificationCategory | undefined> = {
+  '전체': undefined,
   '투두': 'TODO',
   '통계': 'STATS',
   '공지': 'NOTICE',
@@ -42,7 +44,7 @@ function formatRelativeTime(createdAt: string): string {
 }
 
 export default function Notification() {
-  const [activeTab, setActiveTab] = useState<Tab>('투두')
+  const [activeTab, setActiveTab] = useState<Tab>('전체')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
 
   useEffect(() => {
