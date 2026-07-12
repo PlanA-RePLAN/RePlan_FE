@@ -339,25 +339,23 @@ export default function Home() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div
-          onTouchStartCapture={handleCalendarTouchStart}
-          onTouchEndCapture={handleCalendarTouchEnd}
-        >
-          <div className={selectedTab === 'all' ? 'pointer-events-none' : ''}>
+        {selectedTab !== 'all' && (
+          <div
+            onTouchStartCapture={handleCalendarTouchStart}
+            onTouchEndCapture={handleCalendarTouchEnd}
+          >
             <DatePicker
               onClose={() => {}}
               onConfirm={(date) => calendar.setSelectedDate(date)}
               onDeselect={() => calendar.setSelectedDate(null)}
               showHeader={false}
-              value={selectedTab === 'all' ? undefined : calendar.selectedDate ?? undefined}
+              value={calendar.selectedDate ?? undefined}
               defaultMonth={selectedTab === 'week' ? weekViewStart : new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
-              weeks={
-                selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined
-              }
+              weeks={selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined}
               dueDates={itemHook.calendarDueDates}
             />
           </div>
-        </div>
+        )}
 
         {itemHook.filteredItems.length === 0 ? (
           <div className="flex flex-col w-full justify-center items-center mt-16">
