@@ -10,6 +10,7 @@ import {
   addItemSubTodo,
   updateItemSubTodo,
   deleteItemSubTodo,
+  completeItemSubTodo,
 } from '@/shared/api/items'
 import { createTodo as createTodoApi } from '@/shared/api/todo'
 import { createRoutine } from '@/shared/api/routine'
@@ -241,14 +242,16 @@ export function useItems({
     todoId: number | null
     isCompleted: boolean
   }) => {
-    if (sub.todoId == null || !selectedItem) return
+    if (sub.todoId == null || selectedDetail?.todoId == null || !selectedItem) {
+      return
+    }
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
-      await completeItem(
-        accessToken,
-        { kind: 'TODO', todoId: sub.todoId },
-        !sub.isCompleted,
-      )
+      await completeItemSubTodo(accessToken, {
+        parentTodoId: selectedDetail.todoId,
+        subTodoId: sub.todoId,
+        isCompleted: !sub.isCompleted,
+      })
       await fetchDetail(selectedItem)
     } catch (error) {
       console.error(error)
