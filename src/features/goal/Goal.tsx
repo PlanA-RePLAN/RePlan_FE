@@ -74,7 +74,8 @@ const handleDeleteGoal = (id: number) => {
 
   return (
     <div className='flex flex-col h-dvh'>
-        <div className='px-5'>
+        {/* 메인 헤더(h-26.5, sticky)가 붙은 뒤에도 필터·추가 버튼이 함께 고정되도록 헤더 바로 아래에 sticky */}
+        <div className='px-5 sticky top-26.5 z-40 bg-white'>
             <div className='flex justify-between mb-4'>
                 <Dropdown
                   items={['전체', '월별', '연도별']}
