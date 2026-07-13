@@ -165,7 +165,7 @@ export default function TimePicker({
     <div className="px-4 pt-2 pb-6">
       {useHeader && (
         <BottomSheetHeader
-          title="마감 시간"
+          title="종료 시간"
           onClose={onClose}
           onConfirm={handleConfirm}
         />

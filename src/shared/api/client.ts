@@ -24,9 +24,9 @@ client.interceptors.response.use(
   
       try {
         const res = await axios.post(
-          `${BASE_URL}/api/auth/reissue`,
+          '/api/auth/reissue',
           {},
-          { headers: { Authorization: `Bearer ${refreshToken}` } },
+          { baseURL: BASE_URL, headers: { Authorization: `Bearer ${refreshToken}` } },
         )
         const { accessToken, refreshToken: newRefreshToken } = res.data.data
         localStorage.setItem('accessToken', accessToken)
