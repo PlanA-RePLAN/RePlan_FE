@@ -3,6 +3,7 @@ import type { ApiResponse } from '../types/auth'
 import type {
   Item,
   ItemDetail,
+  ItemKind,
   ItemTarget,
   RoutineItemScope,
 } from '../types/item'
@@ -125,5 +126,74 @@ export async function deleteItem(
     ...auth(accessToken),
     data: { ...targetBody(target), ...(scope && { scope }) },
   })
+  return res.data
+}
+
+// 8. 하위 투두 추가 (TODO=todoId / ROUTINE=routineId+date+scope, THIS는 행 없으면 예약·ALL은 하위 루틴 생성)
+export interface AddItemSubTodoBody {
+  kind: ItemKind
+  todoId?: number
+  routineId?: number
+  date?: string // 'YYYY-MM-DD', ROUTINE+THIS 필수
+  scope?: RoutineItemScope // ROUTINE 필수
+  title: string
+}
+
+export async function addItemSubTodo(
+  accessToken: string,
+  body: AddItemSubTodoBody,
+): Promise<ApiResponse<null>> {
+  const res = await client.post<ApiResponse<null>>(
+    '/api/items/subtodos',
+    body,
+    auth(accessToken),
+  )
+  return res.data
+}
+
+// 9~10. 하위 투두 수정/삭제 — 지목 방법 3종 중 하나만 사용
+//  행 하위(그날만): parentTodoId+subTodoId / 예약(그날만): routineId+date+index / 하위 루틴(반복 전체): subRoutineId
+export interface ItemSubTodoTargetBody {
+  parentTodoId?: number
+  subTodoId?: number
+  routineId?: number
+  date?: string
+  index?: number
+  subRoutineId?: number
+}
+
+export async function updateItemSubTodo(
+  accessToken: string,
+  body: ItemSubTodoTargetBody & { title: string },
+): Promise<ApiResponse<null>> {
+  const res = await client.patch<ApiResponse<null>>(
+    '/api/items/subtodos',
+    body,
+    auth(accessToken),
+  )
+  return res.data
+}
+
+export async function deleteItemSubTodo(
+  accessToken: string,
+  body: ItemSubTodoTargetBody,
+): Promise<ApiResponse<null>> {
+  const res = await client.delete<ApiResponse<null>>('/api/items/subtodos', {
+    ...auth(accessToken),
+    data: body,
+  })
+  return res.data
+}
+
+// 11. 하위 투두 완료/미완료 — 행 하위(parentTodoId+subTodoId) 또는 예약 하위(routineId+date+index)
+export async function completeItemSubTodo(
+  accessToken: string,
+  body: ItemSubTodoTargetBody & { isCompleted: boolean },
+): Promise<ApiResponse<null>> {
+  const res = await client.patch<ApiResponse<null>>(
+    '/api/items/subtodos/complete',
+    body,
+    auth(accessToken),
+  )
   return res.data
 }

@@ -123,7 +123,7 @@ export default function ProfileSetting() {
         />
 
         <div className='flex justify-between mt-10 mx-[18px] p-4 border border-bluegray-light-hover rounded-[12px]'>
-          <p className='text-[14px]'>이름</p>
+          <p className='text-[14px]'>닉네임</p>
           <div className='flex justify-center items-center gap-2'>
             {name && <p className='text-bluegray-darker font-bold text-[12px]'>{name}</p>}
             <button onClick={() => {
@@ -149,7 +149,7 @@ export default function ProfileSetting() {
         </div>
       </BackHeaderLayout>
 
-      {/* 이름 수정 바텀시트 */}
+      {/* 닉네임 수정 바텀시트 */}
       <BottomSheet
         isOpen={isBottomSheetOpen}
         onClose={() => setIsBottomSheetOpen(false)}
@@ -159,7 +159,7 @@ export default function ProfileSetting() {
             <button onClick={() => setIsBottomSheetOpen(false)}>
               <CloseButtonIcon />
             </button>
-            <span className="text-lg font-bold">이름</span>
+            <span className="text-lg font-bold">닉네임</span>
             <button onClick={handleNameSave}>
               <CircleCheckButtonIcon/>
             </button>

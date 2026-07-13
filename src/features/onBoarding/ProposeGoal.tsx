@@ -134,13 +134,20 @@ function mapAiTodo(
           : undefined
 
   const routineDays = todo.routineDays ?? []
+  const isRecurring = todo.type === 'RECURRING'
+  // RECURRING: routineTime=반복시간, dueDate/dueTime=반복 종료 일정 / ONE_TIME: dueDate/dueTime=마감
+  const repeatTime = isRecurring && todo.routineTime
+    ? formatTime24to12(todo.routineTime)
+    : undefined
   return {
     id: idOffset + index + 1,
     title: todo.title,
-    time: formatTime24to12(todo.dueTime),
+    time: isRecurring ? (repeatTime ?? '') : formatTime24to12(todo.dueTime),
     dayTag,
     selectedTagId: todo.tagId != null ? String(todo.tagId) : '미선택',
     repeat,
+    repeatTime,
+    repeatTimeEnabled: repeatTime != null,
     // 백엔드가 준 routineDays(요일/일자 배열)를 위클리/먼슬리 입력값으로 풀어 담는다.
     weeklyDay:
       todo.routineType === 'WEEKLY'
@@ -255,23 +262,6 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
     setInfoOpen(true)
   }
 
-  const handleSubTodoAdd = (title: string) => {
-    if (!selectedTodo) return
-    const newSubTodo = { id: Date.now(), title }
-    const updated = {
-      ...selectedTodo,
-      subTodos: [...selectedTodo.subTodos, newSubTodo],
-    }
-    setTodoBatches((prev) =>
-      prev.map((batch, idx) =>
-        idx === currentPage
-          ? batch.map((t) => (t.id === updated.id ? updated : t))
-          : batch,
-      ),
-    )
-    setSelectedTodo(updated)
-  }
-
   const handleTagAdd = (tag: CustomTag) => {
     setAllTags((prev) => [...prev, tag])
   }
@@ -353,9 +343,8 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
           const todoDueDate = t.deadlineDate
             ? format(t.deadlineDate, 'yyyy-MM-dd')
             : null
-          const todoDueTime = isRecurring(t)
-            ? timeToHHmm(t.repeatTime ?? t.deadlineTime)
-            : timeToHHmm(t.deadlineTime)
+          // 마감(ONE_TIME)/종료(RECURRING) 시간은 deadlineTime만. 반복시간은 routineTime으로 따로 보낸다
+          const todoDueTime = timeToHHmm(t.deadlineTime)
 
           return {
             type: isRecurring(t) ? 'RECURRING' : 'ONE_TIME',
@@ -363,6 +352,9 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
             dueDate: resolveDueDate(todoDueDate, todoDueTime),
             dueTime: todoDueTime,
             routineType: isRecurring(t) ? REPEAT_TO_ROUTINE[t.repeat] : null,
+            routineTime: isRecurring(t)
+              ? timeToHHmm(t.repeatTime ?? null)
+              : null,
             routineDays: isRecurring(t)
               ? t.repeat === '위클리'
                 ? (t.weeklyDay ?? []).map((d) => DAY_TO_INDEX[d] ?? 0)
@@ -540,8 +532,12 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
             onClose={() => setInfoOpen(false)}
             onEdit={handleEditOpen}
             todo={toTodoDetail(selectedTodo, allTags)}
+            repeatTime={
+              selectedTodo.repeatTimeEnabled && selectedTodo.repeatTime
+                ? timeToHHmm(selectedTodo.repeatTime)
+                : null
+            }
             allTags={allTags}
-            onSubTodoAdd={handleSubTodoAdd}
           />
           <TodoEditSheet
             isOpen={editOpen}
