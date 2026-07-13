@@ -197,13 +197,12 @@ export default function TodoInfoSheet({
                     value={repeatDaysLabel}
                   />
                 )}
-                {repeatTimeValue && (
-                  <InfoRow
-                    icon={<CalendarWithClockIcon fill="white" />}
-                    label={repeatTimeLabel}
-                    value={repeatTimeValue}
-                  />
-                )}
+                {/* 반복시간 미설정이면 값 칩 없이 라벨 행만 보인다 */}
+                <InfoRow
+                  icon={<CalendarWithClockIcon fill="white" />}
+                  label={repeatTimeLabel}
+                  value={repeatTimeValue}
+                />
               </div>
 
               {/* 종료 일정 (루틴 전체) */}
