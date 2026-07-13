@@ -187,23 +187,28 @@ export default function TodoInfoSheet({
 
           {isRoutine ? (
             <>
-              {/* 반복 설정 (루틴 전체) */}
-              <SectionLabel>반복 설정</SectionLabel>
-              <div className="flex flex-col border-t border-bluegray-light-hover mb-6">
-                {repeatDaysLabel && (
-                  <InfoRow
-                    icon={<CalendarClearSharpIcon fill="white" />}
-                    label="반복 날짜"
-                    value={repeatDaysLabel}
-                  />
-                )}
-                {/* 반복시간 미설정이면 값 칩 없이 라벨 행만 보인다 */}
-                <InfoRow
-                  icon={<CalendarWithClockIcon fill="white" />}
-                  label={repeatTimeLabel}
-                  value={repeatTimeValue}
-                />
-              </div>
+              {/* 반복 설정 (루틴 전체) — 보여줄 값이 하나도 없으면 섹션 통째로 숨긴다 */}
+              {(repeatDaysLabel || repeatTimeValue) && (
+                <>
+                  <SectionLabel>반복 설정</SectionLabel>
+                  <div className="flex flex-col border-t border-bluegray-light-hover mb-6">
+                    {repeatDaysLabel && (
+                      <InfoRow
+                        icon={<CalendarClearSharpIcon fill="white" />}
+                        label="반복 날짜"
+                        value={repeatDaysLabel}
+                      />
+                    )}
+                    {repeatTimeValue && (
+                      <InfoRow
+                        icon={<CalendarWithClockIcon fill="white" />}
+                        label={repeatTimeLabel}
+                        value={repeatTimeValue}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
 
               {/* 종료 일정 (루틴 전체) */}
               <SectionLabel>종료 일정</SectionLabel>
