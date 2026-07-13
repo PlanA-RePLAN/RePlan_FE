@@ -237,19 +237,19 @@ export function useItems({
     return null
   }
 
-  // 하위 투두 완료 토글 — 행이 있는 하위(todoId)만 가능. 예약분·예정분은 행이 없어 완료 개념이 없다
+  // 하위 투두 완료 토글 — 행 하위와 예약 하위만. 하위 루틴 예정분은 회차 개념이 없어 완료 대상이 아니다
   const handleToggleSubTodo = async (sub: {
     todoId: number | null
     isCompleted: boolean
+    reservedIndex?: number | null
+    subRoutineId?: number | null
   }) => {
-    if (sub.todoId == null || selectedDetail?.todoId == null || !selectedItem) {
-      return
-    }
+    const target = subTodoTarget(sub)
+    if (!target || 'subRoutineId' in target || !selectedItem) return
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
       await completeItemSubTodo(accessToken, {
-        parentTodoId: selectedDetail.todoId,
-        subTodoId: sub.todoId,
+        ...target,
         isCompleted: !sub.isCompleted,
       })
       await fetchDetail(selectedItem)

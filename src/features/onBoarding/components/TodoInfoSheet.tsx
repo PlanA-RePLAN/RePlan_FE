@@ -254,10 +254,11 @@ export default function TodoInfoSheet({
                   onClick={onSubTodoUpdate ? () => setEditingSub(sub) : undefined}
                   className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
                 >
-                  {/* 완료 토글 — 행이 있는 하위만. 행 탭(수정)과 분리하기 위해 전파 차단 */}
+                  {/* 완료 토글 — 행 하위·예약 하위만 (예정분 제외). 행 탭(수정)과 분리하기 위해 전파 차단 */}
                   <div
                     onClick={
-                      onSubTodoToggle && sub.todoId != null
+                      onSubTodoToggle &&
+                      (sub.todoId != null || sub.reservedIndex != null)
                         ? (e) => {
                             e.stopPropagation()
                             onSubTodoToggle(sub)

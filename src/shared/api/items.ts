@@ -185,10 +185,10 @@ export async function deleteItemSubTodo(
   return res.data
 }
 
-// 11. 하위 투두 완료/미완료 — 행이 있는 하위(todoId 존재)만 가능
+// 11. 하위 투두 완료/미완료 — 행 하위(parentTodoId+subTodoId) 또는 예약 하위(routineId+date+index)
 export async function completeItemSubTodo(
   accessToken: string,
-  body: { parentTodoId: number; subTodoId: number; isCompleted: boolean },
+  body: ItemSubTodoTargetBody & { isCompleted: boolean },
 ): Promise<ApiResponse<null>> {
   const res = await client.patch<ApiResponse<null>>(
     '/api/items/subtodos/complete',
