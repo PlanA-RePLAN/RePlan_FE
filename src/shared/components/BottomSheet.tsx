@@ -45,10 +45,10 @@ export default function BottomSheet({
             onClick={onClose}
           />
 
-          {/* 바텀시트 */}
+          {/* 바텀시트 — 딤과 같은 z를 써서, 시트가 겹칠 때 나중에 뜬 시트의 딤이 아래 시트를 덮는다 */}
           <motion.div
             ref={sheetRef}
-            className="fixed bottom-0 left-0 right-0 z-1002 bg-white rounded-t-3xl"
+            className="fixed bottom-0 left-0 right-0 z-1001 bg-white rounded-t-3xl"
             style={{ y }}
             drag="y"
             dragControls={dragControls}
