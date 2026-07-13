@@ -262,23 +262,6 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
     setInfoOpen(true)
   }
 
-  const handleSubTodoAdd = (title: string) => {
-    if (!selectedTodo) return
-    const newSubTodo = { id: Date.now(), title }
-    const updated = {
-      ...selectedTodo,
-      subTodos: [...selectedTodo.subTodos, newSubTodo],
-    }
-    setTodoBatches((prev) =>
-      prev.map((batch, idx) =>
-        idx === currentPage
-          ? batch.map((t) => (t.id === updated.id ? updated : t))
-          : batch,
-      ),
-    )
-    setSelectedTodo(updated)
-  }
-
   const handleTagAdd = (tag: CustomTag) => {
     setAllTags((prev) => [...prev, tag])
   }
@@ -555,7 +538,6 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
                 : null
             }
             allTags={allTags}
-            onSubTodoAdd={handleSubTodoAdd}
           />
           <TodoEditSheet
             isOpen={editOpen}

@@ -334,28 +334,29 @@ export default function TodoEditSheet({
                 onTimeChange={setEditDeadlineTime}
               />
 
-              {/* 하위 투두 */}
-              <div className="flex items-center justify-between mt-5 mb-3">
-                <SectionLabel>하위 투두</SectionLabel>
-                <button onClick={() => setAddingSubTodo(true)}>
-                  <AddItemIcon width={24} height={24} />
-                </button>
-              </div>
-              <div className="flex flex-col gap-2">
-                {editSubTodos.map((sub) => (
-                  <div
-                    key={sub.id}
-                    className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
-                  >
-                    <CheckIcon />
-                    <span className="text-sm font-medium text-bluegray-black">
-                      {sub.title}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </>
           )}
+
+          {/* 하위 투두 — 여기서 추가한 건 저장 시 수정 범위(이번만/모두)를 그대로 따른다 */}
+          <div className="flex items-center justify-between mt-5 mb-3">
+            <SectionLabel>하위 투두</SectionLabel>
+            <button onClick={() => setAddingSubTodo(true)}>
+              <AddItemIcon width={24} height={24} />
+            </button>
+          </div>
+          <div className="flex flex-col gap-2">
+            {editSubTodos.map((sub) => (
+              <div
+                key={sub.id}
+                className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
+              >
+                <CheckIcon />
+                <span className="text-sm font-medium text-bluegray-black">
+                  {sub.title}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </BottomSheet>
 

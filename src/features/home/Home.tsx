@@ -239,10 +239,6 @@ export default function Home() {
   const [editScope, setEditScope] = useState<RoutineItemScope | undefined>(
     undefined,
   )
-  // 루틴 하위 추가 시 범위 선택 대기 중인 제목 (null이면 시트 닫힘)
-  const [pendingSubTodoTitle, setPendingSubTodoTitle] = useState<string | null>(
-    null,
-  )
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -310,28 +306,20 @@ export default function Home() {
   }
 
   const handleUpdateItem = async (updated: ProposedTodo) => {
-    if (!itemHook.selectedItem) return
-    await itemHook.handleUpdate(itemHook.selectedItem, editScope, updated)
+    const item = itemHook.selectedItem
+    const detail = itemHook.selectedDetail
+    if (!item || !detail) return
+    await itemHook.handleUpdate(item, editScope, updated)
+    // 수정 시트에서 새로 추가한 하위 투두는 수정 진입 때 고른 범위(이번만/모두)를 그대로 따른다
+    const originalIds = new Set(
+      itemDetailToProposed(detail, editScope).subTodos.map((s) => s.id),
+    )
+    const addedSubs = updated.subTodos.filter((s) => !originalIds.has(s.id))
+    for (const sub of addedSubs) {
+      await itemHook.handleAddSubTodo(item, sub.title, editScope)
+    }
     sheets.setIsEditTodoSheetOpen(false)
     sheets.setIsTodoInfoSheetOpen(false)
-  }
-
-  // 하위 추가: 투두는 바로, 루틴은 "이번만/반복 전체" 범위를 물어본 뒤 진행
-  const handleSubTodoAdd = (title: string) => {
-    const item = itemHook.selectedItem
-    if (!item) return
-    if (item.kind === 'ROUTINE') {
-      setPendingSubTodoTitle(title)
-      return
-    }
-    itemHook.handleAddSubTodo(item, title)
-  }
-
-  const handlePickSubTodoScope = (scope: RoutineItemScope) => {
-    if (itemHook.selectedItem && pendingSubTodoTitle) {
-      itemHook.handleAddSubTodo(itemHook.selectedItem, pendingSubTodoTitle, scope)
-    }
-    setPendingSubTodoTitle(null)
   }
 
   const handleDeleteClick = (item: Item) => {
@@ -724,7 +712,6 @@ export default function Home() {
             repeatTime={repeatTimeRow(itemHook.selectedDetail).time}
             repeatTimeLabel={repeatTimeRow(itemHook.selectedDetail).label}
             allTags={allTags}
-            onSubTodoAdd={handleSubTodoAdd}
             onSubTodoUpdate={(sub, title) =>
               itemHook.handleUpdateSubTodo(sub, title)
             }
@@ -749,33 +736,6 @@ export default function Home() {
           />
         </>
       )}
-
-      {/* 루틴 하위 투두 추가 범위 선택 */}
-      <BottomSheet
-        isOpen={pendingSubTodoTitle != null}
-        onClose={() => setPendingSubTodoTitle(null)}
-      >
-        <div className="pt-4 pb-9 px-5 flex flex-col items-center w-full">
-          <h3 className="text-xl font-semibold">해당 투두는 반복 투두에요</h3>
-          <p className="text-bluegray-darker mt-3 mb-6">
-            이번 투두에만 하위 투두를 추가할까요?
-          </p>
-          <div className="flex gap-3 w-full">
-            <button
-              onClick={() => handlePickSubTodoScope('THIS')}
-              className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
-            >
-              이번만
-            </button>
-            <button
-              onClick={() => handlePickSubTodoScope('ALL')}
-              className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
-            >
-              모든 반복에
-            </button>
-          </div>
-        </div>
-      </BottomSheet>
 
       {/* 루틴 수정 범위 선택 */}
       <BottomSheet

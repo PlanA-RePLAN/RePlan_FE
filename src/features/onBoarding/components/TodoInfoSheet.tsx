@@ -25,7 +25,6 @@ interface TodoInfoSheetProps {
   onEdit: () => void
   todo: TodoDetail
   allTags: CustomTag[]
-  onSubTodoAdd: (title: string) => void
   // 하위 투두 수정/삭제. 안 넘기면(온보딩 등) 하위 행은 표시 전용
   onSubTodoUpdate?: (sub: SubTodoDetail, title: string) => void
   onSubTodoDelete?: (sub: SubTodoDetail) => void
@@ -70,14 +69,12 @@ export default function TodoInfoSheet({
   onEdit,
   todo,
   allTags,
-  onSubTodoAdd,
   onSubTodoUpdate,
   onSubTodoDelete,
   onClick,
   repeatTime,
   repeatTimeLabel = '반복 시간',
 }: TodoInfoSheetProps) {
-  const [openUnderTodoSheet, setOpenUnderTodoSheet] = useState(false)
   const [editingSub, setEditingSub] = useState<SubTodoDetail | null>(null)
 
   const renderTag = () => {
@@ -263,16 +260,6 @@ export default function TodoInfoSheet({
             )}
           </div>
         </div>
-
-        <SubTodoSheet
-          isOpen={openUnderTodoSheet}
-          onClose={() => setOpenUnderTodoSheet(false)}
-          onConfirm={(title) => {
-            onSubTodoAdd(title)
-            setOpenUnderTodoSheet(false)
-          }}
-          mode="추가"
-        />
 
         {/* 하위 투두 수정/삭제 (하위 루틴 예정분은 반복 전체에 반영) */}
         <SubTodoSheet
