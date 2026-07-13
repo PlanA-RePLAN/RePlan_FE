@@ -15,7 +15,6 @@ import SubTodoSheet from './SubTodoSheet'
 import BottomSheet from '@/shared/components/BottomSheet'
 import CloseButtonIcon from '@/icons/CloseButtonIcon'
 import RoundEditIcon from '@/icons/RoundEditIcon'
-import AddItemIcon from '@/icons/AddItemIcon'
 import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
 import CalendarWithClockIcon from '@/icons/CalendarWithClockIcon'
 import { format } from 'date-fns'
@@ -241,12 +240,9 @@ export default function TodoInfoSheet({
             </>
           )}
 
-          {/* 하위 투두 */}
+          {/* 하위 투두 (추가는 수정 시트에서, 여기서는 조회·수정·삭제만) */}
           <div className="flex items-center justify-between mt-6">
             <SectionLabel>하위 투두</SectionLabel>
-            <button onClick={() => setOpenUnderTodoSheet(true)}>
-              <AddItemIcon height={24} width={24} />
-            </button>
           </div>
           <div className="flex flex-col gap-2">
             {todo.subTodos.length === 0 ? (
