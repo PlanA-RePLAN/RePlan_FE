@@ -92,6 +92,22 @@ function getDayTag(routineType: string | null): 'D' | 'W' | 'M' | undefined {
   return undefined
 }
 
+// 정보 시트 "반복 시간" 행: 그날만 시간이 바뀐 회차면 그날의 마감시간을(라벨도 교체), 아니면 루틴 기본 반복시간을 보여준다.
+function repeatTimeRow(detail: ItemDetail): {
+  label: string
+  time: string | null
+} {
+  const momTime = detail.routineTime?.slice(0, 5) ?? null
+  const effTime = detail.dueDate?.slice(11, 16) ?? null
+  const changedThisDay =
+    detail.kind === 'ROUTINE' &&
+    effTime != null &&
+    effTime !== (momTime ?? '23:59')
+  return changedThisDay
+    ? { label: '이 날의 종료 시간', time: effTime }
+    : { label: '반복 시간', time: momTime }
+}
+
 // 상세 응답 단독으로 시트 데이터를 만든다 (v0.29.0부터 루틴 상세도 반복정보/마감일시 완결).
 // 루틴이면 마감 일정 = 루틴 종료일(repeatEndDate), 투두면 = 마감일.
 function itemDetailToTodoDetail(detail: ItemDetail): TodoDetail {
@@ -684,7 +700,8 @@ export default function Home() {
             onClose={() => sheets.setIsTodoInfoSheetOpen(false)}
             onEdit={handleEditClick}
             todo={itemDetailToTodoDetail(itemHook.selectedDetail)}
-            repeatTime={itemHook.selectedDetail.routineTime?.slice(0, 5) ?? null}
+            repeatTime={repeatTimeRow(itemHook.selectedDetail).time}
+            repeatTimeLabel={repeatTimeRow(itemHook.selectedDetail).label}
             allTags={allTags}
             onSubTodoAdd={handleSubTodoAdd}
             onClick={() => {

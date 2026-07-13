@@ -30,6 +30,8 @@ interface TodoInfoSheetProps {
   onClick?: () => void
   // 루틴 회차의 반복 시간('HH:mm'). 넘어올 때만 "반복 시간" 줄을 그린다.
   repeatTime?: string | null
+  // 반복 시간 줄의 라벨 (그날만 시간이 바뀐 회차면 다른 문구로)
+  repeatTimeLabel?: string
 }
 
 // 'HH:mm' → 'hh:MM AM/PM'
@@ -69,6 +71,7 @@ export default function TodoInfoSheet({
   onSubTodoAdd,
   onClick,
   repeatTime,
+  repeatTimeLabel = '반복 시간',
 }: TodoInfoSheetProps) {
   const [openUnderTodoSheet, setOpenUnderTodoSheet] = useState(false)
 
@@ -117,7 +120,7 @@ export default function TodoInfoSheet({
 
   const deadlineDate = todo.dueDate ? new Date(todo.dueDate) : null
   const deadlineTime = todo.dueTime ? to12Hour(todo.dueTime) : null
-  const repeatTimeLabel = repeatTime ? to12Hour(repeatTime) : null
+  const repeatTimeValue = repeatTime ? to12Hour(repeatTime) : null
 
   const isRoutine = todo.routineType !== null
   const endDateLabel = deadlineDate
@@ -190,8 +193,8 @@ export default function TodoInfoSheet({
                 )}
                 <InfoRow
                   icon={<CalendarWithClockIcon fill="white" />}
-                  label="반복 시간"
-                  value={repeatTimeLabel}
+                  label={repeatTimeLabel}
+                  value={repeatTimeValue}
                 />
               </div>
 
