@@ -35,7 +35,7 @@ interface TodoEditSheetProps {
   onTagsLoaded?: (tags: CustomTag[]) => void
   onTagDelete?: (tagId: string) => void
   title?: string
-  // 루틴 "이 날짜만 수정"이면 제목·태그만 편집 (회차별 예외는 제목/태그만 저장되므로)
+  // 루틴 "이 날짜만 수정"이면 제목·태그·그날의 마감시간만 편집
   onlyTitleAndTag?: boolean
 }
 
@@ -90,6 +90,13 @@ export default function TodoEditSheet({
     todo.repeatTimeEnabled ?? false,
   )
   const [monthlyTime, setMonthlyTime] = useState(todo.repeatTime ?? '08:00 AM')
+  // "이 날짜만 수정" 모드의 그날 마감시간 (끄면 루틴 기본 시간으로 복귀)
+  const [occurrenceTimeEnabled, setOccurrenceTimeEnabled] = useState(
+    todo.repeatTimeEnabled ?? false,
+  )
+  const [occurrenceTime, setOccurrenceTime] = useState(
+    todo.repeatTime ?? '08:00 AM',
+  )
   const [editSubTodos, setEditSubTodos] = useState<SubTodo[]>(todo.subTodos)
   const [addingSubTodo, setAddingSubTodo] = useState(false)
   const [tagAddOpen, setTagAddOpen] = useState(false)
@@ -120,6 +127,8 @@ export default function TodoEditSheet({
       setMonthlyDay(todo.monthlyDay ?? [new Date().getDate()])
       setMonthlyTimeEnabled(todo.repeatTimeEnabled ?? false)
       setMonthlyTime(todo.repeatTime ?? '08:00 AM')
+      setOccurrenceTimeEnabled(todo.repeatTimeEnabled ?? false)
+      setOccurrenceTime(todo.repeatTime ?? '08:00 AM')
       setEditSubTodos(todo.subTodos)
       setAddingSubTodo(false)
     }
@@ -131,16 +140,20 @@ export default function TodoEditSheet({
       title: editTitle,
       selectedTagId: editTagId,
       repeat: editRepeat,
-      repeatTimeEnabled:
-        editRepeat === '데일리'
+      repeatTimeEnabled: onlyTitleAndTag
+        ? occurrenceTimeEnabled
+        : editRepeat === '데일리'
           ? dailyTimeEnabled
           : editRepeat === '위클리'
             ? weeklyTimeEnabled
             : editRepeat === '먼슬리'
               ? monthlyTimeEnabled
               : undefined,
-      repeatTime:
-        editRepeat === '데일리' && dailyTimeEnabled
+      repeatTime: onlyTitleAndTag
+        ? occurrenceTimeEnabled
+          ? occurrenceTime
+          : undefined
+        : editRepeat === '데일리' && dailyTimeEnabled
           ? dailyTime
           : editRepeat === '위클리' && weeklyTimeEnabled
             ? weeklyTime
@@ -241,6 +254,19 @@ export default function TodoEditSheet({
               </div>
             ))}
           </div>
+
+          {onlyTitleAndTag && (
+            <div className="mt-5">
+              {/* 그날의 마감시간 (끄면 루틴 기본 시간으로 복귀) */}
+              <DailyTimeSetting
+                label="마감시간"
+                checked={occurrenceTimeEnabled}
+                onCheckedChange={setOccurrenceTimeEnabled}
+                time={occurrenceTime}
+                onTimeChange={setOccurrenceTime}
+              />
+            </div>
+          )}
 
           {!onlyTitleAndTag && (
             <>

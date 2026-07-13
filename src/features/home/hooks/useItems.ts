@@ -271,6 +271,8 @@ export function useItems({
         await updateItemContent(accessToken, target, 'THIS', {
           title: updated.title,
           tagId,
+          // 그 회차만의 마감시간 (null = 루틴 기본 시간으로 복귀)
+          routineTime: buildRoutineTime(updated.repeatTime),
         })
       }
       await refetchItems()
