@@ -65,9 +65,9 @@ export const PRIVACY_CONTENT = (
     {h('수집 내용')}
     <div className="mt-1 border border-bluegray-light-active rounded-xl overflow-hidden">
       {PRIVACY_ROWS.map(({ label, value }, i) => (
-        <div key={label} className={`flex items-center ${i < PRIVACY_ROWS.length - 1 ? 'border-b border-bluegray-light' : ''}`}>
-          <p className="w-[95px] shrink-0 px-4 py-4.5 font-semibold text-bluegray-dark-active bg-bluegray-light">{label}</p>
-          <p className="px-4 py-2 text-bluegray-dark">{value}</p>
+        <div key={label} className={`flex items-stretch ${i < PRIVACY_ROWS.length - 1 ? 'border-b border-bluegray-light' : ''}`}>
+          <p className="w-[95px] shrink-0 px-4 py-4 flex items-center font-semibold text-bluegray-dark-active bg-bluegray-light">{label}</p>
+          <p className="px-4 py-3 text-bluegray-dark">{value}</p>
         </div>
       ))}
     </div>
@@ -80,9 +80,9 @@ export const MARKETING_CONTENT = (
     {h('전송 내용')}
     <div className="mt-1 border border-bluegray-light-active rounded-xl overflow-hidden">
       {MARKETING_ROWS.map(({ label, value }, i) => (
-        <div key={label} className={`flex items-center ${i < MARKETING_ROWS.length - 1 ? 'border-b border-bluegray-light' : ''}`}>
-          <p className="w-[95px] shrink-0 px-4 py-4.5 font-semibold text-bluegray-dark-active bg-bluegray-light">{label}</p>
-          <p className="px-4 py-2 text-bluegray-dark">{value}</p>
+        <div key={label} className={`flex items-stretch ${i < MARKETING_ROWS.length - 1 ? 'border-b border-bluegray-light' : ''}`}>
+          <p className="w-[95px] shrink-0 px-4 py-4 flex items-center font-semibold text-bluegray-dark-active bg-bluegray-light">{label}</p>
+          <p className="px-4 py-3 text-bluegray-dark">{value}</p>
         </div>
       ))}
     </div>
