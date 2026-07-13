@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useReducer, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import {
   motion,
@@ -13,6 +13,15 @@ interface BottomSheetProps {
   children: React.ReactNode
 }
 
+// 열려 있는 시트 스택. 시트가 겹칠 때
+// - 나중에 연 시트가 항상 위로 오도록 z-index를 스택 순서로 배정하고
+// - 맨 위 시트의 딤만 보여서, 배경은 한 번만 어두워지고 아래 시트는 위 시트의 딤에 덮인다.
+const BASE_Z = 1001
+let sheetSeq = 0
+const openSheetIds: number[] = []
+const stackListeners = new Set<() => void>()
+const notifyStack = () => stackListeners.forEach((listener) => listener())
+
 export default function BottomSheet({
   isOpen,
   onClose,
@@ -21,6 +30,32 @@ export default function BottomSheet({
   const dragControls = useDragControls()
   const y = useMotionValue(0)
   const sheetRef = useRef<HTMLDivElement>(null)
+  const idRef = useRef(0)
+  if (idRef.current === 0) idRef.current = ++sheetSeq
+  // 닫히는 애니메이션 동안에도 열릴 때 받은 z를 유지해야 내려가는 시트가 아래 시트 뒤로 꺼지지 않는다
+  const zRef = useRef(BASE_Z)
+  const [, rerenderOnStackChange] = useReducer((n) => n + 1, 0)
+
+  useEffect(() => {
+    stackListeners.add(rerenderOnStackChange)
+    return () => {
+      stackListeners.delete(rerenderOnStackChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isOpen) return
+    zRef.current = BASE_Z + openSheetIds.length * 2
+    openSheetIds.push(idRef.current)
+    notifyStack()
+    return () => {
+      const index = openSheetIds.indexOf(idRef.current)
+      if (index >= 0) openSheetIds.splice(index, 1)
+      notifyStack()
+    }
+  }, [isOpen])
+
+  const isTop = openSheetIds[openSheetIds.length - 1] === idRef.current
 
   const handleDragEnd = (
     _: unknown,
@@ -35,21 +70,22 @@ export default function BottomSheet({
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* 딤 배경 */}
+          {/* 딤 배경 — 맨 위 시트의 딤만 보인다 */}
           <motion.div
-            className="fixed inset-0 z-1001 bg-black"
+            className="fixed inset-0 bg-black"
+            style={{ zIndex: zRef.current }}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.2 }}
+            animate={{ opacity: isTop ? 0.2 : 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             onClick={onClose}
           />
 
-          {/* 바텀시트 — 딤과 같은 z를 써서, 시트가 겹칠 때 나중에 뜬 시트의 딤이 아래 시트를 덮는다 */}
+          {/* 바텀시트 */}
           <motion.div
             ref={sheetRef}
-            className="fixed bottom-0 left-0 right-0 z-1001 bg-white rounded-t-3xl"
-            style={{ y }}
+            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl"
+            style={{ y, zIndex: zRef.current }}
             drag="y"
             dragControls={dragControls}
             dragListener={false}
