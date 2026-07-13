@@ -22,6 +22,28 @@ const openSheetIds: number[] = []
 const stackListeners = new Set<() => void>()
 const notifyStack = () => stackListeners.forEach((listener) => listener())
 
+// 시트가 하나라도 열려 있는 동안 뒤 화면(body) 스크롤을 잠근다.
+// iOS 웹뷰는 overflow: hidden만으로는 스크롤 체이닝·러버밴딩이 막히지 않아 position: fixed 방식을 쓴다.
+let lockedScrollY = 0
+const lockBodyScroll = () => {
+  lockedScrollY = window.scrollY
+  const { style } = document.body
+  style.position = 'fixed'
+  style.top = `-${lockedScrollY}px`
+  style.left = '0'
+  style.right = '0'
+  style.width = '100%'
+}
+const unlockBodyScroll = () => {
+  const { style } = document.body
+  style.position = ''
+  style.top = ''
+  style.left = ''
+  style.right = ''
+  style.width = ''
+  window.scrollTo(0, lockedScrollY)
+}
+
 export default function BottomSheet({
   isOpen,
   onClose,
@@ -47,10 +69,12 @@ export default function BottomSheet({
     if (!isOpen) return
     zRef.current = BASE_Z + openSheetIds.length * 2
     openSheetIds.push(idRef.current)
+    if (openSheetIds.length === 1) lockBodyScroll()
     notifyStack()
     return () => {
       const index = openSheetIds.indexOf(idRef.current)
       if (index >= 0) openSheetIds.splice(index, 1)
+      if (openSheetIds.length === 0) unlockBodyScroll()
       notifyStack()
     }
   }, [isOpen])
