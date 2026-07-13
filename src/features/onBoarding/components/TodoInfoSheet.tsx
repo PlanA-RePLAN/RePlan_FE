@@ -72,7 +72,6 @@ export default function TodoInfoSheet({
   repeatTime,
   repeatTimeLabel = '반복 시간',
 }: TodoInfoSheetProps) {
-
   const renderTag = () => {
     const tagTitle = todo.tagTitle ?? ''
     if (!tagTitle || tagTitle === '미선택') return null
@@ -137,149 +136,159 @@ export default function TodoInfoSheet({
   return (
     <>
       <BottomSheet isOpen={isOpen} onClose={onClose}>
-        <div className="px-5 pt-2 pb-6">
-          {/* 헤더 */}
-          <div className="flex justify-between items-center mb-5">
-            <button onClick={onClose}>
-              <CloseButtonIcon />
-            </button>
-            <span className="text-lg font-bold text-bluegray-black">
-              투두 정보
-            </span>
-            <button
-              onClick={onEdit}
-              className="w-7 h-7 bg-bluegray-black rounded-full flex items-center justify-center"
-            >
-              <RoundEditIcon />
-            </button>
-          </div>
-
-          {/* 타이틀 */}
-          <SectionLabel>타이틀</SectionLabel>
-          <div className="bg-bluegray-light rounded-xl px-4 py-3 text-sm font-medium text-bluegray-black mb-6">
-            {todo.title}
-          </div>
-
-          {/* 태그 분류 */}
-          <SectionLabel>태그 분류</SectionLabel>
-          <div className="mb-6">{renderTag()}</div>
-
-          {/* 반복 여부 */}
-          <SectionLabel>반복 여부</SectionLabel>
-          <div className="flex gap-2 mb-5">
-            <div
-              className={cn(
-                'text-sm font-medium px-5 py-2 rounded-full',
-                'bg-bluegray-black text-white',
-              )}
-            >
-              {repeatLabel}
+        {/* 헤더는 고정, 아래 내용만 스크롤 */}
+        <div className="max-h-[80vh] flex flex-col">
+          <div className="px-5 pt-2 shrink-0">
+            {/* 헤더 */}
+            <div className="flex justify-between items-center mb-5">
+              <button onClick={onClose}>
+                <CloseButtonIcon />
+              </button>
+              <span className="text-lg font-bold text-bluegray-black">
+                투두 정보
+              </span>
+              <button
+                onClick={onEdit}
+                className="w-7 h-7 bg-bluegray-black rounded-full flex items-center justify-center"
+              >
+                <RoundEditIcon />
+              </button>
             </div>
           </div>
+          <div className="overflow-y-auto">
+            <div className="px-5 pb-6">
+              {/* 타이틀 */}
+              <SectionLabel>타이틀</SectionLabel>
+              <div className="bg-bluegray-light rounded-xl px-4 py-3 text-sm font-medium text-bluegray-black mb-6">
+                {todo.title}
+              </div>
 
-          {isRoutine ? (
-            <>
-              {/* 반복 설정 (루틴 전체) — 보여줄 값이 하나도 없으면 섹션 통째로 숨긴다 */}
-              {(repeatDaysLabel || repeatTimeValue) && (
+              {/* 태그 분류 */}
+              <SectionLabel>태그 분류</SectionLabel>
+              <div className="mb-6">{renderTag()}</div>
+
+              {/* 반복 여부 */}
+              <SectionLabel>반복 여부</SectionLabel>
+              <div className="flex gap-2 mb-5">
+                <div
+                  className={cn(
+                    'text-sm font-medium px-5 py-2 rounded-full',
+                    'bg-bluegray-black text-white',
+                  )}
+                >
+                  {repeatLabel}
+                </div>
+              </div>
+
+              {isRoutine ? (
                 <>
-                  <SectionLabel>반복 설정</SectionLabel>
-                  <div className="flex flex-col border-t border-bluegray-light-hover mb-6">
-                    {repeatDaysLabel && (
-                      <InfoRow
-                        icon={<CalendarClearSharpIcon fill="white" />}
-                        label="반복 날짜"
-                        value={repeatDaysLabel}
-                      />
-                    )}
-                    {repeatTimeValue && (
-                      <InfoRow
-                        icon={<CalendarWithClockIcon fill="white" />}
-                        label={repeatTimeLabel}
-                        value={repeatTimeValue}
-                      />
-                    )}
+                  {/* 반복 설정 (루틴 전체) — 보여줄 값이 하나도 없으면 섹션 통째로 숨긴다 */}
+                  {(repeatDaysLabel || repeatTimeValue) && (
+                    <>
+                      <SectionLabel>반복 설정</SectionLabel>
+                      <div className="flex flex-col border-t border-bluegray-light-hover mb-6">
+                        {repeatDaysLabel && (
+                          <InfoRow
+                            icon={<CalendarClearSharpIcon fill="white" />}
+                            label="반복 날짜"
+                            value={repeatDaysLabel}
+                          />
+                        )}
+                        {repeatTimeValue && (
+                          <InfoRow
+                            icon={<CalendarWithClockIcon fill="white" />}
+                            label={repeatTimeLabel}
+                            value={repeatTimeValue}
+                          />
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* 종료 일정 (루틴 전체) */}
+                  <SectionLabel>종료 일정</SectionLabel>
+                  <div className="flex flex-col border-t border-bluegray-light-hover">
+                    <InfoRow
+                      icon={<CalendarClearSharpIcon fill="white" />}
+                      label="종료 날짜"
+                      value={endDateLabel}
+                    />
+                    <InfoRow
+                      icon={<CalendarWithClockIcon fill="white" />}
+                      label="종료 시간"
+                      value={deadlineTime}
+                    />
                   </div>
+                </>
+              ) : (
+                <>
+                  {/* 마감 일정 (일회성 투두) */}
+                  <SectionLabel>마감 일정</SectionLabel>
+                  <DeadlineInput
+                    date={deadlineDate}
+                    time={deadlineTime}
+                    useDate={deadlineDate !== null}
+                    useTime={deadlineTime !== null}
+                    notUseToggle={true}
+                    onUseDateChange={() => {}}
+                    onUseTimeChange={() => {}}
+                  />
                 </>
               )}
 
-              {/* 종료 일정 (루틴 전체) */}
-              <SectionLabel>종료 일정</SectionLabel>
-              <div className="flex flex-col border-t border-bluegray-light-hover">
-                <InfoRow
-                  icon={<CalendarClearSharpIcon fill="white" />}
-                  label="종료 날짜"
-                  value={endDateLabel}
-                />
-                <InfoRow
-                  icon={<CalendarWithClockIcon fill="white" />}
-                  label="종료 시간"
-                  value={deadlineTime}
-                />
+              {/* 하위 투두 (추가는 수정 시트에서, 여기서는 조회·수정·삭제만) */}
+              <div className="flex items-center justify-between mt-6">
+                <SectionLabel>하위 투두</SectionLabel>
               </div>
-            </>
-          ) : (
-            <>
-              {/* 마감 일정 (일회성 투두) */}
-              <SectionLabel>마감 일정</SectionLabel>
-              <DeadlineInput
-                date={deadlineDate}
-                time={deadlineTime}
-                useDate={deadlineDate !== null}
-                useTime={deadlineTime !== null}
-                notUseToggle={true}
-                onUseDateChange={() => {}}
-                onUseTimeChange={() => {}}
-              />
-            </>
-          )}
-
-          {/* 하위 투두 (추가는 수정 시트에서, 여기서는 조회·수정·삭제만) */}
-          <div className="flex items-center justify-between mt-6">
-            <SectionLabel>하위 투두</SectionLabel>
-          </div>
-          <div className="flex flex-col gap-2">
-            {todo.subTodos.length === 0 ? (
-              <span className="text-sm text-bluegray-normal">없음</span>
-            ) : (
-              todo.subTodos.map((sub, i) => (
-                <div
-                  key={sub.todoId ?? `sub-${i}`}
-                  className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
-                >
-                  {/* 완료 토글 — 부모 투두가 완료된 상태면 버튼 자체를 숨긴다 */}
-                  {!todo.isCompleted && (
+              <div className="flex flex-col gap-2">
+                {todo.subTodos.length === 0 ? (
+                  <span className="text-sm text-bluegray-normal">없음</span>
+                ) : (
+                  todo.subTodos.map((sub, i) => (
                     <div
-                      onClick={
-                        onSubTodoToggle
-                          ? (e) => {
-                              e.stopPropagation()
-                              onSubTodoToggle(sub)
-                            }
-                          : undefined
-                      }
+                      key={sub.todoId ?? `sub-${i}`}
+                      className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
                     >
-                      {sub.isCompleted ? <GoalColoredIcon /> : <CheckIcon />}
+                      {/* 완료 토글 — 부모 투두가 완료된 상태면 버튼 자체를 숨긴다 */}
+                      {!todo.isCompleted && (
+                        <div
+                          onClick={
+                            onSubTodoToggle
+                              ? (e) => {
+                                  e.stopPropagation()
+                                  onSubTodoToggle(sub)
+                                }
+                              : undefined
+                          }
+                        >
+                          {sub.isCompleted ? (
+                            <GoalColoredIcon />
+                          ) : (
+                            <CheckIcon />
+                          )}
+                        </div>
+                      )}
+                      <span className="flex-1 text-sm font-medium text-bluegray-black">
+                        {sub.title}
+                      </span>
                     </div>
-                  )}
-                  <span className="flex-1 text-sm font-medium text-bluegray-black">
-                    {sub.title}
-                  </span>
-                </div>
-              ))
+                  ))
+                )}
+              </div>
+            </div>
+
+            {onClick && (
+              <div className="px-5 mt-10 pb-6">
+                <button
+                  onClick={onClick}
+                  className="w-full h-13 bg-bluegray-light flex justify-center items-center rounded-xl text-danger font-semibold text-[14px]"
+                >
+                  투두 삭제
+                </button>
+              </div>
             )}
           </div>
         </div>
-
-        {onClick && (
-          <div className="px-5 mt-10">
-            <button
-              onClick={onClick}
-              className="w-full h-13 bg-bluegray-light flex justify-center items-center rounded-xl text-danger font-semibold text-[14px]"
-            >
-              투두 삭제
-            </button>
-          </div>
-        )}
       </BottomSheet>
     </>
   )
