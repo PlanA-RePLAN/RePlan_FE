@@ -7,11 +7,11 @@ import {
   orderItem,
   updateItemContent,
   deleteItem,
+  addItemSubTodo,
+  updateItemSubTodo,
+  deleteItemSubTodo,
 } from '@/shared/api/items'
-import {
-  createTodo as createTodoApi,
-  createSubTodo as createSubTodoApi,
-} from '@/shared/api/todo'
+import { createTodo as createTodoApi } from '@/shared/api/todo'
 import { createRoutine } from '@/shared/api/routine'
 import type { Item, ItemDetail, RoutineItemScope } from '@/shared/types/item'
 import { toTarget, itemKey } from '@/shared/types/item'
@@ -179,28 +179,93 @@ export function useItems({
     }
   }
 
-  const handleAddSubTodo = async (parentId: number, title: string) => {
+  // 하위 투두 3종 (통합 API) — TODO=그 투두에, ROUTINE+THIS=그날 회차에(행 없으면 예약), ROUTINE+ALL=하위 루틴 생성
+  const handleAddSubTodo = async (
+    item: Item,
+    title: string,
+    scope?: RoutineItemScope,
+  ) => {
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
-      const res = await createSubTodoApi(accessToken, parentId, title)
-      if (res.success && res.data) {
-        const created = res.data
-        setSelectedDetail((prev) =>
-          prev
-            ? {
-                ...prev,
-                subItems: [
-                  ...prev.subItems,
-                  {
-                    todoId: created.todoId,
-                    title: created.title,
-                    isCompleted: created.isCompleted,
-                  },
-                ],
-              }
-            : prev,
-        )
+      if (item.kind === 'TODO') {
+        if (item.todoId == null) return
+        await addItemSubTodo(accessToken, {
+          kind: 'TODO',
+          todoId: item.todoId,
+          title,
+        })
+      } else {
+        if (item.routineId == null || item.date == null) return
+        await addItemSubTodo(accessToken, {
+          kind: 'ROUTINE',
+          routineId: item.routineId,
+          date: item.date,
+          scope: scope ?? 'THIS',
+          title,
+        })
       }
+      await fetchDetail(item)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  // 하위 지목: 행 하위(todoId)는 그날만, 예약(reservedIndex)은 index로, 하위 루틴 예정분(subRoutineId만)은 반복 전체
+  const subTodoTarget = (sub: {
+    todoId: number | null
+    reservedIndex?: number | null
+    subRoutineId?: number | null
+  }) => {
+    if (sub.todoId != null && selectedDetail?.todoId != null) {
+      return { parentTodoId: selectedDetail.todoId, subTodoId: sub.todoId }
+    }
+    if (
+      sub.reservedIndex != null &&
+      selectedItem?.routineId != null &&
+      selectedItem.date != null
+    ) {
+      return {
+        routineId: selectedItem.routineId,
+        date: selectedItem.date,
+        index: sub.reservedIndex,
+      }
+    }
+    if (sub.subRoutineId != null) {
+      return { subRoutineId: sub.subRoutineId }
+    }
+    return null
+  }
+
+  const handleUpdateSubTodo = async (
+    sub: {
+      todoId: number | null
+      reservedIndex?: number | null
+      subRoutineId?: number | null
+    },
+    title: string,
+  ) => {
+    const target = subTodoTarget(sub)
+    if (!target || !selectedItem) return
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      await updateItemSubTodo(accessToken, { ...target, title })
+      await fetchDetail(selectedItem)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleDeleteSubTodo = async (sub: {
+    todoId: number | null
+    reservedIndex?: number | null
+    subRoutineId?: number | null
+  }) => {
+    const target = subTodoTarget(sub)
+    if (!target || !selectedItem) return
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      await deleteItemSubTodo(accessToken, target)
+      await fetchDetail(selectedItem)
     } catch (error) {
       console.error(error)
     }
@@ -421,6 +486,8 @@ export function useItems({
     fetchDetail,
     handleCreate,
     handleAddSubTodo,
+    handleUpdateSubTodo,
+    handleDeleteSubTodo,
     handleUpdate,
     handleDelete,
     handleToggleComplete,

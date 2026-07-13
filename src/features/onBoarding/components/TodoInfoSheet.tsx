@@ -3,7 +3,7 @@ import { cn } from '@/shared/utils/cn'
 
 // types
 import { type CustomTag, ROUTINE_TO_REPEAT, TAG_COLORS } from '../type/types'
-import type { TodoDetail } from '@/shared/types/todo'
+import type { SubTodoDetail, TodoDetail } from '@/shared/types/todo'
 
 // components
 import TodoTag from '@/shared/components/TodoTag'
@@ -27,6 +27,9 @@ interface TodoInfoSheetProps {
   todo: TodoDetail
   allTags: CustomTag[]
   onSubTodoAdd: (title: string) => void
+  // 하위 투두 수정/삭제. 안 넘기면(온보딩 등) 하위 행은 표시 전용
+  onSubTodoUpdate?: (sub: SubTodoDetail, title: string) => void
+  onSubTodoDelete?: (sub: SubTodoDetail) => void
   onClick?: () => void
   // 루틴 회차의 반복 시간('HH:mm'). 넘어올 때만 "반복 시간" 줄을 그린다.
   repeatTime?: string | null
@@ -69,11 +72,14 @@ export default function TodoInfoSheet({
   todo,
   allTags,
   onSubTodoAdd,
+  onSubTodoUpdate,
+  onSubTodoDelete,
   onClick,
   repeatTime,
   repeatTimeLabel = '반복 시간',
 }: TodoInfoSheetProps) {
   const [openUnderTodoSheet, setOpenUnderTodoSheet] = useState(false)
+  const [editingSub, setEditingSub] = useState<SubTodoDetail | null>(null)
 
   const renderTag = () => {
     const tagTitle = todo.tagTitle ?? ''
@@ -240,15 +246,27 @@ export default function TodoInfoSheet({
             {todo.subTodos.length === 0 ? (
               <span className="text-sm text-bluegray-normal">없음</span>
             ) : (
-              todo.subTodos.map((sub) => (
+              todo.subTodos.map((sub, i) => (
                 <div
-                  key={sub.todoId}
+                  key={sub.todoId ?? `sub-${i}`}
+                  onClick={onSubTodoUpdate ? () => setEditingSub(sub) : undefined}
                   className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
                 >
                   <CheckIcon />
-                  <span className="text-sm font-medium text-bluegray-black">
+                  <span className="flex-1 text-sm font-medium text-bluegray-black">
                     {sub.title}
                   </span>
+                  {/* 행 없는 하위 구분 뱃지: 예약(그날만)·반복(하위 루틴 예정분) */}
+                  {sub.todoId == null && sub.reservedIndex != null && (
+                    <span className="shrink-0 text-[10px] font-semibold text-bluegray-dark bg-bluegray-light rounded-full px-2 py-0.5">
+                      예약됨
+                    </span>
+                  )}
+                  {sub.todoId == null && sub.subRoutineId != null && (
+                    <span className="shrink-0 text-[10px] font-semibold text-[#7EA4F5] bg-blue-light rounded-full px-2 py-0.5">
+                      반복
+                    </span>
+                  )}
                 </div>
               ))
             )}
@@ -263,6 +281,26 @@ export default function TodoInfoSheet({
             setOpenUnderTodoSheet(false)
           }}
           mode="추가"
+        />
+
+        {/* 하위 투두 수정/삭제 (하위 루틴 예정분은 반복 전체에 반영) */}
+        <SubTodoSheet
+          isOpen={editingSub != null}
+          onClose={() => setEditingSub(null)}
+          onConfirm={(title) => {
+            if (editingSub) onSubTodoUpdate?.(editingSub, title)
+            setEditingSub(null)
+          }}
+          mode="수정"
+          initialTitle={editingSub?.title}
+          onDelete={
+            onSubTodoDelete
+              ? () => {
+                  if (editingSub) onSubTodoDelete(editingSub)
+                  setEditingSub(null)
+                }
+              : undefined
+          }
         />
         {onClick && (
           <div className="px-5 mt-10">

@@ -23,10 +23,14 @@ export interface Item {
 }
 
 // GET /api/items/detail — 상세
+// 하위 3종 구분: todoId 있음=행 하위(그날만 조작) / reservedIndex 있음=예약(그날만, 미래 회차) /
+// subRoutineId만 있음=하위 루틴 예정분(반복 전체로만 조작). 행 하위인데 subRoutineId도 있으면 하위 루틴 출신.
 export interface SubItem {
-  todoId: number
+  todoId: number | null
   title: string
   isCompleted: boolean
+  reservedIndex: number | null
+  subRoutineId: number | null
 }
 
 export interface ItemDetail {
