@@ -30,6 +30,7 @@ function getOAuthErrorMessage(err: unknown, fallback: string): string {
 export function useOAuthLogin() {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
+  const [showTermsSheet, setShowTermsSheet] = useState(false)
   const googleBtnRef = useRef<HTMLDivElement>(null)
   const googleInitialized = useRef(false)
   const naverInitialized = useRef(false)
@@ -48,7 +49,7 @@ export function useOAuthLogin() {
       navigate('/home')
     } else if (isNewUser && tempToken) {
       sessionStorage.setItem('tempToken', tempToken)
-      navigate('/profile-setup')
+      setShowTermsSheet(true)
     }
   }
 
@@ -317,5 +318,5 @@ export function useOAuthLogin() {
     }
   }
 
-  return { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver, loginWithApple }
+  return { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver, loginWithApple, showTermsSheet, setShowTermsSheet }
 }

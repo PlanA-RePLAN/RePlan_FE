@@ -1,10 +1,14 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
+import { useOAuthLogin } from '@/features/profileSetup/hooks/useOAuthLogin'
+import { useOnboardingStore } from '@/store/onboardingStore'
+
 const logoSvg = '/assets/logo.svg'
 import Button from '@/features/profileSetup/components/Button'
 import GoogleIcon from '@/icons/GoogleIcon'
-import { useOAuthLogin } from '@/features/profileSetup/hooks/useOAuthLogin'
+import TermsAgreementSheet from '@/features/profileSetup//components/TermsAgreementSheet'
+
 
 const LOGIN_OPTION = [
   { title: '카카오', img: 'kakao', option: 'kakao', icon: undefined },
@@ -15,7 +19,9 @@ const LOGIN_OPTION = [
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver, loginWithApple } = useOAuthLogin()
+  
+  const { error, googleBtnRef, loginWithKakao, loginWithGoogle, loginWithNaver, loginWithApple, showTermsSheet, setShowTermsSheet } = useOAuthLogin()
+  const setAgreeMarketing = useOnboardingStore((s) => s.setAgreeMarketing)
 
   useEffect(() => {
     if (localStorage.getItem('accessToken')) {
@@ -28,6 +34,12 @@ export default function LoginPage() {
     if (option === 'google') loginWithGoogle()
     if (option === 'naver') loginWithNaver()
     if (option === 'apple') loginWithApple()
+  }
+
+  const handleTermsConfirm = (agreeMarketing: boolean) => {
+    setAgreeMarketing(agreeMarketing)
+    setShowTermsSheet(false)
+    navigate('/profile-setup')
   }
 
   return (
@@ -55,6 +67,12 @@ export default function LoginPage() {
           />
         ))}
       </div>
+
+      <TermsAgreementSheet
+        isOpen={showTermsSheet}
+        onClose={() => setShowTermsSheet(false)}
+        onConfirm={handleTermsConfirm}
+      />
     </div>
   )
 }
