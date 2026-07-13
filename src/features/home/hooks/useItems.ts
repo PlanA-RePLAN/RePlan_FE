@@ -221,6 +221,10 @@ export function useItems({
     },
     scope?: RoutineItemScope,
   ) => {
+    // 모두(ALL) 수정에서 하위 루틴 출신이면 행 대신 반복 전체를 지목한다
+    if (scope === 'ALL' && sub.subRoutineId != null) {
+      return { subRoutineId: sub.subRoutineId }
+    }
     if (sub.todoId != null && selectedDetail?.todoId != null) {
       return { parentTodoId: selectedDetail.todoId, subTodoId: sub.todoId }
     }

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { cn } from '@/shared/utils/cn'
 
 // types
@@ -12,7 +11,6 @@ import DeadlineInput from './DeadlineInput'
 import InfoRow from './InfoRow'
 import CheckIcon from '@/icons/CheckIcon'
 import GoalColoredIcon from '@/icons/GoalColoredIcon'
-import SubTodoSheet from './SubTodoSheet'
 import BottomSheet from '@/shared/components/BottomSheet'
 import CloseButtonIcon from '@/icons/CloseButtonIcon'
 import RoundEditIcon from '@/icons/RoundEditIcon'
@@ -26,10 +24,8 @@ interface TodoInfoSheetProps {
   onEdit: () => void
   todo: TodoDetail
   allTags: CustomTag[]
-  // 하위 투두 완료/수정/삭제. 안 넘기면(온보딩 등) 하위 행은 표시 전용
+  // 하위 투두 완료 토글. 안 넘기면(온보딩 등) 표시 전용. 제목 수정/삭제는 수정 시트에서 한다
   onSubTodoToggle?: (sub: SubTodoDetail) => void
-  onSubTodoUpdate?: (sub: SubTodoDetail, title: string) => void
-  onSubTodoDelete?: (sub: SubTodoDetail) => void
   onClick?: () => void
   // 루틴 회차의 반복 시간('HH:mm'). 넘어올 때만 "반복 시간" 줄을 그린다.
   repeatTime?: string | null
@@ -72,13 +68,10 @@ export default function TodoInfoSheet({
   todo,
   allTags,
   onSubTodoToggle,
-  onSubTodoUpdate,
-  onSubTodoDelete,
   onClick,
   repeatTime,
   repeatTimeLabel = '반복 시간',
 }: TodoInfoSheetProps) {
-  const [editingSub, setEditingSub] = useState<SubTodoDetail | null>(null)
 
   const renderTag = () => {
     const tagTitle = todo.tagTitle ?? ''
@@ -251,7 +244,6 @@ export default function TodoInfoSheet({
               todo.subTodos.map((sub, i) => (
                 <div
                   key={sub.todoId ?? `sub-${i}`}
-                  onClick={onSubTodoUpdate ? () => setEditingSub(sub) : undefined}
                   className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
                 >
                   {/* 완료 토글 — 행/예약/예정분 모두. 행 탭(수정)과 분리하기 위해 전파 차단 */}
@@ -276,25 +268,6 @@ export default function TodoInfoSheet({
           </div>
         </div>
 
-        {/* 하위 투두 수정/삭제 (하위 루틴 예정분은 반복 전체에 반영) */}
-        <SubTodoSheet
-          isOpen={editingSub != null}
-          onClose={() => setEditingSub(null)}
-          onConfirm={(title) => {
-            if (editingSub) onSubTodoUpdate?.(editingSub, title)
-            setEditingSub(null)
-          }}
-          mode="수정"
-          initialTitle={editingSub?.title}
-          onDelete={
-            onSubTodoDelete
-              ? () => {
-                  if (editingSub) onSubTodoDelete(editingSub)
-                  setEditingSub(null)
-                }
-              : undefined
-          }
-        />
         {onClick && (
           <div className="px-5 mt-10">
             <button

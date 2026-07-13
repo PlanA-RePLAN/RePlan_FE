@@ -13,7 +13,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { startOfWeek, addDays } from 'date-fns'
 
 // type
-import type { SubTodoDetail, TodoDetail } from '@/shared/types/todo'
+import type { TodoDetail } from '@/shared/types/todo'
 import type { Item, ItemDetail, RoutineItemScope } from '@/shared/types/item'
 import { itemKey } from '@/shared/types/item'
 import type { CustomTag, ProposedTodo } from '@/features/onBoarding/type/types'
@@ -239,12 +239,7 @@ export default function Home() {
   const [editScope, setEditScope] = useState<RoutineItemScope | undefined>(
     undefined,
   )
-  // 하위 루틴 예정분 수정/삭제 시 범위 선택 대기 (null이면 시트 닫힘)
-  const [pendingSubAction, setPendingSubAction] = useState<{
-    sub: SubTodoDetail
-    title?: string
-    type: 'update' | 'delete'
-  } | null>(null)
+
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -311,32 +306,52 @@ export default function Home() {
     sheets.setIsEditTodoSheetOpen(true)
   }
 
+  // 수정 시트의 하위 목록 diff를 저장 시점에 반영한다. 조작 범위는 수정 진입 때 고른 것(이번만/모두)을 따른다.
   const handleUpdateItem = async (updated: ProposedTodo) => {
     const item = itemHook.selectedItem
     const detail = itemHook.selectedDetail
     if (!item || !detail) return
     await itemHook.handleUpdate(item, editScope, updated)
-    // 수정 시트에서 새로 추가한 하위 투두는 수정 진입 때 고른 범위(이번만/모두)를 그대로 따른다
-    const originalIds = new Set(
-      itemDetailToProposed(detail, editScope).subTodos.map((s) => s.id),
-    )
-    const addedSubs = updated.subTodos.filter((s) => !originalIds.has(s.id))
-    for (const sub of addedSubs) {
+
+    // proposed의 하위 id → 원본 subItem 복원 (양수=todoId, 음수=subItems 배열 위치)
+    const resolveSub = (id: number) =>
+      id > 0
+        ? detail.subItems.find((s) => s.todoId === id)
+        : detail.subItems[-id - 1]
+
+    const original = itemDetailToProposed(detail, editScope).subTodos
+    const originalIds = new Set(original.map((s) => s.id))
+    const updatedIds = new Set(updated.subTodos.map((s) => s.id))
+
+    // 전체(ALL) 수정은 미래 회차 예외를 리셋하므로, 예약 하위(그날 전용)는 대상에서 뺀다
+    const touchable = (sub?: (typeof detail.subItems)[number]) =>
+      sub != null && !(editScope === 'ALL' && sub.todoId == null && sub.reservedIndex != null)
+
+    // 제목 수정 (index가 안 밀리게 삭제보다 먼저)
+    for (const cur of updated.subTodos) {
+      if (!originalIds.has(cur.id)) continue
+      const before = original.find((s) => s.id === cur.id)
+      if (!before || before.title === cur.title) continue
+      const sub = resolveSub(cur.id)
+      if (touchable(sub)) {
+        await itemHook.handleUpdateSubTodo(sub!, cur.title, editScope)
+      }
+    }
+    // 삭제 — 예약 index가 당겨지지 않게 뒤(index 큰 쪽)부터
+    const removed = original
+      .filter((s) => !updatedIds.has(s.id))
+      .map((s) => resolveSub(s.id))
+      .filter((sub) => touchable(sub))
+      .sort((a, b) => (b?.reservedIndex ?? -1) - (a?.reservedIndex ?? -1))
+    for (const sub of removed) {
+      await itemHook.handleDeleteSubTodo(sub!, editScope)
+    }
+    // 추가
+    for (const sub of updated.subTodos.filter((s) => !originalIds.has(s.id))) {
       await itemHook.handleAddSubTodo(item, sub.title, editScope)
     }
     sheets.setIsEditTodoSheetOpen(false)
     sheets.setIsTodoInfoSheetOpen(false)
-  }
-
-  const handlePickSubScope = (scope: RoutineItemScope) => {
-    if (pendingSubAction) {
-      if (pendingSubAction.type === 'update' && pendingSubAction.title != null) {
-        itemHook.handleUpdateSubTodo(pendingSubAction.sub, pendingSubAction.title, scope)
-      } else if (pendingSubAction.type === 'delete') {
-        itemHook.handleDeleteSubTodo(pendingSubAction.sub, scope)
-      }
-    }
-    setPendingSubAction(null)
   }
 
   const handleDeleteClick = (item: Item) => {
@@ -730,21 +745,6 @@ export default function Home() {
             repeatTimeLabel={repeatTimeRow(itemHook.selectedDetail).label}
             allTags={allTags}
             onSubTodoToggle={(sub) => itemHook.handleToggleSubTodo(sub)}
-            onSubTodoUpdate={(sub, title) => {
-              // 하위 루틴 예정분은 "이번만/모두" 범위를 물어본다
-              if (sub.todoId == null && sub.subRoutineId != null) {
-                setPendingSubAction({ sub, title, type: 'update' })
-                return
-              }
-              itemHook.handleUpdateSubTodo(sub, title)
-            }}
-            onSubTodoDelete={(sub) => {
-              if (sub.todoId == null && sub.subRoutineId != null) {
-                setPendingSubAction({ sub, type: 'delete' })
-                return
-              }
-              itemHook.handleDeleteSubTodo(sub)
-            }}
             onClick={() => {
               handleDeleteClick(itemHook.selectedItem!)
               sheets.setIsTodoInfoSheetOpen(false)
@@ -765,35 +765,6 @@ export default function Home() {
           />
         </>
       )}
-
-      {/* 하위 루틴 예정분 수정/삭제 범위 선택 */}
-      <BottomSheet
-        isOpen={pendingSubAction != null}
-        onClose={() => setPendingSubAction(null)}
-      >
-        <div className="pt-4 pb-9 px-5 flex flex-col items-center w-full">
-          <h3 className="text-xl font-semibold">해당 하위 투두는 반복돼요</h3>
-          <p className="text-bluegray-darker mt-3 mb-6">
-            {pendingSubAction?.type === 'delete'
-              ? '이번 투두에서만 삭제할까요?'
-              : '이번 투두만 수정할까요?'}
-          </p>
-          <div className="flex gap-3 w-full">
-            <button
-              onClick={() => handlePickSubScope('THIS')}
-              className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
-            >
-              이번만
-            </button>
-            <button
-              onClick={() => handlePickSubScope('ALL')}
-              className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
-            >
-              {pendingSubAction?.type === 'delete' ? '모두 삭제' : '모두 수정'}
-            </button>
-          </div>
-        </div>
-      </BottomSheet>
 
       {/* 루틴 수정 범위 선택 */}
       <BottomSheet

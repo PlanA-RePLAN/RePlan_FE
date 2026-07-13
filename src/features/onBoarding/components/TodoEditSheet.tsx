@@ -99,6 +99,7 @@ export default function TodoEditSheet({
   )
   const [editSubTodos, setEditSubTodos] = useState<SubTodo[]>(todo.subTodos)
   const [addingSubTodo, setAddingSubTodo] = useState(false)
+  const [editingSub, setEditingSub] = useState<SubTodo | null>(null)
   const [tagAddOpen, setTagAddOpen] = useState(false)
   const [deletingTagId, setDeletingTagId] = useState<string | null>(null)
 
@@ -131,6 +132,7 @@ export default function TodoEditSheet({
       setOccurrenceTime(todo.repeatTime ?? '08:00 AM')
       setEditSubTodos(todo.subTodos)
       setAddingSubTodo(false)
+      setEditingSub(null)
     }
   }, [isOpen, todo])
 
@@ -348,6 +350,7 @@ export default function TodoEditSheet({
             {editSubTodos.map((sub) => (
               <div
                 key={sub.id}
+                onClick={() => setEditingSub(sub)}
                 className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
               >
                 <CheckIcon />
@@ -368,6 +371,24 @@ export default function TodoEditSheet({
           setAddingSubTodo(false)
         }}
         mode="추가"
+      />
+
+      {/* 하위 투두 수정/삭제 — 저장(체크) 시 수정 범위(이번만/모두)에 맞춰 반영된다 */}
+      <SubTodoSheet
+        isOpen={editingSub != null}
+        onClose={() => setEditingSub(null)}
+        onConfirm={(title) => {
+          setEditSubTodos((prev) =>
+            prev.map((s) => (s.id === editingSub?.id ? { ...s, title } : s)),
+          )
+          setEditingSub(null)
+        }}
+        mode="수정"
+        initialTitle={editingSub?.title}
+        onDelete={() => {
+          setEditSubTodos((prev) => prev.filter((s) => s.id !== editingSub?.id))
+          setEditingSub(null)
+        }}
       />
 
       <TagAddSheet
