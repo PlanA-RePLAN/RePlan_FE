@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
+import { format } from 'date-fns'
 import BottomSheet from '@/shared/components/BottomSheet'
 import BottomSheetHeader from '@/shared/components/BottomSheetHeader'
 import Input from '@/shared/components/Input'
+import Toggle from '@/shared/components/Toggle'
 import AddItemIcon from '@/icons/AddItemIcon'
 import { cn } from '@/shared/utils/cn'
 import {
@@ -15,15 +17,20 @@ import {
 } from '../type/types'
 import { deleteTag } from '@/shared/api/tags'
 import TagAddSheet from './TagAddSheet'
-import DeadlineInput from './DeadlineInput'
 import TodoTag from '@/shared/components/TodoTag'
 import { getTodoTag } from '@/shared/types/todo'
 import CheckIcon from '@/icons/CheckIcon'
 import ClearIcon from '@/icons/ClearIcon'
+import ClockIcon from '@/icons/ClockIcon'
+import ChevronRightIcon from '@/icons/ChevronRightIcon'
+import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
+import CalendarWithClockIcon from '@/icons/CalendarWithClockIcon'
 import DailyTimeSetting from './DailyTimeSetting'
 import WeeklyDaySetting from './WeeklyDaySetting'
 import MonthlySetting from './MonthlySetting'
 import SubTodoSheet from './SubTodoSheet'
+import DatePicker from './DatePicker'
+import TimePicker from './TimePicker'
 
 interface TodoEditSheetProps {
   isOpen: boolean
@@ -47,6 +54,59 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
+// 섹션 제목 + 온오프 토글 한 줄 (반복 설정 / 종료 일정)
+function SectionToggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <div className="flex items-center justify-between mt-6 mb-1">
+      <p className="text-[16px] font-medium text-bluegray-black">{label}</p>
+      <Toggle checked={checked} onChange={onChange} />
+    </div>
+  )
+}
+
+// 값 선택 행: [아이콘] 라벨 ...... [값 칩] > (탭하면 피커)
+function PickerRow({
+  icon,
+  label,
+  value,
+  onClick,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string | null
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex justify-between items-center py-4 w-full border-b border-bluegray-light-hover"
+    >
+      <div className="flex gap-2 items-center">
+        <div className="w-5.5 h-5.5 rounded-full bg-bluegray-light-active flex items-center justify-center">
+          {icon}
+        </div>
+        <div className="text-sm font-medium">{label}</div>
+      </div>
+      <div className="flex gap-2 items-center">
+        {value && (
+          <div className="text-bluegray-dark-active text-xs font-bold py-1 px-3 rounded-full bg-blue-light">
+            {value}
+          </div>
+        )}
+        <ChevronRightIcon />
+      </div>
+    </button>
+  )
+}
+
 export default function TodoEditSheet({
   isOpen,
   onClose,
@@ -62,11 +122,9 @@ export default function TodoEditSheet({
   const [editTitle, setEditTitle] = useState(todo.title)
   const [editTagId, setEditTagId] = useState(todo.selectedTagId)
   const [editRepeat, setEditRepeat] = useState<RepeatType>(todo.repeat)
-  const [useDeadlineDate, setUseDeadlineDate] = useState(
-    todo.deadlineDate !== null,
-  )
-  const [useDeadlineTime, setUseDeadlineTime] = useState(
-    todo.deadlineTime !== null,
+  // 종료 일정 — 섹션 토글 하나, 날짜/시간은 각각 미선택(null) 가능
+  const [useDeadline, setUseDeadline] = useState(
+    todo.deadlineDate !== null || todo.deadlineTime !== null,
   )
   const [editDeadlineDate, setEditDeadlineDate] = useState<Date | null>(
     todo.deadlineDate,
@@ -74,22 +132,15 @@ export default function TodoEditSheet({
   const [editDeadlineTime, setEditDeadlineTime] = useState<string | null>(
     todo.deadlineTime,
   )
-  const [dailyTimeEnabled, setDailyTimeEnabled] = useState(
+  // 반복 설정 — 섹션 토글 + 반복 시간 (미선택 null 가능)
+  const [repTimeEnabled, setRepTimeEnabled] = useState(
     todo.repeatTimeEnabled ?? false,
   )
-  const [dailyTime, setDailyTime] = useState(todo.repeatTime ?? '08:00 AM')
+  const [repTime, setRepTime] = useState<string | null>(todo.repeatTime ?? null)
   const [weeklyDay, setWeeklyDay] = useState<string[]>(todo.weeklyDay ?? ['월'])
-  const [weeklyTimeEnabled, setWeeklyTimeEnabled] = useState(
-    todo.repeatTimeEnabled ?? false,
-  )
-  const [weeklyTime, setWeeklyTime] = useState(todo.repeatTime ?? '08:00 AM')
   const [monthlyDay, setMonthlyDay] = useState<number[]>(
     todo.monthlyDay ?? [new Date().getDate()],
   )
-  const [monthlyTimeEnabled, setMonthlyTimeEnabled] = useState(
-    todo.repeatTimeEnabled ?? false,
-  )
-  const [monthlyTime, setMonthlyTime] = useState(todo.repeatTime ?? '08:00 AM')
   // "이 날짜만 수정" 모드의 그날 마감시간 (끄면 루틴 기본 시간으로 복귀)
   const [occurrenceTimeEnabled, setOccurrenceTimeEnabled] = useState(
     todo.repeatTimeEnabled ?? false,
@@ -102,6 +153,9 @@ export default function TodoEditSheet({
   const [editingSub, setEditingSub] = useState<SubTodo | null>(null)
   const [tagAddOpen, setTagAddOpen] = useState(false)
   const [deletingTagId, setDeletingTagId] = useState<string | null>(null)
+  const [repTimeSheetOpen, setRepTimeSheetOpen] = useState(false)
+  const [dateSheetOpen, setDateSheetOpen] = useState(false)
+  const [timeSheetOpen, setTimeSheetOpen] = useState(false)
 
   useEffect(() => {
     if (isOpen && onTagsLoaded) {
@@ -116,18 +170,13 @@ export default function TodoEditSheet({
       setEditTitle(todo.title)
       setEditTagId(todo.selectedTagId)
       setEditRepeat(todo.repeat)
-      setUseDeadlineDate(todo.deadlineDate !== null)
-      setUseDeadlineTime(todo.deadlineTime !== null)
+      setUseDeadline(todo.deadlineDate !== null || todo.deadlineTime !== null)
       setEditDeadlineDate(todo.deadlineDate)
       setEditDeadlineTime(todo.deadlineTime)
-      setDailyTimeEnabled(todo.repeatTimeEnabled ?? false)
-      setDailyTime(todo.repeatTime ?? '08:00 AM')
+      setRepTimeEnabled(todo.repeatTimeEnabled ?? false)
+      setRepTime(todo.repeatTime ?? null)
       setWeeklyDay(todo.weeklyDay ?? ['월'])
-      setWeeklyTimeEnabled(todo.repeatTimeEnabled ?? false)
-      setWeeklyTime(todo.repeatTime ?? '08:00 AM')
       setMonthlyDay(todo.monthlyDay ?? [new Date().getDate()])
-      setMonthlyTimeEnabled(todo.repeatTimeEnabled ?? false)
-      setMonthlyTime(todo.repeatTime ?? '08:00 AM')
       setOccurrenceTimeEnabled(todo.repeatTimeEnabled ?? false)
       setOccurrenceTime(todo.repeatTime ?? '08:00 AM')
       setEditSubTodos(todo.subTodos)
@@ -135,6 +184,14 @@ export default function TodoEditSheet({
       setEditingSub(null)
     }
   }, [isOpen, todo])
+
+  const isRepeat = editRepeat !== '없음'
+
+  // 켜진 섹션에 미선택 값이 있으면 저장(체크) 비활성
+  const scheduleInvalid = onlyTitleAndTag
+    ? false
+    : (isRepeat && repTimeEnabled && !repTime) ||
+      (useDeadline && (!editDeadlineDate || !editDeadlineTime))
 
   const handleConfirm = () => {
     onConfirm({
@@ -144,28 +201,28 @@ export default function TodoEditSheet({
       repeat: editRepeat,
       repeatTimeEnabled: onlyTitleAndTag
         ? occurrenceTimeEnabled
-        : editRepeat === '데일리'
-          ? dailyTimeEnabled
-          : editRepeat === '위클리'
-            ? weeklyTimeEnabled
-            : editRepeat === '먼슬리'
-              ? monthlyTimeEnabled
-              : undefined,
+        : isRepeat
+          ? repTimeEnabled
+          : undefined,
       repeatTime: onlyTitleAndTag
         ? occurrenceTimeEnabled
           ? occurrenceTime
           : undefined
-        : editRepeat === '데일리' && dailyTimeEnabled
-          ? dailyTime
-          : editRepeat === '위클리' && weeklyTimeEnabled
-            ? weeklyTime
-            : editRepeat === '먼슬리' && monthlyTimeEnabled
-              ? monthlyTime
-              : undefined,
+        : isRepeat && repTimeEnabled && repTime
+          ? repTime
+          : undefined,
       weeklyDay: editRepeat === '위클리' ? weeklyDay : undefined,
       monthlyDay: editRepeat === '먼슬리' ? monthlyDay : undefined,
-      deadlineDate: useDeadlineDate ? editDeadlineDate : null,
-      deadlineTime: useDeadlineTime ? editDeadlineTime : null,
+      deadlineDate: onlyTitleAndTag
+        ? todo.deadlineDate
+        : useDeadline
+          ? editDeadlineDate
+          : null,
+      deadlineTime: onlyTitleAndTag
+        ? todo.deadlineTime
+        : useDeadline
+          ? editDeadlineTime
+          : null,
       subTodos: editSubTodos,
     })
   }
@@ -197,6 +254,16 @@ export default function TodoEditSheet({
     }
   }
 
+  const handleRepToggle = (next: boolean) => {
+    setRepTimeEnabled(next)
+    if (next && !repTime) setRepTimeSheetOpen(true)
+  }
+
+  const handleDeadlineToggle = (next: boolean) => {
+    setUseDeadline(next)
+    if (next && !editDeadlineDate) setDateSheetOpen(true)
+  }
+
   return (
     <>
       <BottomSheet isOpen={isOpen} onClose={onClose}>
@@ -207,7 +274,7 @@ export default function TodoEditSheet({
               title={title}
               onClose={onClose}
               onConfirm={handleConfirm}
-              confirmDisabled={!editTitle.trim()}
+              confirmDisabled={!editTitle.trim() || scheduleInvalid}
             />
           </div>
           <div className="px-5 pb-6 overflow-y-auto">
@@ -295,49 +362,74 @@ export default function TodoEditSheet({
                     </button>
                   ))}
                 </div>
-                {editRepeat === '데일리' && (
-                  <DailyTimeSetting
-                    checked={dailyTimeEnabled}
-                    onCheckedChange={setDailyTimeEnabled}
-                    time={dailyTime}
-                    onTimeChange={setDailyTime}
-                  />
-                )}
                 {editRepeat === '위클리' && (
                   <WeeklyDaySetting
                     selectedDays={weeklyDay}
                     onDaysChange={setWeeklyDay}
-                    timeEnabled={weeklyTimeEnabled}
-                    onTimeEnabledChange={setWeeklyTimeEnabled}
-                    time={weeklyTime}
-                    onTimeChange={setWeeklyTime}
+                    timeEnabled={false}
+                    onTimeEnabledChange={() => {}}
+                    time=""
+                    onTimeChange={() => {}}
+                    hideTime
                   />
                 )}
                 {editRepeat === '먼슬리' && (
                   <MonthlySetting
                     selectedDays={monthlyDay}
                     onDaysChange={setMonthlyDay}
-                    timeEnabled={monthlyTimeEnabled}
-                    onTimeEnabledChange={setMonthlyTimeEnabled}
-                    time={monthlyTime}
-                    onTimeChange={setMonthlyTime}
+                    timeEnabled={false}
+                    onTimeEnabledChange={() => {}}
+                    time=""
+                    onTimeChange={() => {}}
+                    hideTime
                   />
                 )}
 
-                {/* 마감 일정 */}
-                <div className="mt-5">
-                  <SectionLabel>마감 일정</SectionLabel>
-                </div>
-                <DeadlineInput
-                  date={editDeadlineDate}
-                  time={editDeadlineTime}
-                  useDate={useDeadlineDate}
-                  useTime={useDeadlineTime}
-                  onUseDateChange={setUseDeadlineDate}
-                  onUseTimeChange={setUseDeadlineTime}
-                  onDateChange={setEditDeadlineDate}
-                  onTimeChange={setEditDeadlineTime}
+                {/* 반복 설정 — 토글을 켜고 반복 시간을 고르지 않으면 저장 불가 */}
+                {isRepeat && (
+                  <>
+                    <SectionToggle
+                      label="반복 설정"
+                      checked={repTimeEnabled}
+                      onChange={handleRepToggle}
+                    />
+                    {repTimeEnabled && (
+                      <PickerRow
+                        icon={<ClockIcon />}
+                        label="반복 시간"
+                        value={repTime}
+                        onClick={() => setRepTimeSheetOpen(true)}
+                      />
+                    )}
+                  </>
+                )}
+
+                {/* 종료 일정 — 토글을 켜고 날짜/시간 중 하나라도 비면 저장 불가 */}
+                <SectionToggle
+                  label={editRepeat === '없음' ? '마감 일정' : '종료 일정'}
+                  checked={useDeadline}
+                  onChange={handleDeadlineToggle}
                 />
+                {useDeadline && (
+                  <>
+                    <PickerRow
+                      icon={<CalendarClearSharpIcon fill="white" />}
+                      label="종료 날짜"
+                      value={
+                        editDeadlineDate
+                          ? format(editDeadlineDate, 'yyyy년 MM월 dd일')
+                          : null
+                      }
+                      onClick={() => setDateSheetOpen(true)}
+                    />
+                    <PickerRow
+                      icon={<CalendarWithClockIcon fill="white" />}
+                      label="종료 시간"
+                      value={editDeadlineTime}
+                      onClick={() => setTimeSheetOpen(true)}
+                    />
+                  </>
+                )}
               </>
             )}
 
@@ -364,6 +456,52 @@ export default function TodoEditSheet({
             </div>
           </div>
         </div>
+      </BottomSheet>
+
+      {/* 반복 시간 선택 */}
+      <BottomSheet
+        isOpen={repTimeSheetOpen}
+        onClose={() => setRepTimeSheetOpen(false)}
+      >
+        <TimePicker
+          value={repTime ?? undefined}
+          onConfirm={(t) => {
+            setRepTime(t)
+            setRepTimeSheetOpen(false)
+          }}
+          onClose={() => setRepTimeSheetOpen(false)}
+        />
+      </BottomSheet>
+
+      {/* 종료 날짜 선택 */}
+      <BottomSheet
+        isOpen={dateSheetOpen}
+        onClose={() => setDateSheetOpen(false)}
+      >
+        <DatePicker
+          value={editDeadlineDate ?? undefined}
+          onConfirm={(d) => {
+            setEditDeadlineDate(d)
+            setDateSheetOpen(false)
+          }}
+          disablePast={true}
+          onClose={() => setDateSheetOpen(false)}
+        />
+      </BottomSheet>
+
+      {/* 종료 시간 선택 */}
+      <BottomSheet
+        isOpen={timeSheetOpen}
+        onClose={() => setTimeSheetOpen(false)}
+      >
+        <TimePicker
+          value={editDeadlineTime ?? undefined}
+          onConfirm={(t) => {
+            setEditDeadlineTime(t)
+            setTimeSheetOpen(false)
+          }}
+          onClose={() => setTimeSheetOpen(false)}
+        />
       </BottomSheet>
 
       <SubTodoSheet

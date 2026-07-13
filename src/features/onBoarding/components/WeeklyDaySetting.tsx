@@ -12,6 +12,8 @@ interface WeeklyDaySettingProps {
   onTimeEnabledChange: (enabled: boolean) => void
   time: string
   onTimeChange: (time: string) => void
+  // true면 시간 UI를 숨긴다 (반복 시간은 별도 "반복 설정" 섹션에서 관리)
+  hideTime?: boolean
 }
 
 export default function WeeklyDaySetting({
@@ -21,6 +23,7 @@ export default function WeeklyDaySetting({
   onTimeEnabledChange,
   time,
   onTimeChange,
+  hideTime = false,
 }: WeeklyDaySettingProps) {
   const toggle = (day: string) => {
     if (selectedDays.includes(day)) {
@@ -54,30 +57,34 @@ export default function WeeklyDaySetting({
         ))}
       </div>
 
-      <div className="w-full mt-2 border-b border-bluegray-light-hover py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ClockIcon />
-          <div className="text-sm font-medium text-bluegray-dark">
-            반복 시간
+      {!hideTime && (
+        <>
+          <div className="w-full mt-2 border-b border-bluegray-light-hover py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ClockIcon />
+              <div className="text-sm font-medium text-bluegray-dark">
+                반복 시간
+              </div>
+            </div>
+            <div className="flex gap-3 items-center">
+              {timeEnabled && (
+                <span className="bg-blue-light text-xs font-bold text-bluegray-dark-active rounded-full px-3 py-1">
+                  {time}
+                </span>
+              )}
+              <Toggle checked={timeEnabled} onChange={onTimeEnabledChange} />
+            </div>
           </div>
-        </div>
-        <div className="flex gap-3 items-center">
-          {timeEnabled && (
-            <span className="bg-blue-light text-xs font-bold text-bluegray-dark-active rounded-full px-3 py-1">
-              {time}
-            </span>
-          )}
-          <Toggle checked={timeEnabled} onChange={onTimeEnabledChange} />
-        </div>
-      </div>
 
-      {timeEnabled && (
-        <TimePicker
-          useHeader={false}
-          value={time}
-          onChange={onTimeChange}
-          onClose={() => {}}
-        />
+          {timeEnabled && (
+            <TimePicker
+              useHeader={false}
+              value={time}
+              onChange={onTimeChange}
+              onClose={() => {}}
+            />
+          )}
+        </>
       )}
     </>
   )
