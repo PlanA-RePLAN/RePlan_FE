@@ -211,12 +211,16 @@ export function useItems({
     }
   }
 
-  // 하위 지목: 행 하위(todoId)는 그날만, 예약(reservedIndex)은 index로, 하위 루틴 예정분(subRoutineId만)은 반복 전체
-  const subTodoTarget = (sub: {
-    todoId: number | null
-    reservedIndex?: number | null
-    subRoutineId?: number | null
-  }) => {
+  // 하위 지목: 행 하위(todoId)·예약(reservedIndex)은 그날만.
+  // 하위 루틴 예정분(subRoutineId만)은 scope로 구분 — THIS=subRoutineId+date(그날만), ALL=subRoutineId만(반복 전체)
+  const subTodoTarget = (
+    sub: {
+      todoId: number | null
+      reservedIndex?: number | null
+      subRoutineId?: number | null
+    },
+    scope?: RoutineItemScope,
+  ) => {
     if (sub.todoId != null && selectedDetail?.todoId != null) {
       return { parentTodoId: selectedDetail.todoId, subTodoId: sub.todoId }
     }
@@ -232,20 +236,24 @@ export function useItems({
       }
     }
     if (sub.subRoutineId != null) {
+      if (scope === 'THIS') {
+        if (selectedItem?.date == null) return null
+        return { subRoutineId: sub.subRoutineId, date: selectedItem.date }
+      }
       return { subRoutineId: sub.subRoutineId }
     }
     return null
   }
 
-  // 하위 투두 완료 토글 — 행 하위와 예약 하위만. 하위 루틴 예정분은 회차 개념이 없어 완료 대상이 아니다
+  // 하위 투두 완료 토글 — 행/예약/예정분 모두 그날만 완료 (예정분은 subRoutineId+date)
   const handleToggleSubTodo = async (sub: {
     todoId: number | null
     isCompleted: boolean
     reservedIndex?: number | null
     subRoutineId?: number | null
   }) => {
-    const target = subTodoTarget(sub)
-    if (!target || 'subRoutineId' in target || !selectedItem) return
+    const target = subTodoTarget(sub, 'THIS')
+    if (!target || !selectedItem) return
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
       await completeItemSubTodo(accessToken, {
@@ -265,8 +273,9 @@ export function useItems({
       subRoutineId?: number | null
     },
     title: string,
+    scope?: RoutineItemScope,
   ) => {
-    const target = subTodoTarget(sub)
+    const target = subTodoTarget(sub, scope)
     if (!target || !selectedItem) return
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -277,12 +286,15 @@ export function useItems({
     }
   }
 
-  const handleDeleteSubTodo = async (sub: {
-    todoId: number | null
-    reservedIndex?: number | null
-    subRoutineId?: number | null
-  }) => {
-    const target = subTodoTarget(sub)
+  const handleDeleteSubTodo = async (
+    sub: {
+      todoId: number | null
+      reservedIndex?: number | null
+      subRoutineId?: number | null
+    },
+    scope?: RoutineItemScope,
+  ) => {
+    const target = subTodoTarget(sub, scope)
     if (!target || !selectedItem) return
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''

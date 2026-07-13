@@ -13,7 +13,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { startOfWeek, addDays } from 'date-fns'
 
 // type
-import type { TodoDetail } from '@/shared/types/todo'
+import type { SubTodoDetail, TodoDetail } from '@/shared/types/todo'
 import type { Item, ItemDetail, RoutineItemScope } from '@/shared/types/item'
 import { itemKey } from '@/shared/types/item'
 import type { CustomTag, ProposedTodo } from '@/features/onBoarding/type/types'
@@ -239,6 +239,12 @@ export default function Home() {
   const [editScope, setEditScope] = useState<RoutineItemScope | undefined>(
     undefined,
   )
+  // 하위 루틴 예정분 수정/삭제 시 범위 선택 대기 (null이면 시트 닫힘)
+  const [pendingSubAction, setPendingSubAction] = useState<{
+    sub: SubTodoDetail
+    title?: string
+    type: 'update' | 'delete'
+  } | null>(null)
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -320,6 +326,17 @@ export default function Home() {
     }
     sheets.setIsEditTodoSheetOpen(false)
     sheets.setIsTodoInfoSheetOpen(false)
+  }
+
+  const handlePickSubScope = (scope: RoutineItemScope) => {
+    if (pendingSubAction) {
+      if (pendingSubAction.type === 'update' && pendingSubAction.title != null) {
+        itemHook.handleUpdateSubTodo(pendingSubAction.sub, pendingSubAction.title, scope)
+      } else if (pendingSubAction.type === 'delete') {
+        itemHook.handleDeleteSubTodo(pendingSubAction.sub, scope)
+      }
+    }
+    setPendingSubAction(null)
   }
 
   const handleDeleteClick = (item: Item) => {
@@ -713,10 +730,21 @@ export default function Home() {
             repeatTimeLabel={repeatTimeRow(itemHook.selectedDetail).label}
             allTags={allTags}
             onSubTodoToggle={(sub) => itemHook.handleToggleSubTodo(sub)}
-            onSubTodoUpdate={(sub, title) =>
+            onSubTodoUpdate={(sub, title) => {
+              // 하위 루틴 예정분은 "이번만/모두" 범위를 물어본다
+              if (sub.todoId == null && sub.subRoutineId != null) {
+                setPendingSubAction({ sub, title, type: 'update' })
+                return
+              }
               itemHook.handleUpdateSubTodo(sub, title)
-            }
-            onSubTodoDelete={(sub) => itemHook.handleDeleteSubTodo(sub)}
+            }}
+            onSubTodoDelete={(sub) => {
+              if (sub.todoId == null && sub.subRoutineId != null) {
+                setPendingSubAction({ sub, type: 'delete' })
+                return
+              }
+              itemHook.handleDeleteSubTodo(sub)
+            }}
             onClick={() => {
               handleDeleteClick(itemHook.selectedItem!)
               sheets.setIsTodoInfoSheetOpen(false)
@@ -737,6 +765,35 @@ export default function Home() {
           />
         </>
       )}
+
+      {/* 하위 루틴 예정분 수정/삭제 범위 선택 */}
+      <BottomSheet
+        isOpen={pendingSubAction != null}
+        onClose={() => setPendingSubAction(null)}
+      >
+        <div className="pt-4 pb-9 px-5 flex flex-col items-center w-full">
+          <h3 className="text-xl font-semibold">해당 하위 투두는 반복돼요</h3>
+          <p className="text-bluegray-darker mt-3 mb-6">
+            {pendingSubAction?.type === 'delete'
+              ? '이번 투두에서만 삭제할까요?'
+              : '이번 투두만 수정할까요?'}
+          </p>
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={() => handlePickSubScope('THIS')}
+              className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
+            >
+              이번만
+            </button>
+            <button
+              onClick={() => handlePickSubScope('ALL')}
+              className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
+            >
+              {pendingSubAction?.type === 'delete' ? '모두 삭제' : '모두 수정'}
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
 
       {/* 루틴 수정 범위 선택 */}
       <BottomSheet
