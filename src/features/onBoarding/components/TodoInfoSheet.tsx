@@ -256,17 +256,6 @@ export default function TodoInfoSheet({
                   <span className="flex-1 text-sm font-medium text-bluegray-black">
                     {sub.title}
                   </span>
-                  {/* 행 없는 하위 구분 뱃지: 예약(그날만)·반복(하위 루틴 예정분) */}
-                  {sub.todoId == null && sub.reservedIndex != null && (
-                    <span className="shrink-0 text-[10px] font-semibold text-bluegray-dark bg-bluegray-light rounded-full px-2 py-0.5">
-                      예약됨
-                    </span>
-                  )}
-                  {sub.todoId == null && sub.subRoutineId != null && (
-                    <span className="shrink-0 text-[10px] font-semibold text-[#7EA4F5] bg-blue-light rounded-full px-2 py-0.5">
-                      반복
-                    </span>
-                  )}
                 </div>
               ))
             )}
