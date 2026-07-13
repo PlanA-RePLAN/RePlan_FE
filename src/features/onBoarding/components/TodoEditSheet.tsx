@@ -200,165 +200,168 @@ export default function TodoEditSheet({
   return (
     <>
       <BottomSheet isOpen={isOpen} onClose={onClose}>
-        <div className="px-5 pt-2 pb-6 overflow-y-auto max-h-[80vh]">
-          <BottomSheetHeader
-            title={title}
-            onClose={onClose}
-            onConfirm={handleConfirm}
-            confirmDisabled={!editTitle.trim()}
-          />
-
-          {/* 타이틀 */}
-          <SectionLabel>타이틀</SectionLabel>
-          <Input value={editTitle} setValue={setEditTitle}>
-            <Input.Field height={49} placeholder="투두 제목을 입력해주세요" />
-          </Input>
-
-          {/* 태그 분류 */}
-          <div className="flex items-center justify-between mt-5 mb-2">
-            <SectionLabel>태그 분류</SectionLabel>
-            <button onClick={() => setTagAddOpen(true)}>
-              <AddItemIcon width={24} height={24} />
-            </button>
+        {/* 헤더는 고정, 아래 내용만 스크롤 */}
+        <div className="max-h-[80vh] flex flex-col">
+          <div className="px-5 pt-2 shrink-0">
+            <BottomSheetHeader
+              title={title}
+              onClose={onClose}
+              onConfirm={handleConfirm}
+              confirmDisabled={!editTitle.trim()}
+            />
           </div>
-          <div className="flex flex-col gap-3">
-            {allTags.map((tag) => (
-              <div key={tag.id} className="flex items-center gap-3">
-                <button
-                  onClick={() => setEditTagId(tag.id)}
-                  className="w-5 h-5 rounded-full border-2 border-bluegray-light-active flex items-center justify-center shrink-0"
-                >
-                  {editTagId === tag.id && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-bluegray-black" />
-                  )}
-                </button>
-                {getTodoTag(tag.id) ? (
-                  <TodoTag category={tag.id} />
-                ) : (
-                  <div
-                    style={{
-                      backgroundColor: tag.bgColor,
-                      color: tag.textColor,
-                    }}
-                    className="w-17 py-1 rounded-full text-xs font-semibold flex items-center justify-center"
-                  >
-                    {tag.label}
-                  </div>
-                )}
-                {onTagDelete && tag.id !== '미선택' && (
-                  <button
-                    onClick={() => handleTagDelete(tag)}
-                    disabled={deletingTagId === tag.id}
-                  >
-                    <ClearIcon />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+          <div className="px-5 pb-6 overflow-y-auto">
+            {/* 타이틀 */}
+            <SectionLabel>타이틀</SectionLabel>
+            <Input value={editTitle} setValue={setEditTitle}>
+              <Input.Field height={49} placeholder="투두 제목을 입력해주세요" />
+            </Input>
 
-          {onlyTitleAndTag && (
-            <div className="mt-5">
-              {/* 그날의 마감시간 (끄면 루틴 기본 시간으로 복귀) */}
-              <DailyTimeSetting
-                label="이 날의 종료 시간"
-                checked={occurrenceTimeEnabled}
-                onCheckedChange={setOccurrenceTimeEnabled}
-                time={occurrenceTime}
-                onTimeChange={setOccurrenceTime}
-              />
+            {/* 태그 분류 */}
+            <div className="flex items-center justify-between mt-5 mb-2">
+              <SectionLabel>태그 분류</SectionLabel>
+              <button onClick={() => setTagAddOpen(true)}>
+                <AddItemIcon width={24} height={24} />
+              </button>
             </div>
-          )}
-
-          {!onlyTitleAndTag && (
-            <>
-              {/* 반복 여부 */}
-              <div className="mt-5">
-                <SectionLabel>반복 여부</SectionLabel>
-              </div>
-              <div className="flex overflow-hidden gap-1">
-                {REPEAT_OPTIONS.map((opt) => (
+            <div className="flex flex-col gap-3">
+              {allTags.map((tag) => (
+                <div key={tag.id} className="flex items-center gap-3">
                   <button
-                    key={opt}
-                    onClick={() => setEditRepeat(opt)}
-                    className={cn(
-                      'flex-1 py-2.5 text-sm font-medium rounded-full transition-all',
-                      editRepeat === opt
-                        ? 'bg-bluegray-black text-white'
-                        : 'text-bluegray-dark bg-bluegray-light',
-                    )}
+                    onClick={() => setEditTagId(tag.id)}
+                    className="w-5 h-5 rounded-full border-2 border-bluegray-light-active flex items-center justify-center shrink-0"
                   >
-                    {opt}
+                    {editTagId === tag.id && (
+                      <div className="w-2.5 h-2.5 rounded-full bg-bluegray-black" />
+                    )}
                   </button>
-                ))}
-              </div>
-              {editRepeat === '데일리' && (
-                <DailyTimeSetting
-                  checked={dailyTimeEnabled}
-                  onCheckedChange={setDailyTimeEnabled}
-                  time={dailyTime}
-                  onTimeChange={setDailyTime}
-                />
-              )}
-              {editRepeat === '위클리' && (
-                <WeeklyDaySetting
-                  selectedDays={weeklyDay}
-                  onDaysChange={setWeeklyDay}
-                  timeEnabled={weeklyTimeEnabled}
-                  onTimeEnabledChange={setWeeklyTimeEnabled}
-                  time={weeklyTime}
-                  onTimeChange={setWeeklyTime}
-                />
-              )}
-              {editRepeat === '먼슬리' && (
-                <MonthlySetting
-                  selectedDays={monthlyDay}
-                  onDaysChange={setMonthlyDay}
-                  timeEnabled={monthlyTimeEnabled}
-                  onTimeEnabledChange={setMonthlyTimeEnabled}
-                  time={monthlyTime}
-                  onTimeChange={setMonthlyTime}
-                />
-              )}
+                  {getTodoTag(tag.id) ? (
+                    <TodoTag category={tag.id} />
+                  ) : (
+                    <div
+                      style={{
+                        backgroundColor: tag.bgColor,
+                        color: tag.textColor,
+                      }}
+                      className="w-17 py-1 rounded-full text-xs font-semibold flex items-center justify-center"
+                    >
+                      {tag.label}
+                    </div>
+                  )}
+                  {onTagDelete && tag.id !== '미선택' && (
+                    <button
+                      onClick={() => handleTagDelete(tag)}
+                      disabled={deletingTagId === tag.id}
+                    >
+                      <ClearIcon />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
 
-              {/* 마감 일정 */}
+            {onlyTitleAndTag && (
               <div className="mt-5">
-                <SectionLabel>마감 일정</SectionLabel>
+                {/* 그날의 마감시간 (끄면 루틴 기본 시간으로 복귀) */}
+                <DailyTimeSetting
+                  label="이 날의 종료 시간"
+                  checked={occurrenceTimeEnabled}
+                  onCheckedChange={setOccurrenceTimeEnabled}
+                  time={occurrenceTime}
+                  onTimeChange={setOccurrenceTime}
+                />
               </div>
-              <DeadlineInput
-                date={editDeadlineDate}
-                time={editDeadlineTime}
-                useDate={useDeadlineDate}
-                useTime={useDeadlineTime}
-                onUseDateChange={setUseDeadlineDate}
-                onUseTimeChange={setUseDeadlineTime}
-                onDateChange={setEditDeadlineDate}
-                onTimeChange={setEditDeadlineTime}
-              />
+            )}
 
-            </>
-          )}
+            {!onlyTitleAndTag && (
+              <>
+                {/* 반복 여부 */}
+                <div className="mt-5">
+                  <SectionLabel>반복 여부</SectionLabel>
+                </div>
+                <div className="flex overflow-hidden gap-1">
+                  {REPEAT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => setEditRepeat(opt)}
+                      className={cn(
+                        'flex-1 py-2.5 text-sm font-medium rounded-full transition-all',
+                        editRepeat === opt
+                          ? 'bg-bluegray-black text-white'
+                          : 'text-bluegray-dark bg-bluegray-light',
+                      )}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+                {editRepeat === '데일리' && (
+                  <DailyTimeSetting
+                    checked={dailyTimeEnabled}
+                    onCheckedChange={setDailyTimeEnabled}
+                    time={dailyTime}
+                    onTimeChange={setDailyTime}
+                  />
+                )}
+                {editRepeat === '위클리' && (
+                  <WeeklyDaySetting
+                    selectedDays={weeklyDay}
+                    onDaysChange={setWeeklyDay}
+                    timeEnabled={weeklyTimeEnabled}
+                    onTimeEnabledChange={setWeeklyTimeEnabled}
+                    time={weeklyTime}
+                    onTimeChange={setWeeklyTime}
+                  />
+                )}
+                {editRepeat === '먼슬리' && (
+                  <MonthlySetting
+                    selectedDays={monthlyDay}
+                    onDaysChange={setMonthlyDay}
+                    timeEnabled={monthlyTimeEnabled}
+                    onTimeEnabledChange={setMonthlyTimeEnabled}
+                    time={monthlyTime}
+                    onTimeChange={setMonthlyTime}
+                  />
+                )}
 
-          {/* 하위 투두 — 여기서 추가한 건 저장 시 수정 범위(이번만/모두)를 그대로 따른다 */}
-          <div className="flex items-center justify-between mt-5 mb-3">
-            <SectionLabel>하위 투두</SectionLabel>
-            <button onClick={() => setAddingSubTodo(true)}>
-              <AddItemIcon width={24} height={24} />
-            </button>
-          </div>
-          <div className="flex flex-col gap-2">
-            {editSubTodos.map((sub) => (
-              <div
-                key={sub.id}
-                onClick={() => setEditingSub(sub)}
-                className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
-              >
-                <CheckIcon />
-                <span className="text-sm font-medium text-bluegray-black">
-                  {sub.title}
-                </span>
-              </div>
-            ))}
+                {/* 마감 일정 */}
+                <div className="mt-5">
+                  <SectionLabel>마감 일정</SectionLabel>
+                </div>
+                <DeadlineInput
+                  date={editDeadlineDate}
+                  time={editDeadlineTime}
+                  useDate={useDeadlineDate}
+                  useTime={useDeadlineTime}
+                  onUseDateChange={setUseDeadlineDate}
+                  onUseTimeChange={setUseDeadlineTime}
+                  onDateChange={setEditDeadlineDate}
+                  onTimeChange={setEditDeadlineTime}
+                />
+              </>
+            )}
+
+            {/* 하위 투두 — 여기서 추가한 건 저장 시 수정 범위(이번만/모두)를 그대로 따른다 */}
+            <div className="flex items-center justify-between mt-5 mb-3">
+              <SectionLabel>하위 투두</SectionLabel>
+              <button onClick={() => setAddingSubTodo(true)}>
+                <AddItemIcon width={24} height={24} />
+              </button>
+            </div>
+            <div className="flex flex-col gap-2">
+              {editSubTodos.map((sub) => (
+                <div
+                  key={sub.id}
+                  onClick={() => setEditingSub(sub)}
+                  className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
+                >
+                  <CheckIcon />
+                  <span className="text-sm font-medium text-bluegray-black">
+                    {sub.title}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </BottomSheet>
