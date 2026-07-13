@@ -36,7 +36,7 @@ export default function DuplicateCheckButton({
         'w-[66px] h-[29px] rounded-lg text-xs absolute top-10.5 right-4',
         isClick
           ? 'bg-bluegray-light-active text-bluegray-dark-hover'
-          : 'bg-bluegray-black text-white',
+          : 'bg-bluegray-light-active text-bluegray-normal',
       )}
     >
       중복확인
