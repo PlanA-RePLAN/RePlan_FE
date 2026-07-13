@@ -1,7 +1,9 @@
 export interface SubTodoDetail {
-  todoId: number
+  todoId: number | null // 행이 없는 회차의 하위(예약분·예정분)는 null
   title: string
   isCompleted: boolean
+  reservedIndex?: number | null // 예약 하위의 배열 위치 (수정/삭제 지목용)
+  subRoutineId?: number | null // 하위 루틴 ID (반복 전체 수정/삭제 지목용)
 }
 
 export interface TodoDetail {

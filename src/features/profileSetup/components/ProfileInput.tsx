@@ -37,8 +37,8 @@ export default function ProfileInput({
         maxLength={10}
         showCount="always"
       >
-        <Input.Label option="secondary">이름</Input.Label>
-        <Input.Field placeholder="이름을 입력해주세요" />
+        <Input.Label option="secondary">닉네임</Input.Label>
+        <Input.Field placeholder="닉네임을 입력해주세요" />
         <Input.Bottom>
           <Input.Count />
         </Input.Bottom>
@@ -50,12 +50,12 @@ export default function ProfileInput({
             <>
               <img src={dangerSvg} alt="" className="mr-2" />
               <span className="text-danger font-bold">{value}</span>는 이미
-              등록된 이름입니다.
+              등록된 닉네임입니다.
             </>
           ) : (
             <>
               <span className="text-blue-normal font-bold">{value}</span>는
-              사용하실 수 있는 이름입니다.
+              사용하실 수 있는 닉네임입니다.
             </>
           )}
         </p>

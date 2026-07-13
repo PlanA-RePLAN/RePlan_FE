@@ -8,17 +8,22 @@ interface DownTodoSheetProps {
   onClose: () => void
   onConfirm: (title: string) => void
   mode: '수정' | '추가'
+  initialTitle?: string
+  onDelete?: () => void
 }
 export default function SubTodoSheet({
   isOpen,
   onClose,
   onConfirm,
   mode,
+  initialTitle,
+  onDelete,
 }: DownTodoSheetProps) {
   const [todo, setTodo] = useState('')
 
   useEffect(() => {
-    if (isOpen) setTodo('')
+    if (isOpen) setTodo(initialTitle ?? '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
   const handleConfirm = () => {
@@ -40,8 +45,11 @@ export default function SubTodoSheet({
           <Input.Label option="primary">타이틀</Input.Label>
           <Input.Field height={49} placeholder="하위 투두를 입력해주세요" />
         </Input>
-        {mode === '수정' && (
-          <button className="w-full flex items-center py-3.5 justify-center rounded-2xl bg-bluegray-light text-danger">
+        {mode === '수정' && onDelete && (
+          <button
+            onClick={onDelete}
+            className="w-full flex items-center py-3.5 justify-center rounded-2xl bg-bluegray-light text-danger"
+          >
             하위 투두 삭제
           </button>
         )}

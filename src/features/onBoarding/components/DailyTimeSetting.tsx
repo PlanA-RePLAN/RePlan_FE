@@ -6,6 +6,7 @@ interface DailyTimeSettingProps {
   onCheckedChange: (checked: boolean) => void
   time: string
   onTimeChange: (time: string) => void
+  label?: string
 }
 
 export default function DailyTimeSetting({
@@ -13,11 +14,12 @@ export default function DailyTimeSetting({
   onCheckedChange,
   time,
   onTimeChange,
+  label = '반복시간',
 }: DailyTimeSettingProps) {
   return (
     <>
       <div className="w-full mt-2 border-b border-bluegray-light-hover py-4 flex items-center justify-between">
-        <div className="text-sm font-medium text-bluegray-dark">반복시간</div>
+        <div className="text-sm font-medium text-bluegray-dark">{label}</div>
         <div className="flex gap-3 items-center">
           {checked && (
             <span className="bg-blue-light text-xs font-bold text-bluegray-dark-active rounded-full px-3 py-1">
