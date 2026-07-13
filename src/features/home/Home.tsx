@@ -712,6 +712,7 @@ export default function Home() {
             repeatTime={repeatTimeRow(itemHook.selectedDetail).time}
             repeatTimeLabel={repeatTimeRow(itemHook.selectedDetail).label}
             allTags={allTags}
+            onSubTodoToggle={(sub) => itemHook.handleToggleSubTodo(sub)}
             onSubTodoUpdate={(sub, title) =>
               itemHook.handleUpdateSubTodo(sub, title)
             }

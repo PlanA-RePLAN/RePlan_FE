@@ -236,6 +236,25 @@ export function useItems({
     return null
   }
 
+  // 하위 투두 완료 토글 — 행이 있는 하위(todoId)만 가능. 예약분·예정분은 행이 없어 완료 개념이 없다
+  const handleToggleSubTodo = async (sub: {
+    todoId: number | null
+    isCompleted: boolean
+  }) => {
+    if (sub.todoId == null || !selectedItem) return
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      await completeItem(
+        accessToken,
+        { kind: 'TODO', todoId: sub.todoId },
+        !sub.isCompleted,
+      )
+      await fetchDetail(selectedItem)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   const handleUpdateSubTodo = async (
     sub: {
       todoId: number | null
@@ -486,6 +505,7 @@ export function useItems({
     fetchDetail,
     handleCreate,
     handleAddSubTodo,
+    handleToggleSubTodo,
     handleUpdateSubTodo,
     handleDeleteSubTodo,
     handleUpdate,

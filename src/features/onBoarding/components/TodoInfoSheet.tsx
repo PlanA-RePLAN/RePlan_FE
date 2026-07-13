@@ -11,6 +11,7 @@ import { getTodoTag } from '@/shared/types/todo'
 import DeadlineInput from './DeadlineInput'
 import InfoRow from './InfoRow'
 import CheckIcon from '@/icons/CheckIcon'
+import GoalColoredIcon from '@/icons/GoalColoredIcon'
 import SubTodoSheet from './SubTodoSheet'
 import BottomSheet from '@/shared/components/BottomSheet'
 import CloseButtonIcon from '@/icons/CloseButtonIcon'
@@ -25,7 +26,8 @@ interface TodoInfoSheetProps {
   onEdit: () => void
   todo: TodoDetail
   allTags: CustomTag[]
-  // 하위 투두 수정/삭제. 안 넘기면(온보딩 등) 하위 행은 표시 전용
+  // 하위 투두 완료/수정/삭제. 안 넘기면(온보딩 등) 하위 행은 표시 전용
+  onSubTodoToggle?: (sub: SubTodoDetail) => void
   onSubTodoUpdate?: (sub: SubTodoDetail, title: string) => void
   onSubTodoDelete?: (sub: SubTodoDetail) => void
   onClick?: () => void
@@ -69,6 +71,7 @@ export default function TodoInfoSheet({
   onEdit,
   todo,
   allTags,
+  onSubTodoToggle,
   onSubTodoUpdate,
   onSubTodoDelete,
   onClick,
@@ -251,7 +254,19 @@ export default function TodoInfoSheet({
                   onClick={onSubTodoUpdate ? () => setEditingSub(sub) : undefined}
                   className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
                 >
-                  <CheckIcon />
+                  {/* 완료 토글 — 행이 있는 하위만. 행 탭(수정)과 분리하기 위해 전파 차단 */}
+                  <div
+                    onClick={
+                      onSubTodoToggle && sub.todoId != null
+                        ? (e) => {
+                            e.stopPropagation()
+                            onSubTodoToggle(sub)
+                          }
+                        : undefined
+                    }
+                  >
+                    {sub.isCompleted ? <GoalColoredIcon /> : <CheckIcon />}
+                  </div>
                   <span className="flex-1 text-sm font-medium text-bluegray-black">
                     {sub.title}
                   </span>
