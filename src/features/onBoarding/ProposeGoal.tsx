@@ -549,6 +549,11 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
             onClose={() => setInfoOpen(false)}
             onEdit={handleEditOpen}
             todo={toTodoDetail(selectedTodo, allTags)}
+            repeatTime={
+              selectedTodo.repeatTimeEnabled && selectedTodo.repeatTime
+                ? timeToHHmm(selectedTodo.repeatTime)
+                : null
+            }
             allTags={allTags}
             onSubTodoAdd={handleSubTodoAdd}
           />
