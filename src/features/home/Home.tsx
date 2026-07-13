@@ -466,6 +466,7 @@ export default function Home() {
                     : undefined
               }
               dueDates={itemHook.calendarDueDates}
+              showMonthRange
             />
           </div>
         )}
