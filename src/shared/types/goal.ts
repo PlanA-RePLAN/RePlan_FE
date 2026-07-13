@@ -100,10 +100,12 @@ export interface AiTodoRecommendationData {
 export interface CreateGoalTodoItem {
   type: 'ONE_TIME' | 'RECURRING'
   title: string
+  // ONE_TIME=마감 일정, RECURRING=반복 종료 일정
   dueDate?: string | null
   dueTime?: string | null
   routineType?: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
   routineDays?: number[] | null
+  routineTime?: string | null // 반복시간 'HH:mm'. RECURRING 전용
   tagId?: number | null
   subTodos?: string[] | null
   subRoutines?: string[] | null

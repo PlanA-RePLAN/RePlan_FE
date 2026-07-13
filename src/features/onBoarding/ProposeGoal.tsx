@@ -353,9 +353,8 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
           const todoDueDate = t.deadlineDate
             ? format(t.deadlineDate, 'yyyy-MM-dd')
             : null
-          const todoDueTime = isRecurring(t)
-            ? timeToHHmm(t.repeatTime ?? t.deadlineTime)
-            : timeToHHmm(t.deadlineTime)
+          // 마감(ONE_TIME)/종료(RECURRING) 시간은 deadlineTime만. 반복시간은 routineTime으로 따로 보낸다
+          const todoDueTime = timeToHHmm(t.deadlineTime)
 
           return {
             type: isRecurring(t) ? 'RECURRING' : 'ONE_TIME',
@@ -363,6 +362,9 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
             dueDate: resolveDueDate(todoDueDate, todoDueTime),
             dueTime: todoDueTime,
             routineType: isRecurring(t) ? REPEAT_TO_ROUTINE[t.repeat] : null,
+            routineTime: isRecurring(t)
+              ? timeToHHmm(t.repeatTime ?? null)
+              : null,
             routineDays: isRecurring(t)
               ? t.repeat === '위클리'
                 ? (t.weeklyDay ?? []).map((d) => DAY_TO_INDEX[d] ?? 0)
