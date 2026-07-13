@@ -19,6 +19,8 @@ interface DatePickerProps {
   dueDates?: Date[]
   // true면 오늘 이전 날짜는 선택할 수 없다. (마감일 등 미래 날짜만 허용해야 하는 곳에서 사용)
   disablePast?: boolean
+  // true면 월 뷰에서 선택일부터 한 달 범위를 하이라이트한다. (홈 MONTH 탭 전용)
+  showMonthRange?: boolean
 }
 
 const WEEKDAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
@@ -35,6 +37,7 @@ export default function DatePicker({
   selectedTextColor,
   dueDates = [],
   disablePast = false,
+  showMonthRange = false,
 }: DatePickerProps) {
   const [selected, setSelected] = useState<Date | undefined>(value)
   const [month, setMonth] = useState<Date>(defaultMonth ?? value ?? new Date())
@@ -183,6 +186,7 @@ export default function DatePicker({
   const monthRangeStart = toDateOnly(selected ?? new Date())
   const monthRangeEnd = toDateOnly(addDays(addMonths(monthRangeStart, 1), -1))
   const isMonthInRange = (date: Date) => {
+    if (!showMonthRange) return false
     const d = toDateOnly(date)
     return d >= monthRangeStart && d <= monthRangeEnd
   }
