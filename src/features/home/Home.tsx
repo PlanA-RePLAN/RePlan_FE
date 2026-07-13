@@ -73,6 +73,11 @@ function formatTime(dueDate: string | null): string | undefined {
   })
 }
 
+// 카드 표시용: 마감일자 + 마감시간. 루틴이면 이 회차(그날)의 마감이다.
+function formatDateTime(dueDate: string): string {
+  return `${dueDate.slice(0, 10)}, ${formatTime(dueDate)}`
+}
+
 // ISO 일시 → 'HH:mm' (상세시트 dueTime/repeatTime 형식)
 function toHHmm(dt: string | null): string | null {
   if (!dt) return null
@@ -434,7 +439,7 @@ export default function Home() {
                       </TodoCard.Title>
                       {item.dueDate && (
                         <TodoCard.Time>
-                          {formatTime(item.dueDate)}
+                          {formatDateTime(item.dueDate)}
                         </TodoCard.Time>
                       )}
                     </TodoCard.Content>
@@ -523,7 +528,7 @@ export default function Home() {
                                     </TodoCard.Title>
                                     {item.dueDate && (
                                       <TodoCard.Time>
-                                        {formatTime(item.dueDate)}
+                                        {formatDateTime(item.dueDate)}
                                       </TodoCard.Time>
                                     )}
                                   </TodoCard.Content>
@@ -576,7 +581,7 @@ export default function Home() {
                         </TodoCard.Title>
                         {item.dueDate && (
                           <TodoCard.Time>
-                            {formatTime(item.dueDate)}
+                            {formatDateTime(item.dueDate)}
                           </TodoCard.Time>
                         )}
                       </TodoCard.Content>
@@ -634,7 +639,7 @@ export default function Home() {
                           </TodoCard.Title>
                           {item.dueDate && (
                             <TodoCard.Time>
-                              {formatTime(item.dueDate)}
+                              {formatDateTime(item.dueDate)}
                             </TodoCard.Time>
                           )}
                         </TodoCard.Content>
