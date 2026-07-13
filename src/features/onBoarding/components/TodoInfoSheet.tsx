@@ -246,19 +246,21 @@ export default function TodoInfoSheet({
                   key={sub.todoId ?? `sub-${i}`}
                   className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
                 >
-                  {/* 완료 토글 — 행/예약/예정분 모두. 행 탭(수정)과 분리하기 위해 전파 차단 */}
-                  <div
-                    onClick={
-                      onSubTodoToggle
-                        ? (e) => {
-                            e.stopPropagation()
-                            onSubTodoToggle(sub)
-                          }
-                        : undefined
-                    }
-                  >
-                    {sub.isCompleted ? <GoalColoredIcon /> : <CheckIcon />}
-                  </div>
+                  {/* 완료 토글 — 부모 투두가 완료된 상태면 버튼 자체를 숨긴다 */}
+                  {!todo.isCompleted && (
+                    <div
+                      onClick={
+                        onSubTodoToggle
+                          ? (e) => {
+                              e.stopPropagation()
+                              onSubTodoToggle(sub)
+                            }
+                          : undefined
+                      }
+                    >
+                      {sub.isCompleted ? <GoalColoredIcon /> : <CheckIcon />}
+                    </div>
+                  )}
                   <span className="flex-1 text-sm font-medium text-bluegray-black">
                     {sub.title}
                   </span>
