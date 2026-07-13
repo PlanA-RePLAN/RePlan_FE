@@ -4,25 +4,22 @@ export type ItemKind = 'TODO' | 'ROUTINE'
 export type RoutineItemScope = 'THIS' | 'ALL'
 
 // GET /api/items — 목록 아이템 (투두 + 루틴 회차 병합)
+// 카드 표시·조작에 필요한 최소 정보만. 나머지는 상세(getItemDetail)로 받는다.
 export interface Item {
   kind: ItemKind
   todoId: number | null // 미래 루틴 회차면 null
   routineId: number | null
   date: string | null // 'YYYY-MM-DD' (filter=all의 루틴은 null일 수 있음)
   title: string
-  dueDate: string | null
-  repeatEndDate: string | null // 루틴 반복 종료일
+  dueDate: string | null // 루틴이면 그 회차의 실제 마감일시
   routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
-  routineDays: number[] | null
   tagId: number | null
   tagTitle: string | null
   tagColor: string | null
-  goalId: number | null
   sortOrder: number
   isPinned: boolean
   isCompleted: boolean
   isOverdue: boolean
-  hasOverride: boolean
 }
 
 // GET /api/items/detail — 상세
@@ -46,8 +43,10 @@ export interface ItemDetail {
   tagId: number | null
   tagTitle: string | null
   tagColor: string | null
-  routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null // ⚠️ TODO 상세에서만 값 있음
-  routineDays: number[] | null // ⚠️ TODO 상세에서만 값 있음
+  routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
+  routineDays: number[] | null
+  routineTime: string | null // 루틴 기본 반복시간 'HH:mm:ss'. dueDate와 다르면 그날만 시간이 바뀐 것
+  repeatEndDate: string | null // 루틴 반복 종료일
   subItems: SubItem[]
 }
 

@@ -87,15 +87,13 @@ function getDayTag(routineType: string | null): 'D' | 'W' | 'M' | undefined {
   return undefined
 }
 
-// 루틴 상세는 반복정보/마감일을 안 주므로 목록 item에서 보충.
+// 상세 응답 단독으로 시트 데이터를 만든다 (v0.29.0부터 루틴 상세도 반복정보/마감일시 완결).
 // 루틴이면 마감 일정 = 루틴 종료일(repeatEndDate), 투두면 = 마감일.
-function itemDetailToTodoDetail(detail: ItemDetail, item: Item): TodoDetail {
+function itemDetailToTodoDetail(detail: ItemDetail): TodoDetail {
   const dueSource =
-    item.kind === 'ROUTINE'
-      ? item.repeatEndDate
-      : (detail.dueDate ?? item.dueDate)
+    detail.kind === 'ROUTINE' ? detail.repeatEndDate : detail.dueDate
   return {
-    todoId: detail.todoId ?? item.todoId ?? 0,
+    todoId: detail.todoId ?? 0,
     title: detail.title,
     dueDate: dueSource,
     dueTime: toHHmm(dueSource),
@@ -103,8 +101,8 @@ function itemDetailToTodoDetail(detail: ItemDetail, item: Item): TodoDetail {
     tagId: detail.tagId,
     tagTitle: detail.tagTitle,
     tagColor: detail.tagColor,
-    routineType: detail.routineType ?? item.routineType,
-    routineDays: detail.routineDays ?? item.routineDays,
+    routineType: detail.routineType,
+    routineDays: detail.routineDays,
     subTodos: detail.subItems.map((s) => ({
       todoId: s.todoId,
       title: s.title,
@@ -113,28 +111,46 @@ function itemDetailToTodoDetail(detail: ItemDetail, item: Item): TodoDetail {
   }
 }
 
-function itemDetailToProposed(detail: ItemDetail, item: Item): ProposedTodo {
-  const routineType = detail.routineType ?? item.routineType
-  const routineDays = detail.routineDays ?? item.routineDays
-  const isRoutine = item.kind === 'ROUTINE'
+// 'HH:mm:ss' → 'h:mm AM/PM' (TimePicker 표시 형식)
+function formatTimeHMS(t: string | null): string | undefined {
+  if (!t) return undefined
+  const [h, m] = t.split(':').map(Number)
+  const meridiem = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  return `${h12}:${String(m).padStart(2, '0')} ${meridiem}`
+}
 
-  // 반복시간 = 회차 마감일시(dueDate)의 시각. (루틴 상세엔 dueDate가 없어 목록 item에서 가져온다.)
-  const repeatTime = isRoutine ? (formatTime(item.dueDate) ?? null) : null
+function itemDetailToProposed(
+  detail: ItemDetail,
+  scope?: RoutineItemScope,
+): ProposedTodo {
+  const { routineType, routineDays } = detail
+  const isRoutine = detail.kind === 'ROUTINE'
+
+  // 시간 초기값 — 이번만 수정: 그날의 실제 마감시간(23:59는 "시간 없음"), 전체 수정: 루틴 기본 반복시간
+  const occurrenceHasTime =
+    detail.dueDate != null && detail.dueDate.slice(11, 16) !== '23:59'
+  const thisTime = occurrenceHasTime
+    ? formatTime(detail.dueDate)
+    : undefined
+  const repeatTime = isRoutine
+    ? scope === 'THIS'
+      ? thisTime
+      : formatTimeHMS(detail.routineTime)
+    : undefined
   // 마감(종료일): 루틴=반복 종료일, 투두=마감일
-  const endStr = isRoutine
-    ? item.repeatEndDate
-    : (detail.dueDate ?? item.dueDate)
+  const endStr = isRoutine ? detail.repeatEndDate : detail.dueDate
   const deadlineDate = endStr ? new Date(endStr) : null
   const deadlineTime = formatTime(endStr) ?? null
 
   return {
-    id: detail.todoId ?? item.todoId ?? 0,
+    id: detail.todoId ?? 0,
     title: detail.title,
     time: (isRoutine ? repeatTime : deadlineTime) ?? '',
     dayTag: 'D',
     selectedTagId: detail.tagId != null ? String(detail.tagId) : '미선택',
     repeat: routineType ? (ROUTINE_TO_REPEAT[routineType] ?? '없음') : '없음',
-    repeatTime: repeatTime ?? undefined,
+    repeatTime,
     repeatTimeEnabled: repeatTime != null,
     weeklyDay:
       routineType === 'WEEKLY' && routineDays
@@ -662,15 +678,8 @@ export default function Home() {
             isOpen={sheets.isTodoInfoSheetOpen}
             onClose={() => sheets.setIsTodoInfoSheetOpen(false)}
             onEdit={handleEditClick}
-            todo={itemDetailToTodoDetail(
-              itemHook.selectedDetail,
-              itemHook.selectedItem,
-            )}
-            repeatTime={
-              itemHook.selectedItem.kind === 'ROUTINE'
-                ? toHHmm(itemHook.selectedItem.dueDate)
-                : null
-            }
+            todo={itemDetailToTodoDetail(itemHook.selectedDetail)}
+            repeatTime={itemHook.selectedDetail.routineTime?.slice(0, 5) ?? null}
             allTags={allTags}
             onSubTodoAdd={handleSubTodoAdd}
             onClick={() => {
@@ -685,10 +694,7 @@ export default function Home() {
               sheets.setIsTodoInfoSheetOpen(true)
             }}
             onConfirm={handleUpdateItem}
-            todo={itemDetailToProposed(
-              itemHook.selectedDetail,
-              itemHook.selectedItem,
-            )}
+            todo={itemDetailToProposed(itemHook.selectedDetail, editScope)}
             allTags={allTags}
             onTagAdd={() => {}}
             title="투두 수정"
