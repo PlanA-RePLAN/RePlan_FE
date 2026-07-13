@@ -492,7 +492,7 @@ export default function Home() {
                 {itemHook.pinnedItems.map((item) => (
                   <TodoCard
                     key={itemKey(item)}
-                    status="swipeable"
+                    status={item.isOverdue ? 'replan' : 'swipeable'}
                     onDelete={() => handleDeleteClick(item)}
                     onReplan={() =>
                       item.todoId && navigate(`/replan/${item.todoId}`)
@@ -578,7 +578,7 @@ export default function Home() {
                             <div className="flex w-full items-center gap-3">
                               <div className="flex-1 min-w-0">
                                 <TodoCard
-                                  status="swipeable"
+                                  status={item.isOverdue ? 'replan' : 'swipeable'}
                                   onDelete={() => handleDeleteClick(item)}
                                   onReplan={() =>
                                     item.todoId &&
@@ -636,7 +636,7 @@ export default function Home() {
                   itemHook.regularActiveItems.map((item) => (
                     <TodoCard
                       key={itemKey(item)}
-                      status="swipeable"
+                      status={item.isOverdue ? 'replan' : 'swipeable'}
                       onDelete={() => handleDeleteClick(item)}
                       onReplan={() =>
                         item.todoId && navigate(`/replan/${item.todoId}`)
