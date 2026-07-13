@@ -97,11 +97,13 @@ function repeatTimeRow(detail: ItemDetail): {
   label: string
   time: string | null
 } {
-  // 반복시간 미설정 루틴은 백엔드가 실질적으로 23:59 마감으로 처리하므로 그대로 보여준다
-  const momTime = detail.routineTime?.slice(0, 5) ?? '23:59'
+  // 반복시간 미설정(null) 루틴은 반복 시간 행을 아예 숨긴다 (time null)
+  const momTime = detail.routineTime?.slice(0, 5) ?? null
   const effTime = detail.dueDate?.slice(11, 16) ?? null
   const changedThisDay =
-    detail.kind === 'ROUTINE' && effTime != null && effTime !== momTime
+    detail.kind === 'ROUTINE' &&
+    effTime != null &&
+    effTime !== (momTime ?? '23:59')
   return changedThisDay
     ? { label: '이 날의 종료 시간', time: effTime }
     : { label: '반복 시간', time: momTime }

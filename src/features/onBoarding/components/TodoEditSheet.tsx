@@ -259,7 +259,7 @@ export default function TodoEditSheet({
             <div className="mt-5">
               {/* 그날의 마감시간 (끄면 루틴 기본 시간으로 복귀) */}
               <DailyTimeSetting
-                label="마감시간"
+                label="이 날의 종료 시간"
                 checked={occurrenceTimeEnabled}
                 onCheckedChange={setOccurrenceTimeEnabled}
                 time={occurrenceTime}
