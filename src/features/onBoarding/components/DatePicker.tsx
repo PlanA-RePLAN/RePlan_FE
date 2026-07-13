@@ -19,6 +19,8 @@ interface DatePickerProps {
   dueDates?: Date[]
   // true면 오늘 이전 날짜는 선택할 수 없다. (마감일 등 미래 날짜만 허용해야 하는 곳에서 사용)
   disablePast?: boolean
+  // 'range': 선택 날짜 기준 한 달 범위 하이라이트 (Home 월 탭), 'single': 단일 날짜 선택 (검정 원 + 흰 글씨)
+  variant?: 'range' | 'single'
 }
 
 const WEEKDAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
@@ -35,6 +37,7 @@ export default function DatePicker({
   selectedTextColor,
   dueDates = [],
   disablePast = false,
+  variant = 'single',
 }: DatePickerProps) {
   const [selected, setSelected] = useState<Date | undefined>(value)
   const [month, setMonth] = useState<Date>(defaultMonth ?? value ?? new Date())
@@ -118,7 +121,7 @@ export default function DatePicker({
                         </span>
                         <div className="relative w-8 h-8 mt-1 flex items-center justify-center rounded-full text-sm font-medium">
                           {hasDue && (
-                            <span className="absolute top-0.5 right-0 w-[3px] h-[3px] rounded-full bg-[#A9AFB9]" />
+                            <span className="absolute top-0.5 right-0 w-0.75 h-0.75 rounded-full bg-[#A9AFB9]" />
                           )}
                           <span className={cn(
                             isSat && 'text-blue-500',
@@ -187,6 +190,47 @@ export default function DatePicker({
     return d >= monthRangeStart && d <= monthRangeEnd
   }
 
+  const commonDayPickerProps = {
+    mode: 'single' as const,
+    selected,
+    onSelect: (date: Date | undefined) => {
+      setSelected(date)
+      if (date) onConfirm(date)
+      else onDeselect?.()
+    },
+    month,
+    onMonthChange: setMonth,
+    locale: ko,
+    hideNavigation: true,
+    weekStartsOn: 1 as const,
+    disabled: disablePast ? { before: today } : undefined,
+    classNames: {
+      root: 'w-full',
+      months: 'w-full',
+      month: 'w-full',
+      month_caption: 'hidden',
+      month_grid: 'w-full border-collapse',
+      weekdays: 'flex w-full',
+      weekday: 'flex-1 text-center text-sm text-bluegray-normal py-2 font-normal',
+      weeks: 'flex flex-col gap-1 w-full',
+      week: 'flex w-full',
+      day: 'flex-1 flex items-center justify-center',
+      day_button: 'w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium text-bluegray-darker transition-colors',
+      today: '[&>button]:rounded-full',
+      outside: '[&>button]:text-bluegray-light-active',
+      disabled: '[&>button]:text-bluegray-light-active [&>button]:cursor-not-allowed',
+    },
+    modifiers: {
+      saturday: (date: Date) => date.getDay() === 6,
+      sunday: (date: Date) => date.getDay() === 0,
+      hasDue: (date: Date) => dueDates.some((d) => isSameDay(d, date)),
+    },
+    modifiersClassNames: {
+      saturday: '[&>button]:text-blue-500',
+      sunday: '[&>button]:text-red-500',
+    },
+  }
+
   return (
     <div className="px-4 pt-2 pb-4">
       {showHeader !== false && (
@@ -203,82 +247,81 @@ export default function DatePicker({
           }
         />
       )}
-      <DayPicker
-        mode="single"
-        selected={selected}
-        onSelect={(date) => {
-          setSelected(date)
-          if (date) onConfirm(date)
-          else onDeselect?.()
-        }}
-        month={month}
-        onMonthChange={setMonth}
-        locale={ko}
-        hideNavigation
-        weekStartsOn={1}
-        disabled={disablePast ? { before: today } : undefined}
-        classNames={{
-          root: 'w-full',
-          months: 'w-full',
-          month: 'w-full',
-          month_caption: 'hidden',
-          month_grid: 'w-full border-collapse',
-          weekdays: 'flex w-full',
-          weekday: 'flex-1 text-center text-sm text-bluegray-normal py-2 font-normal',
-          weeks: 'flex flex-col gap-1 w-full',
-          week: 'flex w-full',
-          day: 'flex-1 flex items-center justify-center',
-          day_button:
-            'w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium text-bluegray-darker transition-colors',
-          selected: '[&>button]:bg-[#EEF5FD] [&>button]:rounded-full',
-          today: '[&>button]:rounded-full',
-          outside: '[&>button]:text-bluegray-light-active',
-          disabled:
-            '[&>button]:text-bluegray-light-active [&>button]:cursor-not-allowed',
-        }}
-        modifiersClassNames={{
-          saturday: '[&>button]:text-blue-500',
-          sunday: '[&>button]:text-red-500',
-          rangeLeft: 'bg-[#EEF5FD] rounded-l-full',
-          rangeRight: 'bg-[#EEF5FD] rounded-r-full',
-          rangeMid: 'bg-[#EEF5FD]',
-        }}
-        modifiers={{
-          saturday: (date) => date.getDay() === 6,
-          sunday: (date) => date.getDay() === 0,
-          hasDue: (date) => dueDates.some((d) => isSameDay(d, date)),
-          rangeLeft: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeStart) || date.getDay() === 1),
-          rangeRight: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeEnd) || date.getDay() === 0),
-          rangeMid: (date) => {
-            if (!isMonthInRange(date)) return false
-            const isLeft = isSameDay(date, monthRangeStart) || date.getDay() === 1
-            const isRight = isSameDay(date, monthRangeEnd) || date.getDay() === 0
-            return !isLeft && !isRight
-          },
-        }}
-        components={{
-          DayButton: ({ day, modifiers, ...props }) => (
-            <button
-              {...props}
-              className={cn(props.className, 'relative', modifiers.today && !modifiers.selected && 'bg-[#EEF5FD]')}
-              style={
-                modifiers.selected && selectedColor
-                  ? {
-                      backgroundColor: selectedColor,
-                      color: selectedTextColor ?? 'white',
-                      borderRadius: '100%',
-                    }
-                  : undefined
-              }
-            >
-              {modifiers.hasDue && (
-                <span className="absolute top-1.5 left-[calc(50%+7px)] -translate-x-1/2 w-[3px] h-[3px] rounded-full bg-[#A9AFB9]" />
-              )}
-              {props.children}
-            </button>
-          ),
-        }}
-      />
+      {variant === 'range' ? (
+        <DayPicker
+          {...commonDayPickerProps}
+          classNames={{
+            ...commonDayPickerProps.classNames,
+            selected: '[&>button]:bg-[#EEF5FD] [&>button]:rounded-full',
+          }}
+          modifiers={{
+            ...commonDayPickerProps.modifiers,
+            rangeLeft: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeStart) || date.getDay() === 1),
+            rangeRight: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeEnd) || date.getDay() === 0),
+            rangeMid: (date) => {
+              if (!isMonthInRange(date)) return false
+              const isLeft = isSameDay(date, monthRangeStart) || date.getDay() === 1
+              const isRight = isSameDay(date, monthRangeEnd) || date.getDay() === 0
+              return !isLeft && !isRight
+            },
+          }}
+          modifiersClassNames={{
+            ...commonDayPickerProps.modifiersClassNames,
+            rangeLeft: 'bg-[#EEF5FD] rounded-l-full',
+            rangeRight: 'bg-[#EEF5FD] rounded-r-full',
+            rangeMid: 'bg-[#EEF5FD]',
+          }}
+          components={{
+            DayButton: ({ day, modifiers, ...props }) => (
+              <button
+                {...props}
+                className={cn(props.className, 'relative', modifiers.today && !modifiers.selected && 'bg-[#EEF5FD]')}
+                style={
+                  modifiers.selected && selectedColor
+                    ? { backgroundColor: selectedColor, color: selectedTextColor ?? 'white', borderRadius: '100%' }
+                    : undefined
+                }
+              >
+                {modifiers.hasDue && (
+                  <span className="absolute top-1.5 left-[calc(50%+7px)] -translate-x-1/2 w-0.75 h-0.75 rounded-full bg-[#A9AFB9]" />
+                )}
+                {props.children}
+              </button>
+            ),
+          }}
+        />
+      ) : (
+        <DayPicker
+          {...commonDayPickerProps}
+          classNames={{
+            ...commonDayPickerProps.classNames,
+            selected: '[&>button]:bg-black [&>button]:text-white [&>button]:rounded-full',
+          }}
+          components={{
+            DayButton: ({ day, modifiers, ...props }) => (
+              <button
+                {...props}
+                className={cn(
+                  props.className,
+                  'relative',
+                  modifiers.today && !modifiers.selected && 'bg-[#EEF5FD]',
+                  modifiers.selected && '[&>button]:text-white',
+                )}
+                style={
+                  modifiers.selected && selectedColor
+                    ? { backgroundColor: selectedColor, color: selectedTextColor ?? 'white', borderRadius: '100%' }
+                    : undefined
+                }
+              >
+                {modifiers.hasDue && (
+                  <span className="absolute top-1.5 left-[calc(50%+7px)] -translate-x-1/2 w-0.75 h-0.75 rounded-full bg-[#A9AFB9]" />
+                )}
+                {props.children}
+              </button>
+            ),
+          }}
+        />
+      )}
     </div>
   )
 }

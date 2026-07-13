@@ -371,6 +371,7 @@ export default function Home() {
               defaultMonth={selectedTab === 'week' ? weekViewStart : selectedTab === 'day' ? dayViewStart : new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
               weeks={selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined}
               dueDates={itemHook.calendarDueDates}
+              variant={selectedTab === 'month' ? 'range' : 'single'}
             />
           </div>
         )}
