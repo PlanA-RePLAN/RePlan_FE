@@ -31,7 +31,7 @@ export default function BottomSheetHeader({
             <ChevronLeftIcon width={20} height={20} color="#7F838B" />
           </button>
         )}
-        <span className="text-lg font-bold text-bluegray-black w-28 text-center whitespace-nowrap">
+        <span className="text-lg font-bold text-bluegray-black text-center whitespace-nowrap">
           {title}
         </span>
         {onNext && (
