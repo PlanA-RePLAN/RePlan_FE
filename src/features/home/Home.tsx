@@ -154,9 +154,7 @@ function itemDetailToProposed(
   // 시간 초기값 — 이번만 수정: 그날의 실제 마감시간(23:59는 "시간 없음"), 전체 수정: 루틴 기본 반복시간
   const occurrenceHasTime =
     detail.dueDate != null && detail.dueDate.slice(11, 16) !== '23:59'
-  const thisTime = occurrenceHasTime
-    ? formatTime(detail.dueDate)
-    : undefined
+  const thisTime = occurrenceHasTime ? formatTime(detail.dueDate) : undefined
   const repeatTime = isRoutine
     ? scope === 'THIS'
       ? thisTime
@@ -239,7 +237,6 @@ export default function Home() {
   const [editScope, setEditScope] = useState<RoutineItemScope | undefined>(
     undefined,
   )
-
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -325,7 +322,8 @@ export default function Home() {
 
     // 전체(ALL) 수정은 미래 회차 예외를 리셋하므로, 예약 하위(그날 전용)는 대상에서 뺀다
     const touchable = (sub?: (typeof detail.subItems)[number]) =>
-      sub != null && !(editScope === 'ALL' && sub.todoId == null && sub.reservedIndex != null)
+      sub != null &&
+      !(editScope === 'ALL' && sub.todoId == null && sub.reservedIndex != null)
 
     // 제목 수정 (index가 안 밀리게 삭제보다 먼저)
     for (const cur of updated.subTodos) {
@@ -371,11 +369,11 @@ export default function Home() {
   )
 
   const [weekViewStart, setWeekViewStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 1 })
+    startOfWeek(new Date(), { weekStartsOn: 1 }),
   )
 
   const [dayViewStart, setDayViewStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 1 })
+    startOfWeek(new Date(), { weekStartsOn: 1 }),
   )
 
   const calendarTouchStartX = useRef<number | null>(null)
@@ -400,7 +398,10 @@ export default function Home() {
       calendar.setSelectedYear(newStart.getFullYear())
       calendar.setSelectedMonth(newStart.getMonth() + 1)
     } else {
-      const next = new Date(calendar.selectedYear, calendar.selectedMonth - 1 + (delta < 0 ? 1 : -1))
+      const next = new Date(
+        calendar.selectedYear,
+        calendar.selectedMonth - 1 + (delta < 0 ? 1 : -1),
+      )
       calendar.setSelectedYear(next.getFullYear())
       calendar.setSelectedMonth(next.getMonth() + 1)
     }
@@ -446,8 +447,24 @@ export default function Home() {
               onDeselect={() => calendar.setSelectedDate(null)}
               showHeader={false}
               value={calendar.selectedDate ?? undefined}
-              defaultMonth={selectedTab === 'week' ? weekViewStart : selectedTab === 'day' ? dayViewStart : new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
-              weeks={selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined}
+              defaultMonth={
+                selectedTab === 'week'
+                  ? weekViewStart
+                  : selectedTab === 'day'
+                    ? dayViewStart
+                    : new Date(
+                        calendar.selectedYear,
+                        calendar.selectedMonth - 1,
+                        1,
+                      )
+              }
+              weeks={
+                selectedTab === 'day'
+                  ? 1
+                  : selectedTab === 'week'
+                    ? 2
+                    : undefined
+              }
               dueDates={itemHook.calendarDueDates}
             />
           </div>
@@ -513,7 +530,9 @@ export default function Home() {
               </div>
             )}
 
-            {itemHook.pinnedItems.length > 0 && <div className="bg-bluegray-light-hover w-full h-px my-8"></div>}
+            {itemHook.pinnedItems.length > 0 && (
+              <div className="bg-bluegray-light-hover w-full h-px my-8"></div>
+            )}
 
             <div className="flex flex-col gap-3">
               <div className="flex justify-between">
@@ -745,6 +764,13 @@ export default function Home() {
             repeatTimeLabel={repeatTimeRow(itemHook.selectedDetail).label}
             allTags={allTags}
             onSubTodoToggle={(sub) => itemHook.handleToggleSubTodo(sub)}
+            onReplan={
+              // 리플랜은 행(todoId) 있는 미완료 투두만 — 미래 회차·완료 투두는 버튼 숨김
+              itemHook.selectedDetail.todoId != null &&
+              !itemHook.selectedDetail.isCompleted
+                ? () => navigate(`/replan/${itemHook.selectedDetail!.todoId}`)
+                : undefined
+            }
             onClick={() => {
               handleDeleteClick(itemHook.selectedItem!)
               sheets.setIsTodoInfoSheetOpen(false)
@@ -857,9 +883,13 @@ export default function Home() {
             calendar.setSelectedYear(year)
             calendar.setSelectedMonth(month)
             if (selectedTab === 'week') {
-              setWeekViewStart(startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }))
+              setWeekViewStart(
+                startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }),
+              )
             } else if (selectedTab === 'day') {
-              setDayViewStart(startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }))
+              setDayViewStart(
+                startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }),
+              )
             }
             sheets.setIsMonthBottomSheetOpen(false)
           }}

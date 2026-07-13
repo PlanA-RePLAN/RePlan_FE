@@ -26,6 +26,8 @@ interface TodoInfoSheetProps {
   allTags: CustomTag[]
   // 하위 투두 완료 토글. 안 넘기면(온보딩 등) 표시 전용. 제목 수정/삭제는 수정 시트에서 한다
   onSubTodoToggle?: (sub: SubTodoDetail) => void
+  // 리플랜 이동. 리플랜 가능한 투두(행 있고 미완료)일 때만 넘긴다 — 없으면 버튼 미표시
+  onReplan?: () => void
   onClick?: () => void
   // 루틴 회차의 반복 시간('HH:mm'). 넘어올 때만 "반복 시간" 줄을 그린다.
   repeatTime?: string | null
@@ -68,6 +70,7 @@ export default function TodoInfoSheet({
   todo,
   allTags,
   onSubTodoToggle,
+  onReplan,
   onClick,
   repeatTime,
   repeatTimeLabel = '반복 시간',
@@ -278,13 +281,21 @@ export default function TodoInfoSheet({
             </div>
 
             {onClick && (
-              <div className="px-5 mt-10 pb-6">
+              <div className="px-5 mt-10 pb-6 flex gap-3">
                 <button
                   onClick={onClick}
-                  className="w-full h-13 bg-bluegray-light flex justify-center items-center rounded-xl text-danger font-semibold text-[14px]"
+                  className="flex-1 h-13 bg-bluegray-light flex justify-center items-center rounded-xl text-danger font-semibold text-[14px]"
                 >
                   투두 삭제
                 </button>
+                {onReplan && (
+                  <button
+                    onClick={onReplan}
+                    className="flex-1 h-13 bg-blue-light flex justify-center items-center rounded-xl text-blue-normal font-semibold text-[14px]"
+                  >
+                    Replan
+                  </button>
+                )}
               </div>
             )}
           </div>
