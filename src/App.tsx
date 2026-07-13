@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { listenForegroundPush } from '@/shared/firebase'
 
 // components
@@ -18,6 +18,15 @@ import Notification from '@/features/notification/Notification'
 import KakaoCallback from '@/features/oauth/KakaoCallback'
 import NaverCallback from '@/features/oauth/NaverCallback'
 
+// 페이지를 이동하면 body 스크롤을 맨 위로 되돌린다 (이전 페이지의 스크롤 위치가 다음 페이지에 남는 문제 방지)
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
+
 function App() {
   useEffect(() => {
     if (localStorage.getItem('accessToken')) {
@@ -27,6 +36,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* Nav 미사용 페이지 */}
         <Route path="/oauth/kakao" element={<KakaoCallback />} />
