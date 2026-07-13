@@ -134,13 +134,20 @@ function mapAiTodo(
           : undefined
 
   const routineDays = todo.routineDays ?? []
+  const isRecurring = todo.type === 'RECURRING'
+  // RECURRING: routineTime=반복시간, dueDate/dueTime=반복 종료 일정 / ONE_TIME: dueDate/dueTime=마감
+  const repeatTime = isRecurring && todo.routineTime
+    ? formatTime24to12(todo.routineTime)
+    : undefined
   return {
     id: idOffset + index + 1,
     title: todo.title,
-    time: formatTime24to12(todo.dueTime),
+    time: isRecurring ? (repeatTime ?? '') : formatTime24to12(todo.dueTime),
     dayTag,
     selectedTagId: todo.tagId != null ? String(todo.tagId) : '미선택',
     repeat,
+    repeatTime,
+    repeatTimeEnabled: repeatTime != null,
     // 백엔드가 준 routineDays(요일/일자 배열)를 위클리/먼슬리 입력값으로 풀어 담는다.
     weeklyDay:
       todo.routineType === 'WEEKLY'

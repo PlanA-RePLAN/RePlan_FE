@@ -83,11 +83,13 @@ export interface AiTodoRequest {
 export interface AiRecommendedTodo {
   type: 'ONE_TIME' | 'RECURRING'
   title: string
+  // ONE_TIME=마감 일정, RECURRING=반복 종료 일정
   dueDate: string | null
   dueTime: string | null
   routineType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | null
   // WEEKLY: 요일 인덱스(월=0…일=6), MONTHLY: 일자(1~31), DAILY: null
   routineDays: number[] | null
+  routineTime?: string | null // 매 회차 수행 시각 'HH:mm'. RECURRING 전용 (BE v0.31.0+)
   tagId: number | null
   tagName: string | null
 }
