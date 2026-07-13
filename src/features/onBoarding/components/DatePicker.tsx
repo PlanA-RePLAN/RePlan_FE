@@ -252,6 +252,7 @@ export default function DatePicker({
           {...commonDayPickerProps}
           classNames={{
             ...commonDayPickerProps.classNames,
+            day_button: 'w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium text-bluegray-normal transition-colors',
             selected: '[&>button]:bg-[#EEF5FD] [&>button]:rounded-full',
           }}
           modifiers={{
@@ -275,7 +276,11 @@ export default function DatePicker({
             DayButton: ({ day, modifiers, ...props }) => (
               <button
                 {...props}
-                className={cn(props.className, 'relative', modifiers.today && !modifiers.selected && 'bg-[#EEF5FD]')}
+                className={cn(
+                  props.className,
+                  'relative',
+                  modifiers.today && !modifiers.selected && 'bg-[#EEF5FD] text-bluegray-darker',
+                )}
                 style={
                   modifiers.selected && selectedColor
                     ? { backgroundColor: selectedColor, color: selectedTextColor ?? 'white', borderRadius: '100%' }
