@@ -56,16 +56,19 @@ function buildDueDate(
 }
 
 // ProposedTodo의 반복 시각 → 'HH:mm:ss'
+// TimePicker가 '22:00 PM'처럼 24시간 시각에 AM/PM을 붙여 주는 경우가 있어, 13 이상이면 이미 24시간제로 본다
 function buildRoutineTime(repeatTime?: string): string | null {
   if (!repeatTime) return null
   const [timePart, meridiem] = repeatTime.split(' ')
   const [h, m] = timePart.split(':').map(Number)
   const hours24 =
-    meridiem === 'PM' && h !== 12
-      ? h + 12
-      : meridiem === 'AM' && h === 12
-        ? 0
-        : h
+    h > 12
+      ? h
+      : meridiem === 'PM' && h !== 12
+        ? h + 12
+        : meridiem === 'AM' && h === 12
+          ? 0
+          : h
   return `${String(hours24).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`
 }
 
