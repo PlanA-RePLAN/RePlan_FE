@@ -301,6 +301,7 @@ export default function DatePicker({
           classNames={{
             ...commonDayPickerProps.classNames,
             selected: '[&>button]:bg-black [&>button]:text-white [&>button]:rounded-full',
+            today: '',
           }}
           components={{
             DayButton: ({ day, modifiers, ...props }) => (
@@ -309,7 +310,6 @@ export default function DatePicker({
                 className={cn(
                   props.className,
                   'relative',
-                  modifiers.today && !modifiers.selected && 'bg-[#EEF5FD]',
                   modifiers.selected && '[&>button]:text-white',
                 )}
                 style={
