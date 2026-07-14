@@ -73,6 +73,11 @@ function formatTime(dueDate: string | null): string | undefined {
   })
 }
 
+// 카드 표시용: 마감일자 + 마감시간. 루틴이면 이 회차(그날)의 마감이다.
+function formatDateTime(dueDate: string): string {
+  return `${dueDate.slice(0, 10)}, ${formatTime(dueDate)}`
+}
+
 // ISO 일시 → 'HH:mm' (상세시트 dueTime/repeatTime 형식)
 function toHHmm(dt: string | null): string | null {
   if (!dt) return null
@@ -87,15 +92,30 @@ function getDayTag(routineType: string | null): 'D' | 'W' | 'M' | undefined {
   return undefined
 }
 
-// 루틴 상세는 반복정보/마감일을 안 주므로 목록 item에서 보충.
+// 정보 시트 "반복 시간" 행: 그날만 시간이 바뀐 회차면 그날의 마감시간을(라벨도 교체), 아니면 루틴 기본 반복시간을 보여준다.
+function repeatTimeRow(detail: ItemDetail): {
+  label: string
+  time: string | null
+} {
+  // 반복시간 미설정(null) 루틴은 반복 시간 행을 아예 숨긴다 (time null)
+  const momTime = detail.routineTime?.slice(0, 5) ?? null
+  const effTime = detail.dueDate?.slice(11, 16) ?? null
+  const changedThisDay =
+    detail.kind === 'ROUTINE' &&
+    effTime != null &&
+    effTime !== (momTime ?? '23:59')
+  return changedThisDay
+    ? { label: '이 날의 종료 시간', time: effTime }
+    : { label: '반복 시간', time: momTime }
+}
+
+// 상세 응답 단독으로 시트 데이터를 만든다 (v0.29.0부터 루틴 상세도 반복정보/마감일시 완결).
 // 루틴이면 마감 일정 = 루틴 종료일(repeatEndDate), 투두면 = 마감일.
-function itemDetailToTodoDetail(detail: ItemDetail, item: Item): TodoDetail {
+function itemDetailToTodoDetail(detail: ItemDetail): TodoDetail {
   const dueSource =
-    item.kind === 'ROUTINE'
-      ? item.repeatEndDate
-      : (detail.dueDate ?? item.dueDate)
+    detail.kind === 'ROUTINE' ? detail.repeatEndDate : detail.dueDate
   return {
-    todoId: detail.todoId ?? item.todoId ?? 0,
+    todoId: detail.todoId ?? 0,
     title: detail.title,
     dueDate: dueSource,
     dueTime: toHHmm(dueSource),
@@ -103,38 +123,56 @@ function itemDetailToTodoDetail(detail: ItemDetail, item: Item): TodoDetail {
     tagId: detail.tagId,
     tagTitle: detail.tagTitle,
     tagColor: detail.tagColor,
-    routineType: detail.routineType ?? item.routineType,
-    routineDays: detail.routineDays ?? item.routineDays,
+    routineType: detail.routineType,
+    routineDays: detail.routineDays,
     subTodos: detail.subItems.map((s) => ({
       todoId: s.todoId,
       title: s.title,
       isCompleted: s.isCompleted,
+      reservedIndex: s.reservedIndex,
+      subRoutineId: s.subRoutineId,
     })),
   }
 }
 
-function itemDetailToProposed(detail: ItemDetail, item: Item): ProposedTodo {
-  const routineType = detail.routineType ?? item.routineType
-  const routineDays = detail.routineDays ?? item.routineDays
-  const isRoutine = item.kind === 'ROUTINE'
+// 'HH:mm:ss' → 'h:mm AM/PM' (TimePicker 표시 형식)
+function formatTimeHMS(t: string | null): string | undefined {
+  if (!t) return undefined
+  const [h, m] = t.split(':').map(Number)
+  const meridiem = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  return `${h12}:${String(m).padStart(2, '0')} ${meridiem}`
+}
 
-  // 반복시간 = 회차 마감일시(dueDate)의 시각. (루틴 상세엔 dueDate가 없어 목록 item에서 가져온다.)
-  const repeatTime = isRoutine ? (formatTime(item.dueDate) ?? null) : null
+function itemDetailToProposed(
+  detail: ItemDetail,
+  scope?: RoutineItemScope,
+): ProposedTodo {
+  const { routineType, routineDays } = detail
+  const isRoutine = detail.kind === 'ROUTINE'
+
+  // 시간 초기값 — 이번만 수정: 그날의 실제 마감시간(23:59는 "시간 없음"), 전체 수정: 루틴 기본 반복시간
+  const occurrenceHasTime =
+    detail.dueDate != null && detail.dueDate.slice(11, 16) !== '23:59'
+  const thisTime = occurrenceHasTime ? formatTime(detail.dueDate) : undefined
+  const repeatTime = isRoutine
+    ? scope === 'THIS'
+      ? thisTime
+      : formatTimeHMS(detail.routineTime)
+    : undefined
   // 마감(종료일): 루틴=반복 종료일, 투두=마감일
-  const endStr = isRoutine
-    ? item.repeatEndDate
-    : (detail.dueDate ?? item.dueDate)
+  const endStr = isRoutine ? detail.repeatEndDate : detail.dueDate
   const deadlineDate = endStr ? new Date(endStr) : null
   const deadlineTime = formatTime(endStr) ?? null
 
   return {
-    id: detail.todoId ?? item.todoId ?? 0,
+    id: detail.todoId ?? 0,
     title: detail.title,
     time: (isRoutine ? repeatTime : deadlineTime) ?? '',
     dayTag: 'D',
     selectedTagId: detail.tagId != null ? String(detail.tagId) : '미선택',
     repeat: routineType ? (ROUTINE_TO_REPEAT[routineType] ?? '없음') : '없음',
-    repeatTime: repeatTime ?? undefined,
+    repeatTime,
     repeatTimeEnabled: repeatTime != null,
     weeklyDay:
       routineType === 'WEEKLY' && routineDays
@@ -146,7 +184,10 @@ function itemDetailToProposed(detail: ItemDetail, item: Item): ProposedTodo {
       routineType === 'MONTHLY' && routineDays ? routineDays : undefined,
     deadlineDate,
     deadlineTime,
-    subTodos: detail.subItems.map((s) => ({ id: s.todoId, title: s.title })),
+    subTodos: detail.subItems.map((s, i) => ({
+      id: s.todoId ?? -(i + 1), // 행 없는 하위(예약분·예정분)는 임시 음수 키
+      title: s.title,
+    })),
   }
 }
 
@@ -262,18 +303,53 @@ export default function Home() {
     sheets.setIsEditTodoSheetOpen(true)
   }
 
+  // 수정 시트의 하위 목록 diff를 저장 시점에 반영한다. 조작 범위는 수정 진입 때 고른 것(이번만/모두)을 따른다.
   const handleUpdateItem = async (updated: ProposedTodo) => {
-    if (!itemHook.selectedItem) return
-    await itemHook.handleUpdate(itemHook.selectedItem, editScope, updated)
+    const item = itemHook.selectedItem
+    const detail = itemHook.selectedDetail
+    if (!item || !detail) return
+    await itemHook.handleUpdate(item, editScope, updated)
+
+    // proposed의 하위 id → 원본 subItem 복원 (양수=todoId, 음수=subItems 배열 위치)
+    const resolveSub = (id: number) =>
+      id > 0
+        ? detail.subItems.find((s) => s.todoId === id)
+        : detail.subItems[-id - 1]
+
+    const original = itemDetailToProposed(detail, editScope).subTodos
+    const originalIds = new Set(original.map((s) => s.id))
+    const updatedIds = new Set(updated.subTodos.map((s) => s.id))
+
+    // 전체(ALL) 수정은 미래 회차 예외를 리셋하므로, 예약 하위(그날 전용)는 대상에서 뺀다
+    const touchable = (sub?: (typeof detail.subItems)[number]) =>
+      sub != null &&
+      !(editScope === 'ALL' && sub.todoId == null && sub.reservedIndex != null)
+
+    // 제목 수정 (index가 안 밀리게 삭제보다 먼저)
+    for (const cur of updated.subTodos) {
+      if (!originalIds.has(cur.id)) continue
+      const before = original.find((s) => s.id === cur.id)
+      if (!before || before.title === cur.title) continue
+      const sub = resolveSub(cur.id)
+      if (touchable(sub)) {
+        await itemHook.handleUpdateSubTodo(sub!, cur.title, editScope)
+      }
+    }
+    // 삭제 — 예약 index가 당겨지지 않게 뒤(index 큰 쪽)부터
+    const removed = original
+      .filter((s) => !updatedIds.has(s.id))
+      .map((s) => resolveSub(s.id))
+      .filter((sub) => touchable(sub))
+      .sort((a, b) => (b?.reservedIndex ?? -1) - (a?.reservedIndex ?? -1))
+    for (const sub of removed) {
+      await itemHook.handleDeleteSubTodo(sub!, editScope)
+    }
+    // 추가
+    for (const sub of updated.subTodos.filter((s) => !originalIds.has(s.id))) {
+      await itemHook.handleAddSubTodo(item, sub.title, editScope)
+    }
     sheets.setIsEditTodoSheetOpen(false)
     sheets.setIsTodoInfoSheetOpen(false)
-  }
-
-  const handleSubTodoAdd = (title: string) => {
-    const parentId =
-      itemHook.selectedDetail?.todoId ?? itemHook.selectedItem?.todoId
-    if (parentId == null) return
-    itemHook.handleAddSubTodo(parentId, title)
   }
 
   const handleDeleteClick = (item: Item) => {
@@ -293,11 +369,11 @@ export default function Home() {
   )
 
   const [weekViewStart, setWeekViewStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 1 })
+    startOfWeek(new Date(), { weekStartsOn: 1 }),
   )
 
   const [dayViewStart, setDayViewStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 1 })
+    startOfWeek(new Date(), { weekStartsOn: 1 }),
   )
 
   const calendarTouchStartX = useRef<number | null>(null)
@@ -322,7 +398,10 @@ export default function Home() {
       calendar.setSelectedYear(newStart.getFullYear())
       calendar.setSelectedMonth(newStart.getMonth() + 1)
     } else {
-      const next = new Date(calendar.selectedYear, calendar.selectedMonth - 1 + (delta < 0 ? 1 : -1))
+      const next = new Date(
+        calendar.selectedYear,
+        calendar.selectedMonth - 1 + (delta < 0 ? 1 : -1),
+      )
       calendar.setSelectedYear(next.getFullYear())
       calendar.setSelectedMonth(next.getMonth() + 1)
     }
@@ -368,8 +447,24 @@ export default function Home() {
               onDeselect={() => calendar.setSelectedDate(null)}
               showHeader={false}
               value={calendar.selectedDate ?? undefined}
-              defaultMonth={selectedTab === 'week' ? weekViewStart : selectedTab === 'day' ? dayViewStart : new Date(calendar.selectedYear, calendar.selectedMonth - 1, 1)}
-              weeks={selectedTab === 'day' ? 1 : selectedTab === 'week' ? 2 : undefined}
+              defaultMonth={
+                selectedTab === 'week'
+                  ? weekViewStart
+                  : selectedTab === 'day'
+                    ? dayViewStart
+                    : new Date(
+                        calendar.selectedYear,
+                        calendar.selectedMonth - 1,
+                        1,
+                      )
+              }
+              weeks={
+                selectedTab === 'day'
+                  ? 1
+                  : selectedTab === 'week'
+                    ? 2
+                    : undefined
+              }
               dueDates={itemHook.calendarDueDates}
               variant={selectedTab === 'month' ? 'range' : 'single'}
             />
@@ -398,7 +493,7 @@ export default function Home() {
                 {itemHook.pinnedItems.map((item) => (
                   <TodoCard
                     key={itemKey(item)}
-                    status="swipeable"
+                    status={item.isOverdue ? 'replan' : 'swipeable'}
                     onDelete={() => handleDeleteClick(item)}
                     onReplan={() =>
                       item.todoId && navigate(`/replan/${item.todoId}`)
@@ -419,7 +514,7 @@ export default function Home() {
                       </TodoCard.Title>
                       {item.dueDate && (
                         <TodoCard.Time>
-                          {formatTime(item.dueDate)}
+                          {formatDateTime(item.dueDate)}
                         </TodoCard.Time>
                       )}
                     </TodoCard.Content>
@@ -436,7 +531,9 @@ export default function Home() {
               </div>
             )}
 
-            {itemHook.pinnedItems.length > 0 && <div className="bg-bluegray-light-hover w-full h-px my-8"></div>}
+            {itemHook.pinnedItems.length > 0 && (
+              <div className="bg-bluegray-light-hover w-full h-px my-8"></div>
+            )}
 
             <div className="flex flex-col gap-3">
               <div className="flex justify-between">
@@ -482,7 +579,7 @@ export default function Home() {
                             <div className="flex w-full items-center gap-3">
                               <div className="flex-1 min-w-0">
                                 <TodoCard
-                                  status="swipeable"
+                                  status={item.isOverdue ? 'replan' : 'swipeable'}
                                   onDelete={() => handleDeleteClick(item)}
                                   onReplan={() =>
                                     item.todoId &&
@@ -508,7 +605,7 @@ export default function Home() {
                                     </TodoCard.Title>
                                     {item.dueDate && (
                                       <TodoCard.Time>
-                                        {formatTime(item.dueDate)}
+                                        {formatDateTime(item.dueDate)}
                                       </TodoCard.Time>
                                     )}
                                   </TodoCard.Content>
@@ -540,7 +637,7 @@ export default function Home() {
                   itemHook.regularActiveItems.map((item) => (
                     <TodoCard
                       key={itemKey(item)}
-                      status="swipeable"
+                      status={item.isOverdue ? 'replan' : 'swipeable'}
                       onDelete={() => handleDeleteClick(item)}
                       onReplan={() =>
                         item.todoId && navigate(`/replan/${item.todoId}`)
@@ -561,7 +658,7 @@ export default function Home() {
                         </TodoCard.Title>
                         {item.dueDate && (
                           <TodoCard.Time>
-                            {formatTime(item.dueDate)}
+                            {formatDateTime(item.dueDate)}
                           </TodoCard.Time>
                         )}
                       </TodoCard.Content>
@@ -619,7 +716,7 @@ export default function Home() {
                           </TodoCard.Title>
                           {item.dueDate && (
                             <TodoCard.Time>
-                              {formatTime(item.dueDate)}
+                              {formatDateTime(item.dueDate)}
                             </TodoCard.Time>
                           )}
                         </TodoCard.Content>
@@ -663,17 +760,18 @@ export default function Home() {
             isOpen={sheets.isTodoInfoSheetOpen}
             onClose={() => sheets.setIsTodoInfoSheetOpen(false)}
             onEdit={handleEditClick}
-            todo={itemDetailToTodoDetail(
-              itemHook.selectedDetail,
-              itemHook.selectedItem,
-            )}
-            repeatTime={
-              itemHook.selectedItem.kind === 'ROUTINE'
-                ? toHHmm(itemHook.selectedItem.dueDate)
-                : null
-            }
+            todo={itemDetailToTodoDetail(itemHook.selectedDetail)}
+            repeatTime={repeatTimeRow(itemHook.selectedDetail).time}
+            repeatTimeLabel={repeatTimeRow(itemHook.selectedDetail).label}
             allTags={allTags}
-            onSubTodoAdd={handleSubTodoAdd}
+            onSubTodoToggle={(sub) => itemHook.handleToggleSubTodo(sub)}
+            onReplan={
+              // 리플랜은 행(todoId) 있는 미완료 투두만 — 미래 회차·완료 투두는 버튼 숨김
+              itemHook.selectedDetail.todoId != null &&
+              !itemHook.selectedDetail.isCompleted
+                ? () => navigate(`/replan/${itemHook.selectedDetail!.todoId}`)
+                : undefined
+            }
             onClick={() => {
               handleDeleteClick(itemHook.selectedItem!)
               sheets.setIsTodoInfoSheetOpen(false)
@@ -686,10 +784,7 @@ export default function Home() {
               sheets.setIsTodoInfoSheetOpen(true)
             }}
             onConfirm={handleUpdateItem}
-            todo={itemDetailToProposed(
-              itemHook.selectedDetail,
-              itemHook.selectedItem,
-            )}
+            todo={itemDetailToProposed(itemHook.selectedDetail, editScope)}
             allTags={allTags}
             onTagAdd={() => {}}
             title="투두 수정"
@@ -789,9 +884,13 @@ export default function Home() {
             calendar.setSelectedYear(year)
             calendar.setSelectedMonth(month)
             if (selectedTab === 'week') {
-              setWeekViewStart(startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }))
+              setWeekViewStart(
+                startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }),
+              )
             } else if (selectedTab === 'day') {
-              setDayViewStart(startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }))
+              setDayViewStart(
+                startOfWeek(new Date(year, month - 1, 1), { weekStartsOn: 1 }),
+              )
             }
             sheets.setIsMonthBottomSheetOpen(false)
           }}

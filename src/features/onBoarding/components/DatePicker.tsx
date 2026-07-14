@@ -187,6 +187,7 @@ export default function DatePicker({
   const monthRangeStart = toDateOnly(selected ?? new Date())
   const monthRangeEnd = toDateOnly(addDays(addMonths(monthRangeStart, 1), -1))
   const isMonthInRange = (date: Date) => {
+    if (variant !== 'range') return false
     const d = toDateOnly(date)
     return d >= monthRangeStart && d <= monthRangeEnd
   }

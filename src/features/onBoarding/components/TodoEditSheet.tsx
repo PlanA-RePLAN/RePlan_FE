@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
+import { format } from 'date-fns'
 import BottomSheet from '@/shared/components/BottomSheet'
 import BottomSheetHeader from '@/shared/components/BottomSheetHeader'
 import Input from '@/shared/components/Input'
+import Toggle from '@/shared/components/Toggle'
 import AddItemIcon from '@/icons/AddItemIcon'
 import { cn } from '@/shared/utils/cn'
 import {
@@ -15,15 +17,20 @@ import {
 } from '../type/types'
 import { deleteTag } from '@/shared/api/tags'
 import TagAddSheet from './TagAddSheet'
-import DeadlineInput from './DeadlineInput'
 import TodoTag from '@/shared/components/TodoTag'
 import { getTodoTag } from '@/shared/types/todo'
 import CheckIcon from '@/icons/CheckIcon'
 import ClearIcon from '@/icons/ClearIcon'
+import ClockIcon from '@/icons/ClockIcon'
+import ChevronRightIcon from '@/icons/ChevronRightIcon'
+import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
+import CalendarWithClockIcon from '@/icons/CalendarWithClockIcon'
 import DailyTimeSetting from './DailyTimeSetting'
 import WeeklyDaySetting from './WeeklyDaySetting'
 import MonthlySetting from './MonthlySetting'
 import SubTodoSheet from './SubTodoSheet'
+import DatePicker from './DatePicker'
+import TimePicker from './TimePicker'
 
 interface TodoEditSheetProps {
   isOpen: boolean
@@ -35,7 +42,7 @@ interface TodoEditSheetProps {
   onTagsLoaded?: (tags: CustomTag[]) => void
   onTagDelete?: (tagId: string) => void
   title?: string
-  // 루틴 "이 날짜만 수정"이면 제목·태그만 편집 (회차별 예외는 제목/태그만 저장되므로)
+  // 루틴 "이 날짜만 수정"이면 제목·태그·그날의 마감시간만 편집
   onlyTitleAndTag?: boolean
 }
 
@@ -44,6 +51,59 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     <p className="text-[16px] font-medium text-bluegray-black mb-2">
       {children}
     </p>
+  )
+}
+
+// 섹션 제목 + 온오프 토글 한 줄 (반복 설정 / 종료 일정)
+function SectionToggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <div className="flex items-center justify-between mt-6 mb-1">
+      <p className="text-[16px] font-medium text-bluegray-black">{label}</p>
+      <Toggle checked={checked} onChange={onChange} />
+    </div>
+  )
+}
+
+// 값 선택 행: [아이콘] 라벨 ...... [값 칩] > (탭하면 피커)
+function PickerRow({
+  icon,
+  label,
+  value,
+  onClick,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string | null
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex justify-between items-center py-4 w-full border-b border-bluegray-light-hover"
+    >
+      <div className="flex gap-2 items-center">
+        <div className="w-5.5 h-5.5 rounded-full bg-bluegray-light-active flex items-center justify-center">
+          {icon}
+        </div>
+        <div className="text-sm font-medium">{label}</div>
+      </div>
+      <div className="flex gap-2 items-center">
+        {value && (
+          <div className="text-bluegray-dark-active text-xs font-bold py-1 px-3 rounded-full bg-blue-light">
+            {value}
+          </div>
+        )}
+        <ChevronRightIcon />
+      </div>
+    </button>
   )
 }
 
@@ -62,11 +122,9 @@ export default function TodoEditSheet({
   const [editTitle, setEditTitle] = useState(todo.title)
   const [editTagId, setEditTagId] = useState(todo.selectedTagId)
   const [editRepeat, setEditRepeat] = useState<RepeatType>(todo.repeat)
-  const [useDeadlineDate, setUseDeadlineDate] = useState(
-    todo.deadlineDate !== null,
-  )
-  const [useDeadlineTime, setUseDeadlineTime] = useState(
-    todo.deadlineTime !== null,
+  // 종료 일정 — 섹션 토글 하나, 날짜/시간은 각각 미선택(null) 가능
+  const [useDeadline, setUseDeadline] = useState(
+    todo.deadlineDate !== null || todo.deadlineTime !== null,
   )
   const [editDeadlineDate, setEditDeadlineDate] = useState<Date | null>(
     todo.deadlineDate,
@@ -74,26 +132,30 @@ export default function TodoEditSheet({
   const [editDeadlineTime, setEditDeadlineTime] = useState<string | null>(
     todo.deadlineTime,
   )
-  const [dailyTimeEnabled, setDailyTimeEnabled] = useState(
+  // 반복 설정 — 섹션 토글 + 반복 시간 (미선택 null 가능)
+  const [repTimeEnabled, setRepTimeEnabled] = useState(
     todo.repeatTimeEnabled ?? false,
   )
-  const [dailyTime, setDailyTime] = useState(todo.repeatTime ?? '08:00 AM')
+  const [repTime, setRepTime] = useState<string | null>(todo.repeatTime ?? null)
   const [weeklyDay, setWeeklyDay] = useState<string[]>(todo.weeklyDay ?? ['월'])
-  const [weeklyTimeEnabled, setWeeklyTimeEnabled] = useState(
-    todo.repeatTimeEnabled ?? false,
-  )
-  const [weeklyTime, setWeeklyTime] = useState(todo.repeatTime ?? '08:00 AM')
   const [monthlyDay, setMonthlyDay] = useState<number[]>(
     todo.monthlyDay ?? [new Date().getDate()],
   )
-  const [monthlyTimeEnabled, setMonthlyTimeEnabled] = useState(
+  // "이 날짜만 수정" 모드의 그날 마감시간 (끄면 루틴 기본 시간으로 복귀)
+  const [occurrenceTimeEnabled, setOccurrenceTimeEnabled] = useState(
     todo.repeatTimeEnabled ?? false,
   )
-  const [monthlyTime, setMonthlyTime] = useState(todo.repeatTime ?? '08:00 AM')
+  const [occurrenceTime, setOccurrenceTime] = useState(
+    todo.repeatTime ?? '08:00 AM',
+  )
   const [editSubTodos, setEditSubTodos] = useState<SubTodo[]>(todo.subTodos)
   const [addingSubTodo, setAddingSubTodo] = useState(false)
+  const [editingSub, setEditingSub] = useState<SubTodo | null>(null)
   const [tagAddOpen, setTagAddOpen] = useState(false)
   const [deletingTagId, setDeletingTagId] = useState<string | null>(null)
+  const [repTimeSheetOpen, setRepTimeSheetOpen] = useState(false)
+  const [dateSheetOpen, setDateSheetOpen] = useState(false)
+  const [timeSheetOpen, setTimeSheetOpen] = useState(false)
 
   useEffect(() => {
     if (isOpen && onTagsLoaded) {
@@ -108,22 +170,28 @@ export default function TodoEditSheet({
       setEditTitle(todo.title)
       setEditTagId(todo.selectedTagId)
       setEditRepeat(todo.repeat)
-      setUseDeadlineDate(todo.deadlineDate !== null)
-      setUseDeadlineTime(todo.deadlineTime !== null)
+      setUseDeadline(todo.deadlineDate !== null || todo.deadlineTime !== null)
       setEditDeadlineDate(todo.deadlineDate)
       setEditDeadlineTime(todo.deadlineTime)
-      setDailyTimeEnabled(todo.repeatTimeEnabled ?? false)
-      setDailyTime(todo.repeatTime ?? '08:00 AM')
+      setRepTimeEnabled(todo.repeatTimeEnabled ?? false)
+      setRepTime(todo.repeatTime ?? null)
       setWeeklyDay(todo.weeklyDay ?? ['월'])
-      setWeeklyTimeEnabled(todo.repeatTimeEnabled ?? false)
-      setWeeklyTime(todo.repeatTime ?? '08:00 AM')
       setMonthlyDay(todo.monthlyDay ?? [new Date().getDate()])
-      setMonthlyTimeEnabled(todo.repeatTimeEnabled ?? false)
-      setMonthlyTime(todo.repeatTime ?? '08:00 AM')
+      setOccurrenceTimeEnabled(todo.repeatTimeEnabled ?? false)
+      setOccurrenceTime(todo.repeatTime ?? '08:00 AM')
       setEditSubTodos(todo.subTodos)
       setAddingSubTodo(false)
+      setEditingSub(null)
     }
   }, [isOpen, todo])
+
+  const isRepeat = editRepeat !== '없음'
+
+  // 켜진 섹션에 미선택 값이 있으면 저장(체크) 비활성
+  const scheduleInvalid = onlyTitleAndTag
+    ? false
+    : (isRepeat && repTimeEnabled && !repTime) ||
+      (useDeadline && (!editDeadlineDate || !editDeadlineTime))
 
   const handleConfirm = () => {
     onConfirm({
@@ -131,26 +199,30 @@ export default function TodoEditSheet({
       title: editTitle,
       selectedTagId: editTagId,
       repeat: editRepeat,
-      repeatTimeEnabled:
-        editRepeat === '데일리'
-          ? dailyTimeEnabled
-          : editRepeat === '위클리'
-            ? weeklyTimeEnabled
-            : editRepeat === '먼슬리'
-              ? monthlyTimeEnabled
-              : undefined,
-      repeatTime:
-        editRepeat === '데일리' && dailyTimeEnabled
-          ? dailyTime
-          : editRepeat === '위클리' && weeklyTimeEnabled
-            ? weeklyTime
-            : editRepeat === '먼슬리' && monthlyTimeEnabled
-              ? monthlyTime
-              : undefined,
+      repeatTimeEnabled: onlyTitleAndTag
+        ? occurrenceTimeEnabled
+        : isRepeat
+          ? repTimeEnabled
+          : undefined,
+      repeatTime: onlyTitleAndTag
+        ? occurrenceTimeEnabled
+          ? occurrenceTime
+          : undefined
+        : isRepeat && repTimeEnabled && repTime
+          ? repTime
+          : undefined,
       weeklyDay: editRepeat === '위클리' ? weeklyDay : undefined,
       monthlyDay: editRepeat === '먼슬리' ? monthlyDay : undefined,
-      deadlineDate: useDeadlineDate ? editDeadlineDate : null,
-      deadlineTime: useDeadlineTime ? editDeadlineTime : null,
+      deadlineDate: onlyTitleAndTag
+        ? todo.deadlineDate
+        : useDeadline
+          ? editDeadlineDate
+          : null,
+      deadlineTime: onlyTitleAndTag
+        ? todo.deadlineTime
+        : useDeadline
+          ? editDeadlineTime
+          : null,
       subTodos: editSubTodos,
     })
   }
@@ -182,155 +254,254 @@ export default function TodoEditSheet({
     }
   }
 
+  const handleRepToggle = (next: boolean) => {
+    setRepTimeEnabled(next)
+    if (next && !repTime) setRepTimeSheetOpen(true)
+  }
+
+  const handleDeadlineToggle = (next: boolean) => {
+    setUseDeadline(next)
+    if (next && !editDeadlineDate) setDateSheetOpen(true)
+  }
+
   return (
     <>
       <BottomSheet isOpen={isOpen} onClose={onClose}>
-        <div className="px-5 pt-2 pb-6 overflow-y-auto max-h-[80vh]">
-          <BottomSheetHeader
-            title={title}
-            onClose={onClose}
-            onConfirm={handleConfirm}
-            confirmDisabled={!editTitle.trim()}
-          />
-
-          {/* 타이틀 */}
-          <SectionLabel>타이틀</SectionLabel>
-          <Input value={editTitle} setValue={setEditTitle}>
-            <Input.Field height={49} placeholder="투두 제목을 입력해주세요" />
-          </Input>
-
-          {/* 태그 분류 */}
-          <div className="flex items-center justify-between mt-5 mb-2">
-            <SectionLabel>태그 분류</SectionLabel>
-            <button onClick={() => setTagAddOpen(true)}>
-              <AddItemIcon width={24} height={24} />
-            </button>
+        {/* 헤더는 고정, 아래 내용만 스크롤 */}
+        <div className="max-h-[80vh] flex flex-col">
+          <div className="px-5 pt-2 shrink-0">
+            <BottomSheetHeader
+              title={title}
+              onClose={onClose}
+              onConfirm={handleConfirm}
+              confirmDisabled={!editTitle.trim() || scheduleInvalid}
+            />
           </div>
-          <div className="flex flex-col gap-3">
-            {allTags.map((tag) => (
-              <div key={tag.id} className="flex items-center gap-3">
-                <button
-                  onClick={() => setEditTagId(tag.id)}
-                  className="w-5 h-5 rounded-full border-2 border-bluegray-light-active flex items-center justify-center shrink-0"
-                >
-                  {editTagId === tag.id && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-bluegray-black" />
-                  )}
-                </button>
-                {getTodoTag(tag.id) ? (
-                  <TodoTag category={tag.id} />
-                ) : (
-                  <div
-                    style={{
-                      backgroundColor: tag.bgColor,
-                      color: tag.textColor,
-                    }}
-                    className="w-17 py-1 rounded-full text-xs font-semibold flex items-center justify-center"
-                  >
-                    {tag.label}
-                  </div>
-                )}
-                {onTagDelete && tag.id !== '미선택' && (
-                  <button
-                    onClick={() => handleTagDelete(tag)}
-                    disabled={deletingTagId === tag.id}
-                  >
-                    <ClearIcon />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+          <div className="px-5 pb-6 overflow-y-auto">
+            {/* 타이틀 */}
+            <SectionLabel>타이틀</SectionLabel>
+            <Input value={editTitle} setValue={setEditTitle}>
+              <Input.Field height={49} placeholder="투두 제목을 입력해주세요" />
+            </Input>
 
-          {!onlyTitleAndTag && (
-            <>
-              {/* 반복 여부 */}
-              <div className="mt-5">
-                <SectionLabel>반복 여부</SectionLabel>
-              </div>
-              <div className="flex overflow-hidden gap-1">
-                {REPEAT_OPTIONS.map((opt) => (
+            {/* 태그 분류 */}
+            <div className="flex items-center justify-between mt-5 mb-2">
+              <SectionLabel>태그 분류</SectionLabel>
+              <button onClick={() => setTagAddOpen(true)}>
+                <AddItemIcon width={24} height={24} />
+              </button>
+            </div>
+            <div className="flex flex-col gap-3">
+              {allTags.map((tag) => (
+                <div key={tag.id} className="flex items-center gap-3">
                   <button
-                    key={opt}
-                    onClick={() => setEditRepeat(opt)}
-                    className={cn(
-                      'flex-1 py-2.5 text-sm font-medium rounded-full transition-all',
-                      editRepeat === opt
-                        ? 'bg-bluegray-black text-white'
-                        : 'text-bluegray-dark bg-bluegray-light',
+                    onClick={() => setEditTagId(tag.id)}
+                    className="w-5 h-5 rounded-full border-2 border-bluegray-light-active flex items-center justify-center shrink-0"
+                  >
+                    {editTagId === tag.id && (
+                      <div className="w-2.5 h-2.5 rounded-full bg-bluegray-black" />
                     )}
-                  >
-                    {opt}
                   </button>
-                ))}
-              </div>
-              {editRepeat === '데일리' && (
-                <DailyTimeSetting
-                  checked={dailyTimeEnabled}
-                  onCheckedChange={setDailyTimeEnabled}
-                  time={dailyTime}
-                  onTimeChange={setDailyTime}
-                />
-              )}
-              {editRepeat === '위클리' && (
-                <WeeklyDaySetting
-                  selectedDays={weeklyDay}
-                  onDaysChange={setWeeklyDay}
-                  timeEnabled={weeklyTimeEnabled}
-                  onTimeEnabledChange={setWeeklyTimeEnabled}
-                  time={weeklyTime}
-                  onTimeChange={setWeeklyTime}
-                />
-              )}
-              {editRepeat === '먼슬리' && (
-                <MonthlySetting
-                  selectedDays={monthlyDay}
-                  onDaysChange={setMonthlyDay}
-                  timeEnabled={monthlyTimeEnabled}
-                  onTimeEnabledChange={setMonthlyTimeEnabled}
-                  time={monthlyTime}
-                  onTimeChange={setMonthlyTime}
-                />
-              )}
+                  {getTodoTag(tag.id) ? (
+                    <TodoTag category={tag.id} />
+                  ) : (
+                    <div
+                      style={{
+                        backgroundColor: tag.bgColor,
+                        color: tag.textColor,
+                      }}
+                      className="w-17 py-1 rounded-full text-xs font-semibold flex items-center justify-center"
+                    >
+                      {tag.label}
+                    </div>
+                  )}
+                  {onTagDelete && tag.id !== '미선택' && (
+                    <button
+                      onClick={() => handleTagDelete(tag)}
+                      disabled={deletingTagId === tag.id}
+                    >
+                      <ClearIcon />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
 
-              {/* 마감 일정 */}
+            {onlyTitleAndTag && (
               <div className="mt-5">
-                <SectionLabel>마감 일정</SectionLabel>
+                {/* 그날의 마감시간 (끄면 루틴 기본 시간으로 복귀) */}
+                <DailyTimeSetting
+                  label="이 날의 종료 시간"
+                  checked={occurrenceTimeEnabled}
+                  onCheckedChange={setOccurrenceTimeEnabled}
+                  time={occurrenceTime}
+                  onTimeChange={setOccurrenceTime}
+                />
               </div>
-              <DeadlineInput
-                date={editDeadlineDate}
-                time={editDeadlineTime}
-                useDate={useDeadlineDate}
-                useTime={useDeadlineTime}
-                onUseDateChange={setUseDeadlineDate}
-                onUseTimeChange={setUseDeadlineTime}
-                onDateChange={setEditDeadlineDate}
-                onTimeChange={setEditDeadlineTime}
-              />
+            )}
 
-              {/* 하위 투두 */}
-              <div className="flex items-center justify-between mt-5 mb-3">
-                <SectionLabel>하위 투두</SectionLabel>
-                <button onClick={() => setAddingSubTodo(true)}>
-                  <AddItemIcon width={24} height={24} />
-                </button>
-              </div>
-              <div className="flex flex-col gap-2">
-                {editSubTodos.map((sub) => (
-                  <div
-                    key={sub.id}
-                    className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
-                  >
-                    <CheckIcon />
-                    <span className="text-sm font-medium text-bluegray-black">
-                      {sub.title}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
+            {!onlyTitleAndTag && (
+              <>
+                {/* 반복 여부 */}
+                <div className="mt-5">
+                  <SectionLabel>반복 여부</SectionLabel>
+                </div>
+                <div className="flex overflow-hidden gap-1">
+                  {REPEAT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => setEditRepeat(opt)}
+                      className={cn(
+                        'flex-1 py-2.5 text-sm font-medium rounded-full transition-all',
+                        editRepeat === opt
+                          ? 'bg-bluegray-black text-white'
+                          : 'text-bluegray-dark bg-bluegray-light',
+                      )}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+                {editRepeat === '위클리' && (
+                  <WeeklyDaySetting
+                    selectedDays={weeklyDay}
+                    onDaysChange={setWeeklyDay}
+                    timeEnabled={false}
+                    onTimeEnabledChange={() => {}}
+                    time=""
+                    onTimeChange={() => {}}
+                    hideTime
+                  />
+                )}
+                {editRepeat === '먼슬리' && (
+                  <MonthlySetting
+                    selectedDays={monthlyDay}
+                    onDaysChange={setMonthlyDay}
+                    timeEnabled={false}
+                    onTimeEnabledChange={() => {}}
+                    time=""
+                    onTimeChange={() => {}}
+                    hideTime
+                  />
+                )}
+
+                {/* 반복 설정 — 토글을 켜고 반복 시간을 고르지 않으면 저장 불가 */}
+                {isRepeat && (
+                  <>
+                    <SectionToggle
+                      label="반복 설정"
+                      checked={repTimeEnabled}
+                      onChange={handleRepToggle}
+                    />
+                    {repTimeEnabled && (
+                      <PickerRow
+                        icon={<ClockIcon />}
+                        label="반복 시간"
+                        value={repTime}
+                        onClick={() => setRepTimeSheetOpen(true)}
+                      />
+                    )}
+                  </>
+                )}
+
+                {/* 종료 일정 — 토글을 켜고 날짜/시간 중 하나라도 비면 저장 불가 */}
+                <SectionToggle
+                  label={editRepeat === '없음' ? '마감 일정' : '종료 일정'}
+                  checked={useDeadline}
+                  onChange={handleDeadlineToggle}
+                />
+                {useDeadline && (
+                  <>
+                    <PickerRow
+                      icon={<CalendarClearSharpIcon fill="white" />}
+                      label="종료 날짜"
+                      value={
+                        editDeadlineDate
+                          ? format(editDeadlineDate, 'yyyy년 MM월 dd일')
+                          : null
+                      }
+                      onClick={() => setDateSheetOpen(true)}
+                    />
+                    <PickerRow
+                      icon={<CalendarWithClockIcon fill="white" />}
+                      label="종료 시간"
+                      value={editDeadlineTime}
+                      onClick={() => setTimeSheetOpen(true)}
+                    />
+                  </>
+                )}
+              </>
+            )}
+
+            {/* 하위 투두 — 여기서 추가한 건 저장 시 수정 범위(이번만/모두)를 그대로 따른다 */}
+            <div className="flex items-center justify-between mt-5 mb-3">
+              <SectionLabel>하위 투두</SectionLabel>
+              <button onClick={() => setAddingSubTodo(true)}>
+                <AddItemIcon width={24} height={24} />
+              </button>
+            </div>
+            <div className="flex flex-col gap-2">
+              {editSubTodos.map((sub) => (
+                <div
+                  key={sub.id}
+                  onClick={() => setEditingSub(sub)}
+                  className="flex items-center gap-3 p-4 border border-bluegray-light-hover rounded-2xl"
+                >
+                  <CheckIcon />
+                  <span className="text-sm font-medium text-bluegray-black">
+                    {sub.title}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
+      </BottomSheet>
+
+      {/* 반복 시간 선택 */}
+      <BottomSheet
+        isOpen={repTimeSheetOpen}
+        onClose={() => setRepTimeSheetOpen(false)}
+      >
+        <TimePicker
+          value={repTime ?? undefined}
+          onConfirm={(t) => {
+            setRepTime(t)
+            setRepTimeSheetOpen(false)
+          }}
+          onClose={() => setRepTimeSheetOpen(false)}
+        />
+      </BottomSheet>
+
+      {/* 종료 날짜 선택 */}
+      <BottomSheet
+        isOpen={dateSheetOpen}
+        onClose={() => setDateSheetOpen(false)}
+      >
+        <DatePicker
+          value={editDeadlineDate ?? undefined}
+          onConfirm={(d) => {
+            setEditDeadlineDate(d)
+            setDateSheetOpen(false)
+          }}
+          disablePast={true}
+          onClose={() => setDateSheetOpen(false)}
+        />
+      </BottomSheet>
+
+      {/* 종료 시간 선택 */}
+      <BottomSheet
+        isOpen={timeSheetOpen}
+        onClose={() => setTimeSheetOpen(false)}
+      >
+        <TimePicker
+          value={editDeadlineTime ?? undefined}
+          onConfirm={(t) => {
+            setEditDeadlineTime(t)
+            setTimeSheetOpen(false)
+          }}
+          onClose={() => setTimeSheetOpen(false)}
+        />
       </BottomSheet>
 
       <SubTodoSheet
@@ -341,6 +512,24 @@ export default function TodoEditSheet({
           setAddingSubTodo(false)
         }}
         mode="추가"
+      />
+
+      {/* 하위 투두 수정/삭제 — 저장(체크) 시 수정 범위(이번만/모두)에 맞춰 반영된다 */}
+      <SubTodoSheet
+        isOpen={editingSub != null}
+        onClose={() => setEditingSub(null)}
+        onConfirm={(title) => {
+          setEditSubTodos((prev) =>
+            prev.map((s) => (s.id === editingSub?.id ? { ...s, title } : s)),
+          )
+          setEditingSub(null)
+        }}
+        mode="수정"
+        initialTitle={editingSub?.title}
+        onDelete={() => {
+          setEditSubTodos((prev) => prev.filter((s) => s.id !== editingSub?.id))
+          setEditingSub(null)
+        }}
       />
 
       <TagAddSheet

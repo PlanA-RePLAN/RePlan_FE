@@ -7,11 +7,12 @@ import {
   orderItem,
   updateItemContent,
   deleteItem,
+  addItemSubTodo,
+  updateItemSubTodo,
+  deleteItemSubTodo,
+  completeItemSubTodo,
 } from '@/shared/api/items'
-import {
-  createTodo as createTodoApi,
-  createSubTodo as createSubTodoApi,
-} from '@/shared/api/todo'
+import { createTodo as createTodoApi } from '@/shared/api/todo'
 import { createRoutine } from '@/shared/api/routine'
 import type { Item, ItemDetail, RoutineItemScope } from '@/shared/types/item'
 import { toTarget, itemKey } from '@/shared/types/item'
@@ -56,16 +57,19 @@ function buildDueDate(
 }
 
 // ProposedTodo의 반복 시각 → 'HH:mm:ss'
+// TimePicker가 '22:00 PM'처럼 24시간 시각에 AM/PM을 붙여 주는 경우가 있어, 13 이상이면 이미 24시간제로 본다
 function buildRoutineTime(repeatTime?: string): string | null {
   if (!repeatTime) return null
   const [timePart, meridiem] = repeatTime.split(' ')
   const [h, m] = timePart.split(':').map(Number)
   const hours24 =
-    meridiem === 'PM' && h !== 12
-      ? h + 12
-      : meridiem === 'AM' && h === 12
-        ? 0
-        : h
+    h > 12
+      ? h
+      : meridiem === 'PM' && h !== 12
+        ? h + 12
+        : meridiem === 'AM' && h === 12
+          ? 0
+          : h
   return `${String(hours24).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`
 }
 
@@ -176,28 +180,130 @@ export function useItems({
     }
   }
 
-  const handleAddSubTodo = async (parentId: number, title: string) => {
+  // 하위 투두 3종 (통합 API) — TODO=그 투두에, ROUTINE+THIS=그날 회차에(행 없으면 예약), ROUTINE+ALL=하위 루틴 생성
+  const handleAddSubTodo = async (
+    item: Item,
+    title: string,
+    scope?: RoutineItemScope,
+  ) => {
     try {
       const accessToken = localStorage.getItem('accessToken') ?? ''
-      const res = await createSubTodoApi(accessToken, parentId, title)
-      if (res.success && res.data) {
-        const created = res.data
-        setSelectedDetail((prev) =>
-          prev
-            ? {
-                ...prev,
-                subItems: [
-                  ...prev.subItems,
-                  {
-                    todoId: created.todoId,
-                    title: created.title,
-                    isCompleted: created.isCompleted,
-                  },
-                ],
-              }
-            : prev,
-        )
+      if (item.kind === 'TODO') {
+        if (item.todoId == null) return
+        await addItemSubTodo(accessToken, {
+          kind: 'TODO',
+          todoId: item.todoId,
+          title,
+        })
+      } else {
+        if (item.routineId == null || item.date == null) return
+        await addItemSubTodo(accessToken, {
+          kind: 'ROUTINE',
+          routineId: item.routineId,
+          date: item.date,
+          scope: scope ?? 'THIS',
+          title,
+        })
       }
+      await fetchDetail(item)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  // 하위 지목: 행 하위(todoId)·예약(reservedIndex)은 그날만.
+  // 하위 루틴 예정분(subRoutineId만)은 scope로 구분 — THIS=subRoutineId+date(그날만), ALL=subRoutineId만(반복 전체)
+  const subTodoTarget = (
+    sub: {
+      todoId: number | null
+      reservedIndex?: number | null
+      subRoutineId?: number | null
+    },
+    scope?: RoutineItemScope,
+  ) => {
+    // 모두(ALL) 수정에서 하위 루틴 출신이면 행 대신 반복 전체를 지목한다
+    if (scope === 'ALL' && sub.subRoutineId != null) {
+      return { subRoutineId: sub.subRoutineId }
+    }
+    if (sub.todoId != null && selectedDetail?.todoId != null) {
+      return { parentTodoId: selectedDetail.todoId, subTodoId: sub.todoId }
+    }
+    if (
+      sub.reservedIndex != null &&
+      selectedItem?.routineId != null &&
+      selectedItem.date != null
+    ) {
+      return {
+        routineId: selectedItem.routineId,
+        date: selectedItem.date,
+        index: sub.reservedIndex,
+      }
+    }
+    if (sub.subRoutineId != null) {
+      if (scope === 'THIS') {
+        if (selectedItem?.date == null) return null
+        return { subRoutineId: sub.subRoutineId, date: selectedItem.date }
+      }
+      return { subRoutineId: sub.subRoutineId }
+    }
+    return null
+  }
+
+  // 하위 투두 완료 토글 — 행/예약/예정분 모두 그날만 완료 (예정분은 subRoutineId+date)
+  const handleToggleSubTodo = async (sub: {
+    todoId: number | null
+    isCompleted: boolean
+    reservedIndex?: number | null
+    subRoutineId?: number | null
+  }) => {
+    const target = subTodoTarget(sub, 'THIS')
+    if (!target || !selectedItem) return
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      await completeItemSubTodo(accessToken, {
+        ...target,
+        isCompleted: !sub.isCompleted,
+      })
+      await fetchDetail(selectedItem)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleUpdateSubTodo = async (
+    sub: {
+      todoId: number | null
+      reservedIndex?: number | null
+      subRoutineId?: number | null
+    },
+    title: string,
+    scope?: RoutineItemScope,
+  ) => {
+    const target = subTodoTarget(sub, scope)
+    if (!target || !selectedItem) return
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      await updateItemSubTodo(accessToken, { ...target, title })
+      await fetchDetail(selectedItem)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleDeleteSubTodo = async (
+    sub: {
+      todoId: number | null
+      reservedIndex?: number | null
+      subRoutineId?: number | null
+    },
+    scope?: RoutineItemScope,
+  ) => {
+    const target = subTodoTarget(sub, scope)
+    if (!target || !selectedItem) return
+    try {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      await deleteItemSubTodo(accessToken, target)
+      await fetchDetail(selectedItem)
     } catch (error) {
       console.error(error)
     }
@@ -271,6 +377,8 @@ export function useItems({
         await updateItemContent(accessToken, target, 'THIS', {
           title: updated.title,
           tagId,
+          // 그 회차만의 마감시간 (null = 루틴 기본 시간으로 복귀)
+          routineTime: buildRoutineTime(updated.repeatTime),
         })
       }
       await refetchItems()
@@ -416,6 +524,9 @@ export function useItems({
     fetchDetail,
     handleCreate,
     handleAddSubTodo,
+    handleToggleSubTodo,
+    handleUpdateSubTodo,
+    handleDeleteSubTodo,
     handleUpdate,
     handleDelete,
     handleToggleComplete,
