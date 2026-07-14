@@ -83,6 +83,8 @@ export default function DatePicker({
             <div key={weekIndex} className="flex w-full">
               {rowDays.map((day) => {
                 const dayInRange = showRange && isInRange(day)
+                // 범위의 진짜 시작 날짜 — 줄 시작(월요일) 캡과 구분해 반쪽 배경으로 그린다
+                const isRangeStartDay = dayInRange && isSameDay(day, rangeStart)
                 const isRangeFirst = dayInRange && firstInRow && isSameDay(day, firstInRow)
                 const isRangeLast = dayInRange && lastInRow && isSameDay(day, lastInRow)
                 const isSelected = selected && isSameDay(day, selected)
@@ -142,12 +144,14 @@ export default function DatePicker({
                     key={day.toISOString()}
                     className={cn(
                       'flex-1 flex items-center justify-center',
-                      dayInRange && 'bg-[#EEF5FD]',
-                      isRangeFirst && 'rounded-l-full',
-                      isRangeLast && 'rounded-r-full',
+                      dayInRange && !isRangeStartDay && 'bg-[#EEF5FD]',
+                      // 시작 날짜는 오른쪽 절반만 칠해 가운데 원과 어긋나는 캡 틈을 없앤다
+                      isRangeStartDay &&
+                        'bg-[linear-gradient(to_right,transparent_50%,#EEF5FD_50%)]',
+                      isRangeFirst && !isRangeStartDay && 'rounded-l-full',
+                      isRangeLast && !isRangeStartDay && 'rounded-r-full',
                     )}
                   >
-                    
                     <button
                       onClick={() => {
                         if (selected && isSameDay(day, selected)) {
@@ -259,8 +263,15 @@ export default function DatePicker({
           }}
           modifiers={{
             ...commonDayPickerProps.modifiers,
-            rangeLeft: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeStart) || date.getDay() === 1),
-            rangeRight: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeEnd) || date.getDay() === 0),
+            // 시작 날짜는 캡(반원) 대신 오른쪽 절반만 칠한다 — 셀 기준 캡과 가운데 정렬된 원의 중심이 어긋나
+            // 원 왼쪽에 초승달 틈이 생기는 것을 막는다. 캡은 원이 없는 줄 시작(월요일)에만 그린다.
+            rangeStart: (date) => isMonthInRange(date) && isSameDay(date, monthRangeStart),
+            rangeLeft: (date) =>
+              isMonthInRange(date) && date.getDay() === 1 && !isSameDay(date, monthRangeStart),
+            rangeRight: (date) =>
+              isMonthInRange(date) &&
+              (isSameDay(date, monthRangeEnd) || date.getDay() === 0) &&
+              !isSameDay(date, monthRangeStart),
             rangeMid: (date) => {
               if (!isMonthInRange(date)) return false
               const isLeft = isSameDay(date, monthRangeStart) || date.getDay() === 1
@@ -270,6 +281,7 @@ export default function DatePicker({
           }}
           modifiersClassNames={{
             ...commonDayPickerProps.modifiersClassNames,
+            rangeStart: 'bg-[linear-gradient(to_right,transparent_50%,#EEF5FD_50%)]',
             rangeLeft: 'bg-[#EEF5FD] rounded-l-full',
             rangeRight: 'bg-[#EEF5FD] rounded-r-full',
             rangeMid: 'bg-[#EEF5FD]',
