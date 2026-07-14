@@ -159,8 +159,8 @@ export default function DatePicker({
                       }}
                       className={cn(
                         'relative w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium transition-colors',
-                        isTodayDate && !isSelected && 'bg-[#EEF5FD]',
-                        isSelected && 'bg-[#EEF5FD]',
+                        isTodayDate && !isSelected && !!selected && 'border border-bluegray-light-active',
+                        (isSelected || (isTodayDate && !selected)) && 'bg-[#D8EAFB]',
                         isSat && 'text-blue-500',
                         isSun && 'text-red-500',
                         !isSat && !isSun && isTodayDate && 'text-bluegray-darker',
@@ -253,7 +253,7 @@ export default function DatePicker({
           classNames={{
             ...commonDayPickerProps.classNames,
             day_button: 'w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium text-bluegray-normal transition-colors',
-            selected: '[&>button]:bg-[#EEF5FD] [&>button]:rounded-full',
+            selected: '[&>button]:bg-[#D8EAFB] [&>button]:rounded-full',
           }}
           modifiers={{
             ...commonDayPickerProps.modifiers,
@@ -279,7 +279,9 @@ export default function DatePicker({
                 className={cn(
                   props.className,
                   'relative',
-                  modifiers.today && !modifiers.selected && 'bg-[#EEF5FD] text-bluegray-darker',
+                  (modifiers.selected || (!selected && modifiers.today)) && 'bg-[#D8EAFB] rounded-full',
+                  modifiers.today && !modifiers.selected && !!selected && 'border border-bluegray-light-active text-bluegray-darker',
+                  modifiers.today && (modifiers.selected || !selected) && 'text-black',
                 )}
                 style={
                   modifiers.selected && selectedColor
