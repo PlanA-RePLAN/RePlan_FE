@@ -113,7 +113,7 @@ export default function TermsAgreementSheet({ isOpen, onClose, onConfirm }: Prop
                 setDetailIndex(null)
               }}
             />
-            <div className="h-full max-h-[calc(100dvh-49px-56px)] overflow-y-auto text-s text-bluegray-dark whitespace-pre-wrap">
+            <div className="max-h-[calc(100dvh-49px-56px-49px)] overflow-y-auto touch-pan-y text-s text-bluegray-dark whitespace-pre-wrap">
               {AGREEMENT_DATA.find((d) => d.index === detailIndex)?.content}
             </div>
           </div>
