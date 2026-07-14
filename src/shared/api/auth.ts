@@ -56,10 +56,11 @@ export async function registerOAuth(
   tempToken: string,
   nickname: string,
   s3Key?: string,
+  agreeMarketing?: boolean
 ): Promise<ApiResponse<OAuthRegisterData>>{
   const res = await client.post<ApiResponse<OAuthRegisterData>>(
     '/api/auth/oauth/register',
-    { nickname, s3Key },
+    { nickname, s3Key, agreeMarketing },
     { headers: { Authorization: `Bearer ${tempToken}` } }
   )
   return res.data

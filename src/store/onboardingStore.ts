@@ -19,6 +19,7 @@ interface OnboardingState {
   goalValue: string
   deadlineDate: Date | null
   deadlineTime: string | null
+  agreeMarketing: boolean
 
   setQuestions: (questions: ExploreQuestion[]) => void
   setRefineData: (data: RefineGoalData) => void
@@ -26,6 +27,7 @@ interface OnboardingState {
   setGoalValue: (v: string) => void
   setDeadlineDate: (d: Date | null) => void
   setDeadlineTime: (t: string | null) => void
+  setAgreeMarketing: (v: boolean) => void
 }
 
 function parseTime24to12(time: string | null): string | null {
@@ -44,6 +46,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
   goalValue: '',
   deadlineDate: NO_DEADLINE_DATE,
   deadlineTime: null,
+  agreeMarketing: false,
 
   setQuestions: (questions) => set({ questions }),
 
@@ -59,4 +62,5 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
   setGoalValue: (v) => set({ goalValue: v }),
   setDeadlineDate: (d) => set({ deadlineDate: d }),
   setDeadlineTime: (t) => set({ deadlineTime: t }),
+  setAgreeMarketing: (v) => set({ agreeMarketing: v }),
 }))

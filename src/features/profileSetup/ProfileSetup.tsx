@@ -10,11 +10,13 @@ import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
 import MainButton from '@/shared/components/MainButton'
 import { registerOAuth } from '@/shared/api/auth'
 import { useImageUpload } from '@/shared/hooks/useImageUpload'
+import { useOnboardingStore } from '@/store/onboardingStore'
 
 export default function ProfileSetup() {
   const [name, setName] = useState('')
   const [isNameValid, setIsNameValid] = useState(false)
   const { previewUrl, fileInputRef, handleImageChange, uploadImage } = useImageUpload('new')
+  const agreeMarketing = useOnboardingStore((s) => s.agreeMarketing)
   const navigate = useNavigate()
 
   const handleClick = async () => {
@@ -25,7 +27,7 @@ export default function ProfileSetup() {
     }
     try {
       const s3Key = await uploadImage(tempToken)
-      const res = await registerOAuth(tempToken, name, s3Key ?? undefined)
+      const res = await registerOAuth(tempToken, name, s3Key ?? undefined, agreeMarketing) 
       if (!res.success || !res.data) {
         sessionStorage.removeItem('tempToken')
         navigate('/')
