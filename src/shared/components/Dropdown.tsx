@@ -23,9 +23,9 @@ export default function Dropdown({ items, defaultValue, onChange, width = 'w-[93
     <div className={`relative flex ${isOpen ? 'z-11' : 'z-1'}`}>
       <div
         onClick={() => setIsOpen((prev) => !prev)}
-        className={cn("px-3 py-1.5 rounded-2xl bg-white border border-bluegray-light-hover flex items-center justify-center gap-1.25 cursor-pointer", width)}
+        className={cn("px-3 py-1.5 rounded-2xl bg-white border border-bluegray-light-hover flex items-center justify-center gap-2 cursor-pointer", width)}
       >
-        <p className="text-xs font-semibold">{value}</p>
+        <p className="text-[14px] font-semibold">{value}</p>
         <ChevronDownIcon className={`transition-transform duration-200 ${isOpen ? "rotate-180" : "rotate-0"}`} />
       </div>
       {isOpen && (
@@ -34,9 +34,9 @@ export default function Dropdown({ items, defaultValue, onChange, width = 'w-[93
             <div
               key={item}
               onClick={(e) => { e.stopPropagation(); handleClick(item) }}
-              className="py-1.75 flex justify-center items-center hover:bg-bluegray-light cursor-pointer"
+              className="py-1.75 flex justify-center items-center hover:bg-bluegray-light active:bg-bluegray-light cursor-pointer"
             >
-              <p className="text-bluegray-darker text-xs">{item}</p>
+              <p className="text-bluegray-darker text-[14px]">{item}</p>
             </div>
           ))}
         </div>

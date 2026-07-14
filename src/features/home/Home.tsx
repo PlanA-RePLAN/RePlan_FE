@@ -466,7 +466,7 @@ export default function Home() {
                     : undefined
               }
               dueDates={itemHook.calendarDueDates}
-              showMonthRange
+              variant={selectedTab === 'month' ? 'range' : 'single'}
             />
           </div>
         )}

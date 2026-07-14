@@ -19,8 +19,8 @@ interface DatePickerProps {
   dueDates?: Date[]
   // true면 오늘 이전 날짜는 선택할 수 없다. (마감일 등 미래 날짜만 허용해야 하는 곳에서 사용)
   disablePast?: boolean
-  // true면 월 뷰에서 선택일부터 한 달 범위를 하이라이트한다. (홈 MONTH 탭 전용)
-  showMonthRange?: boolean
+  // 'range': 선택 날짜 기준 한 달 범위 하이라이트 (Home 월 탭), 'single': 단일 날짜 선택 (검정 원 + 흰 글씨)
+  variant?: 'range' | 'single'
 }
 
 const WEEKDAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
@@ -37,7 +37,7 @@ export default function DatePicker({
   selectedTextColor,
   dueDates = [],
   disablePast = false,
-  showMonthRange = false,
+  variant = 'single',
 }: DatePickerProps) {
   const [selected, setSelected] = useState<Date | undefined>(value)
   const [month, setMonth] = useState<Date>(defaultMonth ?? value ?? new Date())
@@ -83,6 +83,8 @@ export default function DatePicker({
             <div key={weekIndex} className="flex w-full">
               {rowDays.map((day) => {
                 const dayInRange = showRange && isInRange(day)
+                // 범위의 진짜 시작 날짜 — 줄 시작(월요일) 캡과 구분해 반쪽 배경으로 그린다
+                const isRangeStartDay = dayInRange && isSameDay(day, rangeStart)
                 const isRangeFirst = dayInRange && firstInRow && isSameDay(day, firstInRow)
                 const isRangeLast = dayInRange && lastInRow && isSameDay(day, lastInRow)
                 const isSelected = selected && isSameDay(day, selected)
@@ -121,7 +123,7 @@ export default function DatePicker({
                         </span>
                         <div className="relative w-8 h-8 mt-1 flex items-center justify-center rounded-full text-sm font-medium">
                           {hasDue && (
-                            <span className="absolute top-0.5 right-0 w-[3px] h-[3px] rounded-full bg-[#A9AFB9]" />
+                            <span className="absolute top-0.5 right-0 w-0.75 h-0.75 rounded-full bg-[#A9AFB9]" />
                           )}
                           <span className={cn(
                             isSat && 'text-blue-500',
@@ -142,9 +144,12 @@ export default function DatePicker({
                     key={day.toISOString()}
                     className={cn(
                       'flex-1 flex items-center justify-center',
-                      dayInRange && 'bg-[#EEF5FD]',
-                      isRangeFirst && 'rounded-l-full',
-                      isRangeLast && 'rounded-r-full',
+                      dayInRange && !isRangeStartDay && 'bg-[#EEF5FD]',
+                      // 시작 날짜는 오른쪽 절반만 칠해 가운데 원과 어긋나는 캡 틈을 없앤다
+                      isRangeStartDay &&
+                        'bg-[linear-gradient(to_right,transparent_50%,#EEF5FD_50%)]',
+                      isRangeFirst && !isRangeStartDay && 'rounded-l-full',
+                      isRangeLast && !isRangeStartDay && 'rounded-r-full',
                     )}
                   >
                     <button
@@ -159,8 +164,8 @@ export default function DatePicker({
                       }}
                       className={cn(
                         'relative w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium transition-colors',
-                        isTodayDate && !isSelected && 'bg-[#EEF5FD]',
-                        isSelected && 'bg-[#EEF5FD]',
+                        isTodayDate && !isSelected && !!selected && 'border border-bluegray-light-active',
+                        (isSelected || (isTodayDate && !selected)) && 'bg-[#D8EAFB]',
                         isSat && 'text-blue-500',
                         isSun && 'text-red-500',
                         !isSat && !isSun && isTodayDate && 'text-bluegray-darker',
@@ -186,9 +191,50 @@ export default function DatePicker({
   const monthRangeStart = toDateOnly(selected ?? new Date())
   const monthRangeEnd = toDateOnly(addDays(addMonths(monthRangeStart, 1), -1))
   const isMonthInRange = (date: Date) => {
-    if (!showMonthRange) return false
+    if (variant !== 'range') return false
     const d = toDateOnly(date)
     return d >= monthRangeStart && d <= monthRangeEnd
+  }
+
+  const commonDayPickerProps = {
+    mode: 'single' as const,
+    selected,
+    onSelect: (date: Date | undefined) => {
+      setSelected(date)
+      if (date) onConfirm(date)
+      else onDeselect?.()
+    },
+    month,
+    onMonthChange: setMonth,
+    locale: ko,
+    hideNavigation: true,
+    weekStartsOn: 1 as const,
+    disabled: disablePast ? { before: today } : undefined,
+    classNames: {
+      root: 'w-full',
+      months: 'w-full',
+      month: 'w-full',
+      month_caption: 'hidden',
+      month_grid: 'w-full border-collapse',
+      weekdays: 'flex w-full',
+      weekday: 'flex-1 text-center text-sm text-bluegray-normal py-2 font-normal',
+      weeks: 'flex flex-col gap-1 w-full',
+      week: 'flex w-full',
+      day: 'flex-1 flex items-center justify-center',
+      day_button: 'w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium text-bluegray-darker transition-colors',
+      today: '[&>button]:rounded-full',
+      outside: '[&>button]:text-bluegray-light-active',
+      disabled: '[&>button]:text-bluegray-light-active [&>button]:cursor-not-allowed',
+    },
+    modifiers: {
+      saturday: (date: Date) => date.getDay() === 6,
+      sunday: (date: Date) => date.getDay() === 0,
+      hasDue: (date: Date) => dueDates.some((d) => isSameDay(d, date)),
+    },
+    modifiersClassNames: {
+      saturday: '[&>button]:text-blue-500',
+      sunday: '[&>button]:text-red-500',
+    },
   }
 
   return (
@@ -207,82 +253,96 @@ export default function DatePicker({
           }
         />
       )}
-      <DayPicker
-        mode="single"
-        selected={selected}
-        onSelect={(date) => {
-          setSelected(date)
-          if (date) onConfirm(date)
-          else onDeselect?.()
-        }}
-        month={month}
-        onMonthChange={setMonth}
-        locale={ko}
-        hideNavigation
-        weekStartsOn={1}
-        disabled={disablePast ? { before: today } : undefined}
-        classNames={{
-          root: 'w-full',
-          months: 'w-full',
-          month: 'w-full',
-          month_caption: 'hidden',
-          month_grid: 'w-full border-collapse',
-          weekdays: 'flex w-full',
-          weekday: 'flex-1 text-center text-sm text-bluegray-normal py-2 font-normal',
-          weeks: 'flex flex-col gap-1 w-full',
-          week: 'flex w-full',
-          day: 'flex-1 flex items-center justify-center',
-          day_button:
-            'w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium text-bluegray-darker transition-colors',
-          selected: '[&>button]:bg-[#EEF5FD] [&>button]:rounded-full',
-          today: '[&>button]:rounded-full',
-          outside: '[&>button]:text-bluegray-light-active',
-          disabled:
-            '[&>button]:text-bluegray-light-active [&>button]:cursor-not-allowed',
-        }}
-        modifiersClassNames={{
-          saturday: '[&>button]:text-blue-500',
-          sunday: '[&>button]:text-red-500',
-          rangeLeft: 'bg-[#EEF5FD] rounded-l-full',
-          rangeRight: 'bg-[#EEF5FD] rounded-r-full',
-          rangeMid: 'bg-[#EEF5FD]',
-        }}
-        modifiers={{
-          saturday: (date) => date.getDay() === 6,
-          sunday: (date) => date.getDay() === 0,
-          hasDue: (date) => dueDates.some((d) => isSameDay(d, date)),
-          rangeLeft: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeStart) || date.getDay() === 1),
-          rangeRight: (date) => isMonthInRange(date) && (isSameDay(date, monthRangeEnd) || date.getDay() === 0),
-          rangeMid: (date) => {
-            if (!isMonthInRange(date)) return false
-            const isLeft = isSameDay(date, monthRangeStart) || date.getDay() === 1
-            const isRight = isSameDay(date, monthRangeEnd) || date.getDay() === 0
-            return !isLeft && !isRight
-          },
-        }}
-        components={{
-          DayButton: ({ day, modifiers, ...props }) => (
-            <button
-              {...props}
-              className={cn(props.className, 'relative', modifiers.today && !modifiers.selected && 'bg-[#EEF5FD]')}
-              style={
-                modifiers.selected && selectedColor
-                  ? {
-                      backgroundColor: selectedColor,
-                      color: selectedTextColor ?? 'white',
-                      borderRadius: '100%',
-                    }
-                  : undefined
-              }
-            >
-              {modifiers.hasDue && (
-                <span className="absolute top-1.5 left-[calc(50%+7px)] -translate-x-1/2 w-[3px] h-[3px] rounded-full bg-[#A9AFB9]" />
-              )}
-              {props.children}
-            </button>
-          ),
-        }}
-      />
+      {variant === 'range' ? (
+        <DayPicker
+          {...commonDayPickerProps}
+          classNames={{
+            ...commonDayPickerProps.classNames,
+            day_button: 'w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium text-bluegray-normal transition-colors',
+            selected: '[&>button]:bg-[#D8EAFB] [&>button]:rounded-full',
+          }}
+          modifiers={{
+            ...commonDayPickerProps.modifiers,
+            // 시작 날짜는 캡(반원) 대신 오른쪽 절반만 칠한다 — 셀 기준 캡과 가운데 정렬된 원의 중심이 어긋나
+            // 원 왼쪽에 초승달 틈이 생기는 것을 막는다. 캡은 원이 없는 줄 시작(월요일)에만 그린다.
+            rangeStart: (date) => isMonthInRange(date) && isSameDay(date, monthRangeStart),
+            rangeLeft: (date) =>
+              isMonthInRange(date) && date.getDay() === 1 && !isSameDay(date, monthRangeStart),
+            rangeRight: (date) =>
+              isMonthInRange(date) &&
+              (isSameDay(date, monthRangeEnd) || date.getDay() === 0) &&
+              !isSameDay(date, monthRangeStart),
+            rangeMid: (date) => {
+              if (!isMonthInRange(date)) return false
+              const isLeft = isSameDay(date, monthRangeStart) || date.getDay() === 1
+              const isRight = isSameDay(date, monthRangeEnd) || date.getDay() === 0
+              return !isLeft && !isRight
+            },
+          }}
+          modifiersClassNames={{
+            ...commonDayPickerProps.modifiersClassNames,
+            rangeStart: 'bg-[linear-gradient(to_right,transparent_50%,#EEF5FD_50%)]',
+            rangeLeft: 'bg-[#EEF5FD] rounded-l-full',
+            rangeRight: 'bg-[#EEF5FD] rounded-r-full',
+            rangeMid: 'bg-[#EEF5FD]',
+          }}
+          components={{
+            DayButton: ({ day, modifiers, ...props }) => (
+              <button
+                {...props}
+                className={cn(
+                  props.className,
+                  'relative',
+                  (modifiers.selected || (!selected && modifiers.today)) && 'bg-[#D8EAFB] rounded-full',
+                  modifiers.today && !modifiers.selected && !!selected && 'border border-bluegray-light-active text-bluegray-darker',
+                  modifiers.today && (modifiers.selected || !selected) && 'text-black',
+                )}
+                style={
+                  modifiers.selected && selectedColor
+                    ? { backgroundColor: selectedColor, color: selectedTextColor ?? 'white', borderRadius: '100%' }
+                    : undefined
+                }
+              >
+                {modifiers.hasDue && (
+                  <span className="absolute top-1.5 left-[calc(50%+7px)] -translate-x-1/2 w-0.75 h-0.75 rounded-full bg-[#A9AFB9]" />
+                )}
+                {props.children}
+              </button>
+            ),
+          }}
+        />
+      ) : (
+        <DayPicker
+          {...commonDayPickerProps}
+          classNames={{
+            ...commonDayPickerProps.classNames,
+            selected: '[&>button]:bg-black [&>button]:text-white [&>button]:rounded-full',
+            today: '',
+          }}
+          components={{
+            DayButton: ({ day, modifiers, ...props }) => (
+              <button
+                {...props}
+                className={cn(
+                  props.className,
+                  'relative',
+                  modifiers.selected && '[&>button]:text-white',
+                )}
+                style={
+                  modifiers.selected && selectedColor
+                    ? { backgroundColor: selectedColor, color: selectedTextColor ?? 'white', borderRadius: '100%' }
+                    : undefined
+                }
+              >
+                {modifiers.hasDue && (
+                  <span className="absolute top-1.5 left-[calc(50%+7px)] -translate-x-1/2 w-0.75 h-0.75 rounded-full bg-[#A9AFB9]" />
+                )}
+                {props.children}
+              </button>
+            ),
+          }}
+        />
+      )}
     </div>
   )
 }
