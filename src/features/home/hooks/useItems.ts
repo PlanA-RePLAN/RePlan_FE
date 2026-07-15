@@ -159,8 +159,10 @@ export function useItems({
   }, [selectedTab, sort, selectedYear, selectedMonth, selectedDate])
 
   useEffect(() => {
+    // ALL 탭은 달력(DatePicker)을 그리지 않으므로 달력용 month 조회가 필요 없다
+    if (selectedTab === 'all') return
     refetchCalendarItems()
-  }, [selectedYear, selectedMonth])
+  }, [selectedTab, selectedYear, selectedMonth])
 
   const patchLocal = (key: string, patch: Partial<Item>) =>
     setItems((prev) =>
@@ -481,17 +483,9 @@ export function useItems({
     }
   }
 
-  const filteredItems =
-    selectedTab === 'all'
-      ? items.filter((it) => {
-          if (!it.dueDate) return true
-          const date = new Date(it.dueDate)
-          return (
-            date.getFullYear() === selectedYear &&
-            date.getMonth() + 1 === selectedMonth
-          )
-        })
-      : items
+  // ALL 탭은 서버의 filter=all 응답을 그대로 보여준다.
+  // (이전에는 상단에서 고른 연·월로 한 번 더 걸러서, 다음 달 마감 항목이 목록에서 사라졌다)
+  const filteredItems = items
 
   const sortedItems =
     sort === 'latest'
