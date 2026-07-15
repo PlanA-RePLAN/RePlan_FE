@@ -45,11 +45,13 @@ function buildDueDate(
     const [timePart, meridiem] = deadlineTime.split(' ')
     const [h, m] = timePart.split(':').map(Number)
     const hours24 =
-      meridiem === 'PM' && h !== 12
-        ? h + 12
-        : meridiem === 'AM' && h === 12
-          ? 0
-          : h
+      h > 12
+        ? h
+        : meridiem === 'PM' && h !== 12
+          ? h + 12
+          : meridiem === 'AM' && h === 12
+            ? 0
+            : h
     date.setHours(hours24, m, 0, 0)
   }
   const pad = (n: number) => String(n).padStart(2, '0')
