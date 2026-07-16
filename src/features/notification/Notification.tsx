@@ -34,6 +34,10 @@ const NOTIFICATION_ICON_MAP: Record<NotificationTypeName, ReactElement> = {
   REPORT_READY: <StatsNotificationIcon />,
 }
 
+// 마이페이지 '공지사항' 메뉴와 같은 노션 페이지
+const NOTICE_NOTION_URL =
+  'https://app.notion.com/p/37712dc6738b80bda3d6c65eb341bd36?v=37712dc6738b8066ba35000cdde11b2c'
+
 function formatRelativeTime(createdAt: string): string {
   const diff = Date.now() - new Date(createdAt).getTime()
   const minutes = Math.floor(diff / 1000 / 60)
@@ -113,9 +117,16 @@ export default function Notification() {
       setHasUnread(res.data.count > 0)
     }
 
+    // 이동 규칙: 공지는 노션 공지사항 새 탭, 혜택/이벤트는 읽음 처리만 하고 이동 없음
+    if (item.category === 'NOTICE') {
+      window.open(NOTICE_NOTION_URL, '_blank')
+      return
+    }
+    if (item.category === 'MARKETING') return
+
     if (item.type === 'TODO_DUE_SOON') navigate('/home')
     else if (item.type === 'REPORT_READY') navigate('/statics')
-    else if (item.type === 'TODO_FAILED_REPLAN') navigate('/home')  
+    else if (item.type === 'TODO_FAILED_REPLAN') navigate('/home')
   }
 
   return (
