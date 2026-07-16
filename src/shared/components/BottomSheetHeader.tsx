@@ -25,13 +25,13 @@ export default function BottomSheetHeader({
         <CloseButtonIcon />
       </button>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between">
         {onPrev && (
           <button onClick={onPrev}>
             <ChevronLeftIcon width={20} height={20} color="#7F838B" />
           </button>
         )}
-        <span className="text-lg font-bold text-bluegray-black text-center whitespace-nowrap">
+        <span className="text-lg font-bold text-bluegray-black text-center">
           {title}
         </span>
         {onNext && (
