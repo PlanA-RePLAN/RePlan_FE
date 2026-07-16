@@ -66,7 +66,7 @@ export default function Step2({
 
       <div className="fixed pb-10 pt-10 bottom-0 left-0 right-0 w-full px-5 bg-linear-to-b from-transparent from-0% to-white to-20%">
         <MainButton
-          option={isSubmitting ? 'disabled' : 'primary'}
+          option={isSubmitting || !selectedSubOption ? 'disabled' : 'primary'}
           onClick={onNext}
           title={isSubmitting ? '불러오는 중...' : '다음으로'}
           className="mt-10"

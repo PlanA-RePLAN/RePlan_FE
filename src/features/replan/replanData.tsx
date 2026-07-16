@@ -11,11 +11,11 @@ import PlayIcon from '@/icons/PlayIcon'
 import PoorConditionIcon from '@/icons/PoorConditionIcon'
 import PowerIcon from '@/icons/PowerIcon'
 import ReplanSurveyIcon from '@/icons/ReplanSurveyIcon'
-import RestLeftFillIcon from '@/icons/RestLeftFillIcon'
-import ShuffleIcon from '@/icons/ShuffleIcon'
+import ResetIcon from '@/icons/ResetIcon'
 import SleepIcon from '@/icons/SleepIcon'
 import AlertTriangleIcon from '@/icons/AlertTriangleIcon'
 import MenuListIcon from '@/icons/MenuListIcon'
+import XIcon from '@/icons/XIcon'
 
 export type MainOptionKey =
   | 'psychologicalState'
@@ -165,7 +165,7 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
       },
       {
         key: 'distracted',
-        icon: <ShuffleIcon />,
+        icon: <XIcon />,
         label: '딴짓을 하다가 미뤘어요',
         code: 'MENTAL_DISTRACTION',
       },
@@ -259,8 +259,8 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
   },
   {
     key: 'goalImprovement',
-    icon: <RestLeftFillIcon width={20} height={20} />,
-    label: '목표/계획 개선 필요',
+    icon: <ResetIcon />,
+    label: '목표 개선 필요',
     code: 'GOAL_NEEDS_IMPROVEMENT',
     subOptions: [
       {

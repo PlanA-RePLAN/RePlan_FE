@@ -3,7 +3,7 @@ import Description from '@/shared/components/Description'
 import MainButton from '@/shared/components/MainButton'
 import MenuIcon from '@/icons/MenuIcon'
 import ListItem from '@/shared/components/ListItem'
-import RestLeftFillIcon from '@/icons/RestLeftFillIcon'
+import RestLeftFillIcon from '@/icons/ResetLeftFillIcon'
 import TodoCard from '@/shared/components/TodoCard'
 import CheckBoxIcon from '@/icons/CheckBoxIcon'
 import TodoInfoSheet from './components/TodoInfoSheet'
@@ -150,7 +150,6 @@ function mapAiTodo(
     repeat,
     repeatTime,
     repeatTimeEnabled: repeatTime != null,
-    // 백엔드가 준 routineDays(요일/일자 배열)를 위클리/먼슬리 입력값으로 풀어 담는다.
     weeklyDay:
       todo.routineType === 'WEEKLY'
         ? routineDays
