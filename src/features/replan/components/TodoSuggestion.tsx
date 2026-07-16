@@ -27,6 +27,7 @@ const MAX_REFRESH_COUNT = 3
 const FIELD_LABELS: Record<string, string> = {
   title: '내용',
   dueTime: '시간',
+  dueDate: '기간',
   tag: '태그',
   routineType: '반복',
 }
