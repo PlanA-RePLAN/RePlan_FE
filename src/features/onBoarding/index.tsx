@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 
 // components
 import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
+import ConfirmBottomSheet from '@/shared/components/ConfirmBottomSheet'
 import ProposeGoal from './ProposeGoal'
 import WritingGoal from './WritingGoal'
 import WritingGoalDetails from './WritingGoalDetails'
@@ -16,14 +17,18 @@ const TOTAL_STEPS = 4
 
 export default function OnBoarding() {
   const [currentStep, setCurrentStep] = useState(0)
+  const [isExitSheetOpen, setIsExitSheetOpen] = useState(false)
   const navigate = useNavigate()
 
+  // 뒤로가기 = 이전 단계가 아니라 목표 설정에서 나가기.
+  // 실수로 나가면 입력한 내용이 다 사라지므로 확인 시트를 먼저 띄운다.
+  // 완료 화면에서는 초기화될 게 없어 바로 나간다.
   const moveBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
-    } else {
+    if (currentStep === TOTAL_STEPS) {
       navigate(-1)
+      return
     }
+    setIsExitSheetOpen(true)
   }
 
   const moveNext = () => {
@@ -51,6 +56,14 @@ export default function OnBoarding() {
         </div>
       )}
       {currentStep === TOTAL_STEPS && <OnboardingComplete />}
+      <ConfirmBottomSheet
+        isOpen={isExitSheetOpen}
+        onClose={() => setIsExitSheetOpen(false)}
+        title="지금 나가면 목표 설정이 초기화돼요"
+        description="나가시겠어요?"
+        confirmText="나가기"
+        onConfirm={() => navigate(-1)}
+      />
     </BackHeaderLayout>
   )
 }
