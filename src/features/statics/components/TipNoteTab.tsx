@@ -372,7 +372,7 @@ export default function TipNoteTab({
         <div className="mt-10 pb-32">
           <button
             onClick={() => navigate('/')}
-            className="w-full h-14 bg-bluegray-light-hover rounded-xl text-sm font-semibold text-bluegray-normal"
+            className="w-full h-14 bg-bluegray-normal rounded-xl text-sm font-semibold text-white"
           >
             홈화면으로
           </button>
