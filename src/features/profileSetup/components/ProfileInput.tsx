@@ -45,7 +45,7 @@ export default function ProfileInput({
       </Input>
       <DuplicateCheckButton nickname={value} onCheck={handleCheck} />
       {isCheck && (
-        <p className="absolute top-21 text-xs text-bluegray-normal flex">
+        <p className="absolute top-23 text-xs text-bluegray-normal flex">
           {isDuplicate ? (
             <>
               <img src={dangerSvg} alt="" className="mr-2" />
