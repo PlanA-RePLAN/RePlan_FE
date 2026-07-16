@@ -1,5 +1,5 @@
 // utils
-import { useState, useEffect, ReactElement } from "react"
+import { useState, useEffect, useRef, useCallback, ReactElement } from "react"
 import { useNavigate } from "react-router-dom"
 import { cn } from "@/shared/utils/cn"
 import { getNotifications, getUnreadNotificationCount, markNotificationAsRead } from "@/shared/api/notification"
@@ -50,24 +50,56 @@ export default function Notification() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<Tab>('전체')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [nextCursor, setNextCursor] = useState<number | null>(null)
+  const [hasNext, setHasNext] = useState(false)
+  const isLoadingRef = useRef(false)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
   const { setHasUnread } = useNotificationStore()
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
+  // cursor 없으면 첫 페이지(목록 교체), 있으면 다음 페이지(뒤에 이어 붙임)
+  const fetchNotifications = useCallback(
+    async (cursor?: number) => {
+      if (isLoadingRef.current) return
+      isLoadingRef.current = true
       try {
         const accessToken = localStorage.getItem('accessToken') ?? ''
         const res = await getNotifications(accessToken, {
           category: TAB_CATEGORY_MAP[activeTab],
+          cursor,
         })
         if (res.success && res.data) {
-          setNotifications(res.data.items)
+          const { items, nextCursor, hasNext } = res.data
+          setNotifications((prev) => (cursor ? [...prev, ...items] : items))
+          setNextCursor(nextCursor)
+          setHasNext(hasNext)
         }
       } catch (error) {
         console.error(error)
+      } finally {
+        isLoadingRef.current = false
       }
-    }
+    },
+    [activeTab],
+  )
+
+  // 탭이 바뀌면 목록·커서를 초기화하고 첫 페이지부터 다시
+  useEffect(() => {
+    setNotifications([])
+    setNextCursor(null)
+    setHasNext(false)
     fetchNotifications()
-  }, [activeTab])
+  }, [fetchNotifications])
+
+  // 목록 끝의 감시 요소가 화면에 들어오면 다음 페이지 요청
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel || !hasNext || nextCursor == null) return
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) fetchNotifications(nextCursor)
+    })
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasNext, nextCursor, fetchNotifications])
 
   const handleNotificationClick = async (item: NotificationItem) => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -107,17 +139,20 @@ export default function Notification() {
           </div>
           <div>
             {notifications.length > 0 ? (
-              notifications.map((item) => (
-                <NotificaationList
-                  key={item.id}
-                  icon={NOTIFICATION_ICON_MAP[item.type]}
-                  title={item.title}
-                  content={item.body}
-                  notificationTime={formatRelativeTime(item.createdAt)}
-                  isRead={item.read}
-                  onClick={() => handleNotificationClick(item)}
-                />
-              ))
+              <>
+                {notifications.map((item) => (
+                  <NotificaationList
+                    key={item.id}
+                    icon={NOTIFICATION_ICON_MAP[item.type]}
+                    title={item.title}
+                    content={item.body}
+                    notificationTime={formatRelativeTime(item.createdAt)}
+                    isRead={item.read}
+                    onClick={() => handleNotificationClick(item)}
+                  />
+                ))}
+                {hasNext && <div ref={sentinelRef} className="h-1" />}
+              </>
             ) : (
               <div className="flex flex-col min-h-[calc(100vh-240px)] justify-center items-center">
                 <StatisticsIcon />
