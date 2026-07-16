@@ -106,15 +106,18 @@ export default function Notification() {
   }, [hasNext, nextCursor, fetchNotifications])
 
   const handleNotificationClick = async (item: NotificationItem) => {
-    const accessToken = localStorage.getItem('accessToken') ?? ''
-    await markNotificationAsRead(accessToken, item.id)
-    setNotifications((prev) =>
-      prev.map((n) => n.id === item.id ? { ...n, read: true } : n)
-    )
+    // 이미 읽은 알림은 읽음 처리·안읽음 개수 API를 다시 보내지 않는다
+    if (!item.read) {
+      const accessToken = localStorage.getItem('accessToken') ?? ''
+      await markNotificationAsRead(accessToken, item.id)
+      setNotifications((prev) =>
+        prev.map((n) => n.id === item.id ? { ...n, read: true } : n)
+      )
 
-    const res = await getUnreadNotificationCount(accessToken)
-    if (res.success && res.data){
-      setHasUnread(res.data.count > 0)
+      const res = await getUnreadNotificationCount(accessToken)
+      if (res.success && res.data){
+        setHasUnread(res.data.count > 0)
+      }
     }
 
     // 이동 규칙: 공지는 노션 공지사항 새 탭, 혜택/이벤트는 읽음 처리만 하고 이동 없음
