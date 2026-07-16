@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { cn } from '@/shared/utils/cn'
-import { getMonthlyReport } from '@/shared/api/statics'
-import { MonthlyReport } from '@/shared/types/statics'
+import { getMonthlyReport, getTipNote } from '@/shared/api/statics'
+import { MonthlyReport, TipNote } from '@/shared/types/statics'
 import ReportTab from './components/ReportTab'
 import DeepAnalysisTab from './components/DeepAnalysisTab'
 import TipNoteTab from './components/TipNoteTab'
@@ -21,6 +21,8 @@ export default function Statics() {
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [reportData, setReportData] = useState<MonthlyReport | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [tipNoteData, setTipNoteData] = useState<TipNote | null>(null)
+  const [isTipNoteLoading, setIsTipNoteLoading] = useState(false)
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -36,6 +38,22 @@ export default function Statics() {
       .catch(() => setReportData(null))
       .finally(() => setIsLoading(false))
   }, [year, month])
+
+  // 팁노트는 별도 API — 반영/끝내기 후 남은 카드를 다시 받아오기 위해 재조회 함수로 뺀다.
+  const fetchTipNote = useCallback(() => {
+    const accessToken = localStorage.getItem('accessToken') ?? ''
+    setIsTipNoteLoading(true)
+    getTipNote(accessToken, year, month)
+      .then((res) => {
+        setTipNoteData(res.success && res.data ? res.data : null)
+      })
+      .catch(() => setTipNoteData(null)) // 404 = 그 달 팁노트 없음
+      .finally(() => setIsTipNoteLoading(false))
+  }, [year, month])
+
+  useEffect(() => {
+    fetchTipNote()
+  }, [fetchTipNote])
 
   return (
     <div className="flex flex-col">
@@ -87,7 +105,17 @@ export default function Statics() {
         />
       )}
       {activeTab === 'tip' && (
-        <TipNoteTab data={reportData} isLoading={isLoading} />
+        <TipNoteTab
+          data={tipNoteData}
+          isLoading={isTipNoteLoading}
+          year={year}
+          month={month}
+          onMonthChange={(y, m) => {
+            setYear(y)
+            setMonth(m)
+          }}
+          onRefresh={fetchTipNote}
+        />
       )}
     </div>
   )
