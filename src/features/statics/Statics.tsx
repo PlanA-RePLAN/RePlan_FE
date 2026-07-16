@@ -16,9 +16,12 @@ const TABS: { id: Tab; label: string }[] = [
 
 export default function Statics() {
   const [activeTab, setActiveTab] = useState<Tab>('report')
-  const now = new Date()
-  const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth() + 1)
+  // 리포트·팁노트는 매월 1일에 '지난달' 것이 만들어지므로, 진입 시 기본 조회 월도 지난달로 둔다.
+  const prevMonth = new Date()
+  prevMonth.setDate(1)
+  prevMonth.setMonth(prevMonth.getMonth() - 1)
+  const [year, setYear] = useState(prevMonth.getFullYear())
+  const [month, setMonth] = useState(prevMonth.getMonth() + 1)
   const [reportData, setReportData] = useState<MonthlyReport | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [tipNoteData, setTipNoteData] = useState<TipNote | null>(null)
