@@ -119,8 +119,12 @@ export default function ReportTab({
   const completedTodos = data?.completedTodos ?? 0
   const totalTodos = data?.totalTodos ?? 0
   const uncompletedTodos = totalTodos - completedTodos
-  const prevMonthDiff = data?.prevMonthDiff ?? null
-  const replanEffect = data?.replanAchievementEffect ?? null
+  const prevMonthDiff =
+    data?.prevMonthDiff != null ? Math.trunc(data.prevMonthDiff) : null
+  const replanEffect =
+    data?.replanAchievementEffect != null
+      ? Math.trunc(data.replanAchievementEffect)
+      : null
   const analysis = data?.analysisData
 
   const headlineHighlight =
