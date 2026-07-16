@@ -120,7 +120,6 @@ export default function ReportTab({
   const totalTodos = data?.totalTodos ?? 0
   const uncompletedTodos = totalTodos - completedTodos
   const prevMonthDiff = data?.prevMonthDiff ?? null
-  const replanCount = data?.replanCount ?? 0
   const replanEffect = data?.replanAchievementEffect ?? null
   const analysis = data?.analysisData
 
@@ -208,6 +207,26 @@ export default function ReportTab({
           </div>
 
           <div className="mt-5 flex flex-col gap-8">
+            {/* 달성률 */}
+            <div className="flex flex-col gap-2">
+              <SectionHeader icon={<ReplanIcon />} title="달성률" />
+              <div className="flex gap-2">
+                <EffectCard
+                  label="지난 달 대비 목표 달성률"
+                  value={
+                    prevMonthDiff !== null
+                      ? `${prevMonthDiff >= 0 ? '+' : ''}${prevMonthDiff}%`
+                      : '-'
+                  }
+                />
+                <EffectCard
+                  label="리플랜 효과"
+                  value={replanEffect !== null ? `+${replanEffect}%` : '-'}
+                  isBlue
+                />
+              </div>
+            </div>
+
             {/* 태그별 */}
             <div className="flex flex-col gap-2">
               <SectionHeader icon={<TagIcon />} title="태그별" />
@@ -266,18 +285,6 @@ export default function ReportTab({
               </div>
             </div>
 
-            {/* RePlan 효과 */}
-            <div className="flex flex-col gap-2">
-              <SectionHeader icon={<ReplanIcon />} title="RePlan 효과" />
-              <div className="flex gap-2">
-                <EffectCard label="사용 횟수" value={`${replanCount}회`} />
-                <EffectCard
-                  label="달성률 효과"
-                  value={replanEffect !== null ? `+${replanEffect}% 상승` : '-'}
-                  isBlue
-                />
-              </div>
-            </div>
           </div>
         </>
       )}
