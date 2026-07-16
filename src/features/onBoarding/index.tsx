@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 
 // components
 import BackHeaderLayout from '@/shared/components/BackHeaderLayout'
-import BottomSheet from '@/shared/components/BottomSheet'
+import ConfirmBottomSheet from '@/shared/components/ConfirmBottomSheet'
 import ProposeGoal from './ProposeGoal'
 import WritingGoal from './WritingGoal'
 import WritingGoalDetails from './WritingGoalDetails'
@@ -56,29 +56,14 @@ export default function OnBoarding() {
         </div>
       )}
       {currentStep === TOTAL_STEPS && <OnboardingComplete />}
-      <BottomSheet
+      <ConfirmBottomSheet
         isOpen={isExitSheetOpen}
         onClose={() => setIsExitSheetOpen(false)}
-      >
-        <div className="pt-4 pb-9.25 px-5 flex flex-col items-center w-full">
-          <h3 className="text-xl font-semibold">지금 나가면 목표 설정이 초기화돼요</h3>
-          <p className="mt-5">나가시겠어요?</p>
-          <div className="flex gap-3 mt-5 w-full">
-            <button
-              onClick={() => setIsExitSheetOpen(false)}
-              className="flex-1 py-3 rounded-xl bg-bluegray-light text-black font-semibold"
-            >
-              취소
-            </button>
-            <button
-              onClick={() => navigate(-1)}
-              className="flex-1 py-3 rounded-xl bg-bluegray-light text-danger font-semibold"
-            >
-              나가기
-            </button>
-          </div>
-        </div>
-      </BottomSheet>
+        title="지금 나가면 목표 설정이 초기화돼요"
+        description="나가시겠어요?"
+        confirmText="나가기"
+        onConfirm={() => navigate(-1)}
+      />
     </BackHeaderLayout>
   )
 }
