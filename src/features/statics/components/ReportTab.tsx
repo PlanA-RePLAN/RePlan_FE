@@ -127,15 +127,15 @@ export default function ReportTab({
       : null
   const analysis = data?.analysisData
 
-  const headlineHighlight =
-    prevMonthDiff !== null
-      ? prevMonthDiff >= 0
-        ? `${prevMonthDiff}% 높였어요`
-        : `${Math.abs(prevMonthDiff)}% 낮아졌어요`
-      : null
-
-  const headlinePrefix =
-    prevMonthDiff !== null ? '지난 달 대비 목표 달성률을' : null
+  // 목표 달성률 구간별 응원 문구 (모든 달에 표시)
+  const [headlineLine1, headlineLine2] =
+    achievementRate < 30
+      ? ['당장 완벽하지 않아도 괜찮아요,', '다음 달엔 조금 더 힘내봐요!']
+      : achievementRate < 50
+        ? ['성과가 쌓여가고 있어요,', '다음 달엔 한 걸음 더 나아가봐요!']
+        : achievementRate < 75
+          ? ['흐름이 좋아요,', '이 기세 그대로 다음 달도 힘내봐요!']
+          : ['훌륭해요,', '이 페이스 다음 달에도 이어가봐요!']
 
   const isEmpty = !isLoading && !data
   const [isPickerOpen, setIsPickerOpen] = useState(false)
@@ -170,21 +170,11 @@ export default function ReportTab({
       {!isEmpty && (
         <>
           {/* Headline */}
-          {headlinePrefix && headlineHighlight && (
-            <p className="mt-4.25 text-2xl font-bold leading-[1.3] tracking-[-0.03em]">
-              <span className="text-bluegray-black">{headlinePrefix}</span>
-              <br />
-              <span
-                className={
-                  prevMonthDiff !== null && prevMonthDiff >= 0
-                    ? 'text-blue-normal'
-                    : 'text-danger'
-                }
-              >
-                {headlineHighlight}
-              </span>
-            </p>
-          )}
+          <p className="mt-4.25 text-2xl font-bold leading-[1.3] tracking-[-0.03em] text-bluegray-black">
+            {headlineLine1}
+            <br />
+            {headlineLine2}
+          </p>
 
           {/* Donut Chart */}
           <div className="mt-4.5 flex flex-col items-center">
