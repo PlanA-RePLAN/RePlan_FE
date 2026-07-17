@@ -536,31 +536,33 @@ export default function Home() {
             )}
 
             <div className="flex flex-col gap-3">
-              <div className="flex justify-between">
-                <Dropdown
-                  width="w-[116px]"
-                  items={['마감기한순', '최신등록순', '직접설정순']}
-                  onChange={(item) => {
-                    if (item === '마감기한순') {
-                      setSort('dueDate')
-                      setPriorityEdit(false)
-                    } else if (item === '최신등록순') {
-                      setSort('latest')
-                      setPriorityEdit(false)
-                    } else {
-                      setSort('priority')
-                    }
-                  }}
-                />
-                {showEdit && (
-                  <p
-                    onClick={() => handlePriorityEdit()}
-                    className="text-[12px] text-center text-bluegray-normal-active py-[6.5px] w-12 h-8 border border-bluegray-light-hover rounded-[20px] cursor-pointer"
-                  >
-                    {priorityEdit ? '완료' : '편집'}
-                  </p>
-                )}
-              </div>
+              {itemHook.regularActiveItems.length > 0 && (
+                <div className="flex justify-between">
+                  <Dropdown
+                    width="w-[116px]"
+                    items={['마감기한순', '최신등록순', '직접설정순']}
+                    onChange={(item) => {
+                      if (item === '마감기한순') {
+                        setSort('dueDate')
+                        setPriorityEdit(false)
+                      } else if (item === '최신등록순') {
+                        setSort('latest')
+                        setPriorityEdit(false)
+                      } else {
+                        setSort('priority')
+                      }
+                    }}
+                  />
+                  {showEdit && (
+                    <p
+                      onClick={() => handlePriorityEdit()}
+                      className="text-[12px] text-center text-bluegray-normal-active py-[6.5px] w-12 h-8 border border-bluegray-light-hover rounded-[20px] cursor-pointer"
+                    >
+                      {priorityEdit ? '완료' : '편집'}
+                    </p>
+                  )}
+                </div>
+              )}
               <div>
                 {sort === 'priority' ? (
                   <DndContext
