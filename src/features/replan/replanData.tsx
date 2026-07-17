@@ -16,6 +16,9 @@ import SleepIcon from '@/icons/SleepIcon'
 import AlertTriangleIcon from '@/icons/AlertTriangleIcon'
 import MenuListIcon from '@/icons/MenuListIcon'
 import XIcon from '@/icons/XIcon'
+import QuestionIcon from '@/icons/replan/QuestionIcon'
+import HealthIcon from '@/icons/HealthIcon'
+import PerfectIcon from '@/icons/replan/PerfectIcon'
 
 export type MainOptionKey =
   | 'psychologicalState'
