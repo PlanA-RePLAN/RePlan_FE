@@ -4,18 +4,19 @@ import { useEffect, useRef, useState } from 'react'
 import MainButton from '@/shared/components/MainButton'
 import Title from '@/shared/components/Title'
 import TodoCard from '@/shared/components/TodoCard'
+import SelectionCard from './SelectionCard'
 import MenuIcon from '@/icons/MenuIcon'
 import RestLeftFillIcon from '@/icons/ResetLeftFillIcon'
 import ChevronDownIcon from '@/icons/ChevronDownIcon'
 import ChevronLeftIcon from '@/icons/ChevronLeftIcon'
 import ChevronRightIcon from '@/icons/ChevronRightIcon'
-import ReplanSurveyIcon from '@/icons/ReplanSurveyIcon'
 import CheckBoxIcon from '@/icons/CheckBoxIcon'
 import LoofIcon from '@/icons/LoofIcon'
 
 // utils
 import { cn } from '@/shared/utils/cn'
 import { getDayTag, formatHHmm } from '../utils'
+import type { SelectionPathItem } from '../replanData'
 
 // api / types
 import { getTags } from '@/shared/api/tags'
@@ -33,7 +34,7 @@ const FIELD_LABELS: Record<string, string> = {
 }
 
 interface TodoSuggestionProps {
-  reasonLabels: string[] | null
+  selectionPath: SelectionPathItem[]
   operationBatches: ReplanOperation[][]
   currentPage: number
   onPageChange: (page: number) => void
@@ -64,7 +65,7 @@ function operationKey(pageIndex: number, index: number) {
 }
 
 export default function TodoSuggestion({
-  reasonLabels,
+  selectionPath,
   operationBatches,
   currentPage,
   onPageChange,
@@ -154,16 +155,16 @@ export default function TodoSuggestion({
         </Title>
       </div>
 
-      {reasonLabels && reasonLabels.length > 0 && (
-        <div className="bg-blue-light rounded-xl px-4 py-3 mb-4 flex items-start gap-2.5">
-          <ReplanSurveyIcon color="#579DEC" />
-          <div className="flex flex-col gap-1">
-            {reasonLabels.map((label, i) => (
-              <p key={i} className="font-medium text-sm text-blue-normal">
-                {label}
-              </p>
-            ))}
-          </div>
+      {selectionPath.length > 0 && (
+        <div className="mb-4">
+          {selectionPath.map((item, i) => (
+            <SelectionCard
+              key={i}
+              icon={item.icon}
+              label={item.label}
+              step={i === 0 ? 2 : 3}
+            />
+          ))}
         </div>
       )}
 
