@@ -14,7 +14,7 @@ import {
   TipNoteItem,
 } from '@/shared/types/statics'
 import { applyTipNote, dismissTipNote } from '@/shared/api/statics'
-import { getProfile } from '@/shared/api/user'
+import { useProfileStore } from '@/store/profileStore'
 import StatisticsEmptyState from './StatisticsEmptyState'
 
 interface TipNoteTabProps {
@@ -277,17 +277,10 @@ export default function TipNoteTab({
   const navigate = useNavigate()
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set())
+  const { name: nickname } = useProfileStore()
   const [mode, setMode] = useState<Mode>('view')
   const [resultItems, setResultItems] = useState<TipNoteItem[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [nickname, setNickname] = useState<string | null>(null)
-
-  useEffect(() => {
-    const accessToken = localStorage.getItem('accessToken') ?? ''
-    getProfile(accessToken)
-      .then((res) => setNickname(res.data?.nickname ?? null))
-      .catch(() => setNickname(null))
-  }, [])
 
   // 월을 바꾸면 처음 상태로
   useEffect(() => {
