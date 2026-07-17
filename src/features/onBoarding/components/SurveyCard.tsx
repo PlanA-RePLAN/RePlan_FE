@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import InfoIcon from '@/icons/InfoIcon'
 import ReplanSurveyIcon from '@/icons/ReplanSurveyIcon'
-import WandStar from '@/icons/WandStar'
 import BottomSheet from '@/shared/components/BottomSheet'
 import BottomSheetHeader from '@/shared/components/BottomSheetHeader'
 import Input from '@/shared/components/Input'
 import ChecvronRightIcon from '@/icons/ChevronLeftIcon'
+import SolutionIcon from '@/icons/SolutionIcon'
 
 export type ContentItem = { title: string; description: string }
 export type SurveyContent = string | ContentItem[]
@@ -126,7 +126,7 @@ export default function SurveyCard({
         <BottomSheet isOpen={infoOpen} onClose={() => setInfoOpen(false)}>
           <div className="flex flex-col gap-2 px-5 pt-2 pb-4">
             <div className="flex items-center gap-1.5 bg-bluegray-light px-3 py-1.5 rounded-full self-start">
-              <WandStar width={16} height={16} />
+              <SolutionIcon />
               <span className="text-sm font-semibold text-blue-normal">
                 솔루션 근거
               </span>
