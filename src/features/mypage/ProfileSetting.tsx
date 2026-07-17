@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { getProfile, editProfile, logout, deleteAccount } from '@/shared/api/user'
+import { editProfile, logout, deleteAccount } from '@/shared/api/user'
 import { deleteToken } from '@/shared/api/notification'
 import { useImageUpload } from '@/shared/hooks/useImageUpload'
+import { useProfileStore } from '@/store/profileStore'
 
 const cameraSvg = '/assets/camera.svg'
 
@@ -14,39 +15,18 @@ import BottomSheet from '@/shared/components/BottomSheet'
 import CloseButtonIcon from '@/icons/CloseButtonIcon'
 import CircleCheckButtonIcon from '@/icons/CircleCheckButtonIcon'
 import ProfileInput from '../profileSetup/components/ProfileInput'
-import LogoIcon, { type Provider } from './components/LogoIcon'
+import LogoIcon from './components/LogoIcon'
 
 type ConfirmType = 'logout' | 'deleteAccount' | null
 
 export default function ProfileSetting() {
   const navigate = useNavigate()
-  const [name, setName] = useState<string | null>(null)
+  const { name, profileImageUrl, email, provider, setProfile } = useProfileStore()
   const [editingName, setEditingName] = useState('')
-  const [email, setEmail] = useState<string | null>(null)
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null)
   const [confirmType, setConfirmType] = useState<ConfirmType>(null)
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false)
-  const [provider, setProvider] = useState<Provider | null>(null)
 
   const { imageFile, previewUrl, fileInputRef, handleImageChange, uploadImage } = useImageUpload('existing')
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const accessToken = localStorage.getItem('accessToken') ?? ''
-        const res = await getProfile(accessToken)
-        if (res.success && res.data) {
-          setName(res.data.nickname)
-          setEmail(res.data.email)
-          setProvider(res.data.provider as Provider)
-          setProfileImageUrl(res.data.profileImage)
-        }
-      } catch (error) {
-        console.error(error)
-      }
-    }
-    fetchProfile()
-  }, [])
 
   useEffect(() => {
     if (!imageFile) return
@@ -63,7 +43,7 @@ export default function ProfileSetting() {
       const accessToken = localStorage.getItem('accessToken') ?? ''
       const res = await editProfile(accessToken, 'application/json', editingName, undefined)
       if (res.success) {
-        setName(editingName)
+        setProfile(editingName, profileImageUrl, email, provider)
         setIsBottomSheetOpen(false)
       }
     } catch (error) {
