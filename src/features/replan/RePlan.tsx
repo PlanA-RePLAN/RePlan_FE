@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getTodoDetail } from '@/shared/api/todo'
+import { getProfile } from '@/shared/api/user'
 import { recommendReplan, saveReplan } from '@/shared/api/replan'
 import type { TodoDetail } from '@/shared/types/todo'
 import type {
@@ -50,6 +51,7 @@ export default function RePlan({
   const [refreshCount, setRefreshCount] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [anchorTodo, setAnchorTodo] = useState<TodoDetail | null>(null)
+  const [userName, setUserName] = useState<string | null>(null)
 
   const selectedOptionData = MAIN_OPTIONS.find((o) => o.key === selectedOption)
   const selectedSubOptionData = selectedOptionData?.subOptions.find(
@@ -65,6 +67,13 @@ export default function RePlan({
       setAnchorTodo(res.data)
     })
   }, [anchorTodoId])
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken') ?? ''
+    getProfile(accessToken).then((res) => {
+      setUserName(res.data?.nickname ?? null)
+    })
+  }, [])
 
   const submitRecommend = async (
     reasonCodes: string[],
@@ -241,6 +250,7 @@ export default function RePlan({
         onDirectInputTextChange={setDirectInputText}
         onNext={handleNext}
         isSubmitting={isSubmitting}
+        userName={userName}
       />
     )
   }

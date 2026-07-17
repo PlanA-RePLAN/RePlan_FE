@@ -132,6 +132,7 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
         icon: <PlayIcon width={20} height={20} />,
         label: '시작하기 막막하거나 부담스러웠어요',
         code: 'MENTAL_HARD_TO_START',
+        step3Title: ['{{name}}님이', '시작이 막막했던 이유가 뭔가요?'],
         subSubOptions: [
           {
             key: 'dontKnowWhereToStart',
@@ -196,6 +197,7 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
         key: 'sleepDeprived',
         icon: <SleepIcon width={16} height={16} />,
         label: '수면부족/피로 누적 상태에요',
+        step3Title: ['오늘 {{name}}님의', '수면 시간은 몇 시간 정도였나요?'],
         code: 'CONDITION_SLEEP',
         subSubOptions: [
           {
@@ -234,6 +236,7 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
       {
         key: 'burnout',
         icon: <PowerIcon />,
+        step3Title: ['많이 지치셨군요.', '어떤 부분이 힘드셨나요?'],
         label: '번아웃이 왔어요',
         code: 'CONDITION_BURNOUT',
         subSubOptions: [
