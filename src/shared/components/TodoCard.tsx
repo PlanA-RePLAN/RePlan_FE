@@ -57,7 +57,7 @@ function TodoCard({
     <div
       onClick={isSwipeable ? handleCardClick : onClick}
       className={cn(
-        'relative flex items-start pt-4 gap-3 w-full h-[78px] rounded-2xl border border-bluegray-light bg-white px-4 transition-all duration-100 ease-in-out',
+        'relative flex items-start pt-4 pb-4 gap-3 w-full min-h-[78px] rounded-2xl border border-bluegray-light bg-white px-4 transition-all duration-100 ease-in-out',
         { 'mt-3': !isSwipeable },
         className,
         {
