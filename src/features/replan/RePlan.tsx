@@ -13,6 +13,8 @@ import {
   MainOptionKey,
   StepType,
   buildReasonCodes,
+  buildSelectionPath,
+  type SelectionPathItem,
 } from './replanData'
 import Step1 from './components/Step1'
 import Step2 from './components/Step2'
@@ -52,6 +54,9 @@ export default function RePlan({
   )
   const [currentPage, setCurrentPage] = useState(0)
   const [finalReasonCodes, setFinalReasonCodes] = useState<string[]>([])
+  const [finalSelectionPath, setFinalSelectionPath] = useState<
+    SelectionPathItem[]
+  >([])
   const [refreshCount, setRefreshCount] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [anchorTodo, setAnchorTodo] = useState<TodoDetail | null>(null)
@@ -137,6 +142,14 @@ export default function RePlan({
           directInputText,
         )
         setFinalReasonCodes(reasonCodes)
+        setFinalSelectionPath(
+          buildSelectionPath(
+            selectedOptionData,
+            undefined,
+            undefined,
+            directInputText,
+          ),
+        )
         submitRecommend(reasonCodes, false)
         return
       }
@@ -169,6 +182,14 @@ export default function RePlan({
         directInputText,
       )
       setFinalReasonCodes(reasonCodes)
+      setFinalSelectionPath(
+        buildSelectionPath(
+          selectedOptionData,
+          selectedSubOptionData,
+          undefined,
+          directInputText,
+        ),
+      )
       submitRecommend(reasonCodes, false)
       return
     }
@@ -190,6 +211,14 @@ export default function RePlan({
         directInputText,
       )
       setFinalReasonCodes(reasonCodes)
+      setFinalSelectionPath(
+        buildSelectionPath(
+          selectedOptionData,
+          selectedSubOptionData,
+          selectedSubSubOptionData,
+          directInputText,
+        ),
+      )
       submitRecommend(reasonCodes, false)
     }
   }
@@ -285,7 +314,7 @@ export default function RePlan({
   if (step === 'result' && recommendData) {
     return (
       <TodoSuggestion
-        reasonLabels={recommendData.reasonLabels}
+        selectionPath={finalSelectionPath}
         operationBatches={operationBatches}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
