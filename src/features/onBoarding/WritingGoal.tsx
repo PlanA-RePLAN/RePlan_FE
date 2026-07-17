@@ -110,7 +110,7 @@ export default function WritingGoal({ moveNext }: { moveNext: () => void }) {
             목표
           </div>
         </Input.Label>
-        <div className="flex gap-1.25 py-2 overflow-x-auto">
+        <div className="flex gap-1.25 py-2 overflow-x-auto no-scrollbar">
           <ExampleTag
             tag="토익 850점 달성하기"
             onClick={() => setGoal('토익 850점 달성하기')}

@@ -12,7 +12,7 @@ export default function SelectionCard({
   step,
 }: SelectionCardProps) {
   const step2Style = 'bg-blue-light'
-  const step3Style = 'bg-white border border-bluegray-light-active'
+  const step3Style = 'bg-white border border-blue-light-active'
 
   return (
     <div

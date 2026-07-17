@@ -109,7 +109,7 @@ export default function WritingGoalDetails({
                 {q.question}
               </div>
             </Input.Label>
-            <div className="flex gap-1.25 py-2 overflow-x-auto">
+            <div className="flex gap-1.25 py-2 overflow-x-auto no-scrollbar">
               {q.chips.map((chip) => (
                 <ExampleTag
                   key={chip}

@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // components
 import MainButton from '@/shared/components/MainButton'
 import Title from '@/shared/components/Title'
 import TodoCard from '@/shared/components/TodoCard'
 import MenuIcon from '@/icons/MenuIcon'
-import RestLeftFillIcon from '@/icons/RestLeftFillIcon'
+import RestLeftFillIcon from '@/icons/ResetLeftFillIcon'
 import ChevronDownIcon from '@/icons/ChevronDownIcon'
 import ChevronLeftIcon from '@/icons/ChevronLeftIcon'
 import ChevronRightIcon from '@/icons/ChevronRightIcon'
 import ReplanSurveyIcon from '@/icons/ReplanSurveyIcon'
-import LoopLeftIcon from '@/icons/LoopLeftIcon'
 import CheckBoxIcon from '@/icons/CheckBoxIcon'
+import LoofIcon from '@/icons/LoofIcon'
 
 // utils
 import { cn } from '@/shared/utils/cn'
@@ -27,13 +27,16 @@ const MAX_REFRESH_COUNT = 3
 const FIELD_LABELS: Record<string, string> = {
   title: '내용',
   dueTime: '시간',
+  dueDate: '기간',
   tag: '태그',
   routineType: '반복',
 }
 
 interface TodoSuggestionProps {
   reasonLabels: string[] | null
-  operations: ReplanOperation[]
+  operationBatches: ReplanOperation[][]
+  currentPage: number
+  onPageChange: (page: number) => void
   refreshCount: number
   isSubmitting: boolean
   onRefresh: () => void
@@ -45,7 +48,7 @@ function ChangedFieldRow({ field }: { field: ChangedField }) {
   return (
     <div className="flex gap-3 items-start w-full">
       <span className="flex items-center gap-1 shrink-0 w-11 text-bluegray-normal text-xs font-medium">
-        <LoopLeftIcon />
+        <LoofIcon width={16} height={16} color="#A9AFB9" />
         {FIELD_LABELS[field.field] ?? field.field}
       </span>
       <p className="text-xs text-blue-normal">
@@ -56,9 +59,15 @@ function ChangedFieldRow({ field }: { field: ChangedField }) {
   )
 }
 
+function operationKey(pageIndex: number, index: number) {
+  return `${pageIndex}-${index}`
+}
+
 export default function TodoSuggestion({
   reasonLabels,
-  operations,
+  operationBatches,
+  currentPage,
+  onPageChange,
   refreshCount,
   isSubmitting,
   onRefresh,
@@ -66,7 +75,12 @@ export default function TodoSuggestion({
   onAccept,
 }: TodoSuggestionProps) {
   const [tagMap, setTagMap] = useState<Map<number, Tag>>(new Map())
-  const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set())
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const scrollEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const totalPages = operationBatches.length
+  const currentPageOperations = operationBatches[currentPage] ?? []
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken') ?? ''
@@ -75,20 +89,58 @@ export default function TodoSuggestion({
     })
   }, [])
 
-  const allSelected =
-    operations.length > 0 && selectedIndexes.size === operations.length
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    const target = container.children[currentPage] as HTMLElement | undefined
+    target?.scrollIntoView({
+      behavior: 'smooth',
+      inline: 'start',
+      block: 'nearest',
+    })
+  }, [currentPage])
 
-  const toggleAll = () => {
-    setSelectedIndexes(
-      allSelected ? new Set() : new Set(operations.map((_, i) => i)),
-    )
+  const handleScroll = () => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    if (scrollEndTimeoutRef.current) clearTimeout(scrollEndTimeoutRef.current)
+    scrollEndTimeoutRef.current = setTimeout(() => {
+      const pageWidth = container.clientWidth
+      if (pageWidth === 0) return
+      const page = Math.round(container.scrollLeft / pageWidth)
+      onPageChange(page)
+    }, 100)
   }
 
-  const toggleOne = (index: number) => {
-    setSelectedIndexes((prev) => {
+  const goToPage = (page: number) => {
+    if (page < 0 || page >= totalPages) return
+    onPageChange(page)
+  }
+
+  const currentPageKeys = currentPageOperations.map((_, i) =>
+    operationKey(currentPage, i),
+  )
+  const allSelected =
+    currentPageKeys.length > 0 &&
+    currentPageKeys.every((key) => selectedKeys.has(key))
+
+  const toggleAll = () => {
+    setSelectedKeys((prev) => {
       const next = new Set(prev)
-      if (next.has(index)) next.delete(index)
-      else next.add(index)
+      if (allSelected) {
+        currentPageKeys.forEach((key) => next.delete(key))
+      } else {
+        currentPageKeys.forEach((key) => next.add(key))
+      }
+      return next
+    })
+  }
+
+  const toggleOne = (key: string) => {
+    setSelectedKeys((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
       return next
     })
   }
@@ -153,92 +205,126 @@ export default function TodoSuggestion({
             전체 선택
           </span>
         </button>
-        <div className="flex items-center gap-0.5 text-bluegray-normal text-sm font-semibold">
-          <ChevronLeftIcon color="#A9AFB9" width={20} height={20} />
-          <span>1 / 1</span>
-          <ChevronRightIcon />
-        </div>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-0.5 text-bluegray-normal text-sm font-semibold">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 0}
+              className="disabled:opacity-40"
+            >
+              <ChevronLeftIcon color="#A9AFB9" width={20} height={20} />
+            </button>
+            <span className="w-8 text-center">
+              {currentPage + 1} / {totalPages}
+            </span>
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages - 1}
+              className="disabled:opacity-40"
+            >
+              <ChevronRightIcon />
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col gap-4 max-h-[391px] overflow-y-auto">
-        {operations.map((operation, index) => {
-          const changedFields = operation.changedFields
-          const hasChanges = changedFields.length > 0
-          const changed = new Set(changedFields.map((f) => f.field))
-          const tag =
-            operation.tagId !== null ? tagMap.get(operation.tagId) : undefined
-          const selected = selectedIndexes.has(index)
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex min-w-0 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
+      >
+        {operationBatches.map((batch, pageIndex) => (
+          <div
+            key={pageIndex}
+            className="flex flex-col gap-4 w-full shrink-0 snap-start max-h-[391px] overflow-y-auto"
+          >
+            {batch.map((operation, index) => {
+              const changedFields = operation.changedFields
+              const hasChanges = changedFields.length > 0
+              const changed = new Set(changedFields.map((f) => f.field))
+              const tag =
+                operation.tagId !== null
+                  ? tagMap.get(operation.tagId)
+                  : undefined
+              const key = operationKey(pageIndex, index)
+              const selected = selectedKeys.has(key)
 
-          return (
-            <div key={index} className="flex gap-4 items-center w-full">
-              <button
-                onClick={() => toggleOne(index)}
-                className={cn(
-                  'w-5.5 h-5.5 shrink-0 border-bluegray-light-active border rounded-[5px] flex items-center justify-center',
-                  selected && 'border-none',
-                )}
-              >
-                {selected && <CheckBoxIcon color="#579DEC" />}
-              </button>
+              return (
+                <div key={key} className="flex gap-4 items-center w-full">
+                  <button
+                    onClick={() => toggleOne(key)}
+                    className={cn(
+                      'w-5.5 h-5.5 shrink-0 border-bluegray-light-active border rounded-[5px] flex items-center justify-center',
+                      selected && 'border-none',
+                    )}
+                  >
+                    {selected && <CheckBoxIcon color="#579DEC" />}
+                  </button>
 
-              {hasChanges ? (
-                <div
-                  className="flex-1 min-w-0 rounded-2xl border border-bluegray-light bg-white p-4 flex flex-col gap-2.5 cursor-pointer"
-                  onClick={() => toggleOne(index)}
-                >
-                  <div className="flex items-start justify-between w-full gap-3">
-                    <TodoCard.Content>
-                      <TodoCard.Title dayTag={getDayTag(operation.routineType)}>
-                        {operation.title}
-                      </TodoCard.Title>
-                      {operation.dueTime && (
-                        <TodoCard.Time>
-                          {formatHHmm(operation.dueTime)}
-                        </TodoCard.Time>
-                      )}
-                    </TodoCard.Content>
-                    {tag && (
-                      <TodoCard.Category
-                        category={tag.title}
-                        color={changed.has('tag') ? '#579DEC' : tag.color}
-                      />
-                    )}
-                  </div>
-                  <div className="h-px bg-bluegray-light w-full" />
-                  <div className="flex flex-col gap-2">
-                    {changedFields.map((field, i) => (
-                      <ChangedFieldRow key={i} field={field} />
-                    ))}
-                  </div>
+                  {hasChanges ? (
+                    <div
+                      className="flex-1 min-w-0 rounded-2xl border border-bluegray-light bg-white p-4 flex flex-col gap-2.5 cursor-pointer"
+                      onClick={() => toggleOne(key)}
+                    >
+                      <div className="flex items-start justify-between w-full gap-3">
+                        <TodoCard.Content>
+                          <TodoCard.Title
+                            dayTag={getDayTag(operation.routineType)}
+                          >
+                            {operation.title}
+                          </TodoCard.Title>
+                          {operation.dueTime && (
+                            <TodoCard.Time>
+                              {formatHHmm(operation.dueTime)}
+                            </TodoCard.Time>
+                          )}
+                        </TodoCard.Content>
+                        {tag && (
+                          <TodoCard.Category
+                            category={tag.title}
+                            color={changed.has('tag') ? '#579DEC' : tag.color}
+                          />
+                        )}
+                      </div>
+                      <div className="h-px bg-bluegray-light w-full" />
+                      <div className="flex flex-col gap-2">
+                        {changedFields.map((field, i) => (
+                          <ChangedFieldRow key={i} field={field} />
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex-1 min-w-0"
+                      onClick={() => toggleOne(key)}
+                    >
+                      <TodoCard status="default">
+                        <TodoCard.Content>
+                          <TodoCard.Title
+                            dayTag={getDayTag(operation.routineType)}
+                          >
+                            {operation.title}
+                          </TodoCard.Title>
+                          {operation.dueTime && (
+                            <TodoCard.Time>
+                              {formatHHmm(operation.dueTime)}
+                            </TodoCard.Time>
+                          )}
+                        </TodoCard.Content>
+                        {tag && (
+                          <TodoCard.Category
+                            category={tag.title}
+                            color={tag.color}
+                          />
+                        )}
+                      </TodoCard>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div
-                  className="flex-1 min-w-0"
-                  onClick={() => toggleOne(index)}
-                >
-                  <TodoCard status="default">
-                    <TodoCard.Content>
-                      <TodoCard.Title dayTag={getDayTag(operation.routineType)}>
-                        {operation.title}
-                      </TodoCard.Title>
-                      {operation.dueTime && (
-                        <TodoCard.Time>
-                          {formatHHmm(operation.dueTime)}
-                        </TodoCard.Time>
-                      )}
-                    </TodoCard.Content>
-                    {tag && (
-                      <TodoCard.Category
-                        category={tag.title}
-                        color={tag.color}
-                      />
-                    )}
-                  </TodoCard>
-                </div>
-              )}
-            </div>
-          )
-        })}
+              )
+            })}
+          </div>
+        ))}
       </div>
 
       <div className="fixed pb-10 pt-6 bottom-0 left-0 right-0 w-full px-5 bg-linear-to-b from-transparent from-0% to-white to-20%">
@@ -251,12 +337,16 @@ export default function TodoSuggestion({
           />
           <MainButton
             option={
-              isSubmitting || selectedIndexes.size === 0
-                ? 'disabled'
-                : 'primary'
+              isSubmitting || selectedKeys.size === 0 ? 'disabled' : 'primary'
             }
             onClick={() =>
-              onAccept(operations.filter((_, i) => selectedIndexes.has(i)))
+              onAccept(
+                operationBatches.flatMap((batch, pageIndex) =>
+                  batch.filter((_, index) =>
+                    selectedKeys.has(operationKey(pageIndex, index)),
+                  ),
+                ),
+              )
             }
             title={isSubmitting ? '반영하는 중...' : '투두 반영하기'}
             className="flex-1"

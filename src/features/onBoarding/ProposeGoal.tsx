@@ -3,7 +3,7 @@ import Description from '@/shared/components/Description'
 import MainButton from '@/shared/components/MainButton'
 import MenuIcon from '@/icons/MenuIcon'
 import ListItem from '@/shared/components/ListItem'
-import RestLeftFillIcon from '@/icons/RestLeftFillIcon'
+import RestLeftFillIcon from '@/icons/ResetLeftFillIcon'
 import TodoCard from '@/shared/components/TodoCard'
 import CheckBoxIcon from '@/icons/CheckBoxIcon'
 import TodoInfoSheet from './components/TodoInfoSheet'
@@ -30,6 +30,7 @@ import {
   createGoalWithTodos,
   getAiTodoRecommendations,
 } from '@/shared/api/goal'
+import InfoIcon from '@/icons/InfoIcon'
 
 const MAX_REFRESH_COUNT = 3
 const BATCH_ID_STEP = 1000
@@ -136,9 +137,10 @@ function mapAiTodo(
   const routineDays = todo.routineDays ?? []
   const isRecurring = todo.type === 'RECURRING'
   // RECURRING: routineTime=반복시간, dueDate/dueTime=반복 종료 일정 / ONE_TIME: dueDate/dueTime=마감
-  const repeatTime = isRecurring && todo.routineTime
-    ? formatTime24to12(todo.routineTime)
-    : undefined
+  const repeatTime =
+    isRecurring && todo.routineTime
+      ? formatTime24to12(todo.routineTime)
+      : undefined
   return {
     id: idOffset + index + 1,
     title: todo.title,
@@ -148,7 +150,6 @@ function mapAiTodo(
     repeat,
     repeatTime,
     repeatTimeEnabled: repeatTime != null,
-    // 백엔드가 준 routineDays(요일/일자 배열)를 위클리/먼슬리 입력값으로 풀어 담는다.
     weeklyDay:
       todo.routineType === 'WEEKLY'
         ? routineDays
@@ -395,7 +396,17 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
         </Description>
       </div>
 
-      <ListItem className="mt-6 mb-8 border-none">{goalValue}</ListItem>
+      <div className="my-4 flex gap-2 items-center">
+        <InfoIcon />
+        <div className="text-xs font-medium text-bluegray-normal-active">
+          <span className="font-bold text-blue-normal">D</span> ·
+          <span className="font-bold text-tag2-text">W</span> ·
+          <span className="font-bold text-tag6-text">M</span>은
+          <span className="font-bold"> 데일리 · 위클리 · 먼슬리</span> 반복
+          주기예요
+        </div>
+      </div>
+      <ListItem className="mb-8 border-none">{goalValue}</ListItem>
 
       <div className="mb-30 min-w-0">
         <div className="flex items-center gap-2 w-full">

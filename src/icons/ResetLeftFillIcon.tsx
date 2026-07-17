@@ -1,4 +1,4 @@
-export default function RestLeftFillIcon({
+export default function ResetLeftFillIcon({
   ...props
 }: React.SVGProps<SVGSVGElement>) {
   return (
