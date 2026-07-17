@@ -401,3 +401,51 @@ export function buildReasonCodes(
 
   return [selectedSubOptionData!.code]
 }
+
+export interface SelectionPathItem {
+  icon: React.ReactNode
+  label: string
+}
+
+// 결과 화면 상단에 보여줄 선택 경로(단계별 아이콘+라벨). reasonCodes와 같은 트리를 따라가되
+// 직접입력 구간은 ReplanSurveyIcon + 입력한 텍스트로 대체한다
+export function buildSelectionPath(
+  selectedOptionData: MainOptionItem,
+  selectedSubOptionData: SubOptionItem | undefined,
+  selectedSubSubOptionData: SubSubOptionItem | undefined,
+  directInputText: string,
+): SelectionPathItem[] {
+  const directInputItem = (): SelectionPathItem => ({
+    icon: <ReplanSurveyIcon width={18} height={18} />,
+    label: directInputText,
+  })
+
+  if (selectedOptionData.key === 'directInput') return [directInputItem()]
+
+  const path: SelectionPathItem[] = [
+    { icon: selectedOptionData.icon, label: selectedOptionData.label },
+  ]
+
+  if (selectedSubOptionData?.key === 'directInput') {
+    path.push(directInputItem())
+    return path
+  }
+
+  if (selectedSubOptionData) {
+    path.push({
+      icon: selectedSubOptionData.icon,
+      label: selectedSubOptionData.label,
+    })
+  }
+
+  if (selectedSubSubOptionData?.key === 'directInput') {
+    path.push(directInputItem())
+  } else if (selectedSubSubOptionData) {
+    path.push({
+      icon: selectedSubSubOptionData.icon ?? <MoonIcon />,
+      label: selectedSubSubOptionData.label,
+    })
+  }
+
+  return path
+}
