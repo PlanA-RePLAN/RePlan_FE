@@ -16,6 +16,9 @@ import ShuffleIcon from '@/icons/ShuffleIcon'
 import SleepIcon from '@/icons/SleepIcon'
 import AlertTriangleIcon from '@/icons/AlertTriangleIcon'
 import MenuListIcon from '@/icons/MenuListIcon'
+import QuestionIcon from '@/icons/replan/QuestionIcon'
+import HealthIcon from '@/icons/HealthIcon'
+import PerfectIcon from '@/icons/replan/PerfectIcon'
 
 export type MainOptionKey =
   | 'psychologicalState'
@@ -132,19 +135,19 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
         subSubOptions: [
           {
             key: 'dontKnowWhereToStart',
-            icon: <ReplanSurveyIcon />,
+            icon: <QuestionIcon />,
             label: '무엇부터 시작할지 몰라서',
             code: 'MENTAL_START_WHERE',
           },
           {
             key: 'tooMuchTimeOrEnergy',
-            icon: <ReplanSurveyIcon />,
+            icon: <HealthIcon />,
             label: '시간이나 에너지가 많이 들 것 같아서',
             code: 'MENTAL_START_HEAVY',
           },
           {
             key: 'wantToBePerfect',
-            icon: <ReplanSurveyIcon />,
+            icon: <PerfectIcon />,
             label: '완벽하게 해내고 싶어서',
             code: 'MENTAL_PERFECTIONISM',
           },
