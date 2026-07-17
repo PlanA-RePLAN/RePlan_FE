@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useNotificationStore } from '@/store/notificationStore'
 import { getUnreadNotificationCount } from '@/shared/api/notification'
 import { getProfile } from '../api/user'
+import { useProfileStore } from '@/store/profileStore'
+import { type Provider } from '@/features/mypage/components/LogoIcon'
 import BellIcon from '@/icons/BellIcon'
 import DefaultProfileIcon from '@/icons/DefaultProfileIcon'
 
 export default function MainHeader() {
   const navigate = useNavigate()
-  const [name, setName] = useState<string | null>('')
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null)
+  const { name, profileImageUrl, setProfile } = useProfileStore()
   const { hasUnread, setHasUnread } = useNotificationStore()
 
   useEffect(() => {
@@ -37,8 +38,7 @@ export default function MainHeader() {
           const accessToken = localStorage.getItem('accessToken') ?? ''
           const res = await getProfile(accessToken)
           if (res.success && res.data) {
-            setName(res.data.nickname)
-            setProfileImageUrl(res.data.profileImage)
+            setProfile(res.data.nickname, res.data.profileImage, res.data.email, res.data.provider as Provider)
           }
         } catch (error) {
           console.error(error)
