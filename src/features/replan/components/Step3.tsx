@@ -15,6 +15,7 @@ interface Step3Props {
   onDirectInputTextChange: (text: string) => void
   onNext: () => void
   isSubmitting: boolean
+  userName?: string | null
 }
 
 export default function Step3({
@@ -26,8 +27,12 @@ export default function Step3({
   onDirectInputTextChange,
   onNext,
   isSubmitting,
+  userName,
 }: Step3Props) {
-  const titleLines = selectedSubOptionData.step3Title ?? ['조금 더 알려주세요.']
+  const displayName = userName?.trim() || '회원'
+  const titleLines = (
+    selectedSubOptionData.step3Title ?? ['조금 더 알려주세요.']
+  ).map((line) => line.split('{{name}}').join(displayName))
 
   return (
     <div className="px-5 pt-8">
