@@ -25,7 +25,7 @@ export default function ReplanOption({
     <button
       onClick={handleClick}
       className={cn(
-        'w-full rounded-xl px-4 py-2.5 mb-3 flex items-center gap-3 text-left transition-colors',
+        'w-full rounded-xl px-4 py-3 mb-3 flex items-center gap-3 text-left transition-colors',
         isSelected
           ? 'bg-white border border-bluegray-light-active'
           : 'bg-bluegray-light border border-bluegray-light hover:bg-bluegray-light-hover',

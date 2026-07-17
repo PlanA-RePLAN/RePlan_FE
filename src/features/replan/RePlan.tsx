@@ -47,6 +47,10 @@ export default function RePlan({
   const [directInputText, setDirectInputText] = useState('')
   const [answers, setAnswers] = useState<Record<string, ReplanAnswer>>({})
   const [recommendData, setRecommendData] = useState<RecommendData | null>(null)
+  const [operationBatches, setOperationBatches] = useState<ReplanOperation[][]>(
+    [],
+  )
+  const [currentPage, setCurrentPage] = useState(0)
   const [finalReasonCodes, setFinalReasonCodes] = useState<string[]>([])
   const [refreshCount, setRefreshCount] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -91,6 +95,15 @@ export default function RePlan({
     setIsSubmitting(false)
     if (!res.data) return
     setRecommendData(res.data)
+    if (!res.data.needsMoreInfo) {
+      if (refresh) {
+        setOperationBatches((prev) => [...prev, res.data!.operations])
+        setCurrentPage((prev) => prev + 1)
+      } else {
+        setOperationBatches([res.data.operations])
+        setCurrentPage(0)
+      }
+    }
     onNextStep(res.data.needsMoreInfo ? 'question' : 'result')
   }
 
@@ -273,7 +286,9 @@ export default function RePlan({
     return (
       <TodoSuggestion
         reasonLabels={recommendData.reasonLabels}
-        operations={recommendData.operations}
+        operationBatches={operationBatches}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
         refreshCount={refreshCount}
         isSubmitting={isSubmitting}
         onRefresh={handleRefresh}
