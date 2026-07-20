@@ -65,12 +65,7 @@ export function listenForegroundPush() {
         })
         return
     }
-    onMessage(getMessaging(app), (payload) => {
-        const title = payload.data?.title ?? 'RePlan'
-        const body  = payload.data?.body  ?? ''
-        if (Notification.permission === 'granted') {
-            new Notification(title, { body, icon: '/assets/pwa-192x192.png' })
-        }
+    onMessage(getMessaging(app), () => {
         useNotificationStore.getState().setHasUnread(true)
     })
 }
