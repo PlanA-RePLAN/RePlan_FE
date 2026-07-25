@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getTodoDetail } from '@/shared/api/todo'
+import { getProfile } from '@/shared/api/user'
 import { recommendReplan, saveReplan } from '@/shared/api/replan'
 import type { TodoDetail } from '@/shared/types/todo'
 import type {
@@ -12,6 +13,8 @@ import {
   MainOptionKey,
   StepType,
   buildReasonCodes,
+  buildSelectionPath,
+  type SelectionPathItem,
 } from './replanData'
 import Step1 from './components/Step1'
 import Step2 from './components/Step2'
@@ -51,9 +54,13 @@ export default function RePlan({
   )
   const [currentPage, setCurrentPage] = useState(0)
   const [finalReasonCodes, setFinalReasonCodes] = useState<string[]>([])
+  const [finalSelectionPath, setFinalSelectionPath] = useState<
+    SelectionPathItem[]
+  >([])
   const [refreshCount, setRefreshCount] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [anchorTodo, setAnchorTodo] = useState<TodoDetail | null>(null)
+  const [userName, setUserName] = useState<string | null>(null)
 
   const selectedOptionData = MAIN_OPTIONS.find((o) => o.key === selectedOption)
   const selectedSubOptionData = selectedOptionData?.subOptions.find(
@@ -69,6 +76,13 @@ export default function RePlan({
       setAnchorTodo(res.data)
     })
   }, [anchorTodoId])
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken') ?? ''
+    getProfile(accessToken).then((res) => {
+      setUserName(res.data?.nickname ?? null)
+    })
+  }, [])
 
   const submitRecommend = async (
     reasonCodes: string[],
@@ -128,6 +142,14 @@ export default function RePlan({
           directInputText,
         )
         setFinalReasonCodes(reasonCodes)
+        setFinalSelectionPath(
+          buildSelectionPath(
+            selectedOptionData,
+            undefined,
+            undefined,
+            directInputText,
+          ),
+        )
         submitRecommend(reasonCodes, false)
         return
       }
@@ -160,6 +182,14 @@ export default function RePlan({
         directInputText,
       )
       setFinalReasonCodes(reasonCodes)
+      setFinalSelectionPath(
+        buildSelectionPath(
+          selectedOptionData,
+          selectedSubOptionData,
+          undefined,
+          directInputText,
+        ),
+      )
       submitRecommend(reasonCodes, false)
       return
     }
@@ -181,6 +211,14 @@ export default function RePlan({
         directInputText,
       )
       setFinalReasonCodes(reasonCodes)
+      setFinalSelectionPath(
+        buildSelectionPath(
+          selectedOptionData,
+          selectedSubOptionData,
+          selectedSubSubOptionData,
+          directInputText,
+        ),
+      )
       submitRecommend(reasonCodes, false)
     }
   }
@@ -254,6 +292,7 @@ export default function RePlan({
         onDirectInputTextChange={setDirectInputText}
         onNext={handleNext}
         isSubmitting={isSubmitting}
+        userName={userName}
       />
     )
   }
@@ -275,7 +314,7 @@ export default function RePlan({
   if (step === 'result' && recommendData) {
     return (
       <TodoSuggestion
-        reasonLabels={recommendData.reasonLabels}
+        selectionPath={finalSelectionPath}
         operationBatches={operationBatches}
         currentPage={currentPage}
         onPageChange={setCurrentPage}

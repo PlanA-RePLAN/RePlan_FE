@@ -16,6 +16,9 @@ import SleepIcon from '@/icons/SleepIcon'
 import AlertTriangleIcon from '@/icons/AlertTriangleIcon'
 import MenuListIcon from '@/icons/MenuListIcon'
 import XIcon from '@/icons/XIcon'
+import QuestionIcon from '@/icons/replan/QuestionIcon'
+import HealthIcon from '@/icons/HealthIcon'
+import PerfectIcon from '@/icons/replan/PerfectIcon'
 
 export type MainOptionKey =
   | 'psychologicalState'
@@ -129,22 +132,23 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
         icon: <PlayIcon width={20} height={20} />,
         label: '시작하기 막막하거나 부담스러웠어요',
         code: 'MENTAL_HARD_TO_START',
+        step3Title: ['{{name}}님이', '시작이 막막했던 이유가 뭔가요?'],
         subSubOptions: [
           {
             key: 'dontKnowWhereToStart',
-            icon: <ReplanSurveyIcon />,
+            icon: <QuestionIcon />,
             label: '무엇부터 시작할지 몰라서',
             code: 'MENTAL_START_WHERE',
           },
           {
             key: 'tooMuchTimeOrEnergy',
-            icon: <ReplanSurveyIcon />,
+            icon: <HealthIcon />,
             label: '시간이나 에너지가 많이 들 것 같아서',
             code: 'MENTAL_START_HEAVY',
           },
           {
             key: 'wantToBePerfect',
-            icon: <ReplanSurveyIcon />,
+            icon: <PerfectIcon />,
             label: '완벽하게 해내고 싶어서',
             code: 'MENTAL_PERFECTIONISM',
           },
@@ -193,6 +197,7 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
         key: 'sleepDeprived',
         icon: <SleepIcon width={16} height={16} />,
         label: '수면부족/피로 누적 상태에요',
+        step3Title: ['오늘 {{name}}님의', '수면 시간은 몇 시간 정도였나요?'],
         code: 'CONDITION_SLEEP',
         subSubOptions: [
           {
@@ -231,6 +236,7 @@ export const MAIN_OPTIONS: MainOptionItem[] = [
       {
         key: 'burnout',
         icon: <PowerIcon />,
+        step3Title: ['많이 지치셨군요.', '어떤 부분이 힘드셨나요?'],
         label: '번아웃이 왔어요',
         code: 'CONDITION_BURNOUT',
         subSubOptions: [
@@ -394,4 +400,52 @@ export function buildReasonCodes(
   if (selectedSubSubOptionData) return [selectedSubSubOptionData.code]
 
   return [selectedSubOptionData!.code]
+}
+
+export interface SelectionPathItem {
+  icon: React.ReactNode
+  label: string
+}
+
+// 결과 화면 상단에 보여줄 선택 경로(단계별 아이콘+라벨). reasonCodes와 같은 트리를 따라가되
+// 직접입력 구간은 ReplanSurveyIcon + 입력한 텍스트로 대체한다
+export function buildSelectionPath(
+  selectedOptionData: MainOptionItem,
+  selectedSubOptionData: SubOptionItem | undefined,
+  selectedSubSubOptionData: SubSubOptionItem | undefined,
+  directInputText: string,
+): SelectionPathItem[] {
+  const directInputItem = (): SelectionPathItem => ({
+    icon: <ReplanSurveyIcon width={18} height={18} />,
+    label: directInputText,
+  })
+
+  if (selectedOptionData.key === 'directInput') return [directInputItem()]
+
+  const path: SelectionPathItem[] = [
+    { icon: selectedOptionData.icon, label: selectedOptionData.label },
+  ]
+
+  if (selectedSubOptionData?.key === 'directInput') {
+    path.push(directInputItem())
+    return path
+  }
+
+  if (selectedSubOptionData) {
+    path.push({
+      icon: selectedSubOptionData.icon,
+      label: selectedSubOptionData.label,
+    })
+  }
+
+  if (selectedSubSubOptionData?.key === 'directInput') {
+    path.push(directInputItem())
+  } else if (selectedSubSubOptionData) {
+    path.push({
+      icon: selectedSubSubOptionData.icon ?? <MoonIcon />,
+      label: selectedSubSubOptionData.label,
+    })
+  }
+
+  return path
 }
