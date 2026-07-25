@@ -756,7 +756,7 @@ export default function Home() {
         onConfirm={handleCreateItem}
         todo={emptyTodo}
         allTags={allTags}
-        onTagAdd={() => {}}
+        onTagAdd={(tag) => setAllTags((prev) => [...prev, tag])}
         title="투두 추가"
       />
 
@@ -792,7 +792,7 @@ export default function Home() {
             onConfirm={handleUpdateItem}
             todo={itemDetailToProposed(itemHook.selectedDetail, editScope)}
             allTags={allTags}
-            onTagAdd={() => {}}
+            onTagAdd={(tag) => setAllTags((prev) => [...prev, tag])}
             title="투두 수정"
             onlyTitleAndTag={editScope === 'THIS'}
           />
