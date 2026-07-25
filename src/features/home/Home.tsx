@@ -520,6 +520,7 @@ export default function Home() {
                     </TodoCard.Content>
                     <TodoCard.Category
                       category={item.tagTitle ?? ''}
+                      color={item.tagColor}
                       usePin
                       pinned={item.isPinned}
                       setPinned={(isPinned) =>
@@ -613,6 +614,7 @@ export default function Home() {
                                   </TodoCard.Content>
                                   <TodoCard.Category
                                     category={item.tagTitle ?? ''}
+                                    color={item.tagColor}
                                     usePin
                                     pinned={item.isPinned}
                                     setPinned={(isPinned) =>
@@ -666,6 +668,7 @@ export default function Home() {
                       </TodoCard.Content>
                       <TodoCard.Category
                         category={item.tagTitle ?? ''}
+                        color={item.tagColor}
                         usePin
                         pinned={item.isPinned}
                         setPinned={(isPinned) =>
@@ -724,6 +727,7 @@ export default function Home() {
                         </TodoCard.Content>
                         <TodoCard.Category
                           category={item.tagTitle ?? ''}
+                          color={item.tagColor}
                           usePin
                           pinned={item.isPinned}
                           setPinned={(isPinned) =>
