@@ -13,6 +13,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging()
 
 messaging.onBackgroundMessage((payload) => {
+  if (payload.notification) return
   const title = payload.data?.title ?? 'RePlan'
   const body = payload.data?.body ?? ''
   self.registration.showNotification(title, {
