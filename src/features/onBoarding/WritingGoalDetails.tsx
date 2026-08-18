@@ -137,7 +137,13 @@ export default function WritingGoalDetails({
         />
       </div>
 
-      {loading && <AiLoadingOverlay message="딱 맞는 플랜을 짜고 있어요!" />}
+      {loading && (
+        <AiLoadingOverlay
+          highlightMessage="딱 맞는 플랜"
+          message="을 짜고 있어요!"
+          description="조금만 기다려주세요, 금방 완성돼요"
+        />
+      )}
     </div>
   )
 }

@@ -507,7 +507,11 @@ export default function ProposeGoal({ moveNext }: ProposeGoalProps) {
                           <TodoCard.Title dayTag={todo.dayTag}>
                             {todo.title}
                           </TodoCard.Title>
-                          <TodoCard.Time>{todo.time}</TodoCard.Time>
+                          <TodoCard.Time>
+                            {todo.deadlineDate
+                              ? `${format(todo.deadlineDate, 'yyyy-MM-dd')}, ${todo.time}`
+                              : todo.time}
+                          </TodoCard.Time>
                         </TodoCard.Content>
                         <TodoCard.Category
                           category={selectedTag?.label ?? ''}
