@@ -183,7 +183,10 @@ export default function TodoEditSheet({
       setAddingSubTodo(false)
       setEditingSub(null)
     }
-  }, [isOpen, todo])
+    // todo는 의도적으로 제외 — 시트가 열릴 때만 초기화해야 하며,
+    // 열린 상태에서 todo 참조가 바뀌어도(태그 추가 등) 입력값이 리셋되면 안 됨
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   const isRepeat = editRepeat !== '없음'
 
