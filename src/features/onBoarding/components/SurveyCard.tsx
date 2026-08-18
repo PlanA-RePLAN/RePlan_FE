@@ -169,7 +169,7 @@ export default function SurveyCard({
                       }
                       setEditItemValues(updated)
                     }}
-                    className="w-full p-3 rounded-xl bg-blue-light text-sm font-medium leading-relaxed resize-none outline-none"
+                    className="w-full p-3 rounded-xl bg-blue-light text-[16px] font-medium leading-relaxed resize-none outline-none"
                     rows={2}
                   />
                 </div>

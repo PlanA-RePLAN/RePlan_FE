@@ -1,15 +1,20 @@
+// components
 import Title from '@/shared/components/Title'
 import Description from '@/shared/components/Description'
 import MainButton from '@/shared/components/MainButton'
 import ListItem from '@/shared/components/ListItem'
-import GoalIcon from '@/icons/GoalIcon'
-import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
-import MessageQuestionIcon from '@/icons/MessageQuestionIcon'
 import SurveyCard, {
   type SurveyContent,
 } from '@/features/onBoarding/components/SurveyCard'
 import DeadlineInput from '@/features/onBoarding/components/DeadlineInput'
 import AiLoadingOverlay from '@/features/onBoarding/components/AiLoadingOverlay'
+
+// icons
+import GoalIcon from '@/icons/GoalIcon'
+import CalendarClearSharpIcon from '@/icons/CalendarClearSharpIcon'
+import MessageQuestionIcon from '@/icons/MessageQuestionIcon'
+
+// utils
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { useOnboardingStore } from '@/store/onboardingStore'
@@ -152,7 +157,13 @@ export default function AskQuestion({ moveNext }: { moveNext: () => void }) {
         />
       </div>
 
-      {loading && <AiLoadingOverlay message="추천 투두를 준비하고 있어요!" />}
+      {loading && (
+        <AiLoadingOverlay
+          highlightMessage="추천 투두"
+          message="를 준비하고 있어요!"
+          description="마음에 드는 투두만 골라서 수정하고 추가할 수 있어요"
+        />
+      )}
     </div>
   )
 }
